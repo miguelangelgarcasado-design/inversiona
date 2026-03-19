@@ -1,0 +1,2 @@
+# inversiona
+App inversion IA
