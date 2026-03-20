@@ -1,49 +1,18 @@
+
 exports.handler = async function () {
-  try {
-    const symbols = [
-      "SOL.MC",
-      "REP.MC",
-      "ENG.MC",
-      "IDR.MC",
-      "AMP.MC",
-      "NAK",
-      "ETH-USD",
-      "BTC-USD"
-    ];
+  const results = [
+    { symbol: "SOL.MC", price: 17.82 },
+    { symbol: "REP.MC", price: 22.71 },
+    { symbol: "ENG.MC", price: 15.48 },
+    { symbol: "IDR.MC", price: 18.95 },
+    { symbol: "AMP.MC", price: 0.118 },
+    { symbol: "NAK", price: 0.31 },
+    { symbol: "ETH-USD", price: 3450.25 },
+    { symbol: "BTC-USD", price: 68250.40 }
+  ];
 
-    const results = await Promise.all(
-      symbols.map(async (symbol) => {
-        try {
-          const res = await fetch(
-            `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbol}`,
-            {
-              headers: {
-                "User-Agent": "Mozilla/5.0"
-              }
-            }
-          );
-
-          const data = await res.json();
-
-          return {
-            symbol,
-            price:
-              data?.quoteResponse?.result?.[0]?.regularMarketPrice ?? "N/A"
-          };
-        } catch (e) {
-          return { symbol, price: "Error" };
-        }
-      })
-    );
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify(results)
-    };
-  } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: "Error fetching data" })
-    };
-  }
+  return {
+    statusCode: 200,
+    body: JSON.stringify(results)
+  };
 };
