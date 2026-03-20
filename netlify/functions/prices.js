@@ -1,6 +1,16 @@
 exports.handler = async function () {
   try {
-    const symbols = ["IDR.MC", "REP.MC", "TSLA", "AAPL", "BTC-USD"];
+  const symbols = [
+  "SOL.MC",
+  "REP.MC",
+  "ENG.MC",
+  "IDR.MC",
+  "AMP.MC",
+  "NAK",
+  "ETH-USD",
+  "BTC-USD"
+];
+
 
     const results = await Promise.all(
       symbols.map(async (symbol) => {
