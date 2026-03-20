@@ -87,10 +87,16 @@ try {
   const res = await fetch('/.netlify/functions/prices');
   const data = await res.json();
 
-  data.forEach(function(item) {
-    bloque.innerHTML += '<p><strong>' + item.symbol + '</strong>: ' + item.price + '</p>';
-  });
+  
+data.forEach(function(item) {
+  let precio = item.price;
 
+  if (precio === null || precio === undefined || precio === "N/A") {
+    precio = "—";
+  }
+
+  bloque.innerHTML += "<p><strong>" + item.symbol + "</strong>: " + precio + "</p>";
+});
 } catch (e) {
   bloque.innerHTML += '<p>Error cargando datos</p>';
 }
