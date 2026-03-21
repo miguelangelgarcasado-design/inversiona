@@ -87,16 +87,37 @@ try {
   const res = await fetch('/.netlify/functions/prices');
   const data = await res.json();
 
-  
-data.forEach(function(item) {
+ data.forEach(function(item) {
   let precio = item.price;
 
   if (precio === null || precio === undefined || precio === "N/A") {
     precio = "—";
+  } else {
+    precio = Number(precio).toLocaleString("es-ES", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
   }
 
-  bloque.innerHTML += "<p><strong>" + item.symbol + "</strong>: " + precio + "</p>";
+  let nombre = item.symbol;
+
+  if (item.symbol === "SOL.MC") nombre = "Solaria";
+  if (item.symbol === "REP.MC") nombre = "Repsol";
+  if (item.symbol === "ENG.MC") nombre = "Enagás";
+  if (item.symbol === "IDR.MC") nombre = "Indra";
+  if (item.symbol === "AMP.MC") nombre = "Amper";
+  if (item.symbol === "NAK") nombre = "Northern Dynasty";
+  if (item.symbol === "ETH-USD") nombre = "Ethereum";
+  if (item.symbol === "BTC-USD") nombre = "Bitcoin";
+
+  bloque.innerHTML += `
+    <div style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.08);">
+      <strong>${nombre}</strong> <span style="opacity:0.7;">(${item.symbol})</span><br>
+      <span style="color:#7dd3fc;">${precio}</span>
+    </div>
+  `;
 });
+
 } catch (e) {
   bloque.innerHTML += '<p>Error cargando datos</p>';
 }
