@@ -105,13 +105,31 @@
   </div>
 <script>
 async function cargarDatos() {
-  const activos = [
-    { nombre: "Indra", ticker: "IDR.MC" },
-    { nombre: "Repsol", ticker: "REP.MC" },
-    { nombre: "Tesla", ticker: "TSLA" },
-    { nombre: "Apple", ticker: "AAPL" },
-    { nombre: "Bitcoin", ticker: "BTC-USD" }
-  ];
+  for (let activo of activos) {
+
+  const res = await fetch(`/api/quote?symbol=${activo.ticker}`);
+  const item = await res.json();
+
+  let precio = item.price;
+
+  if (precio == null || precio == undefined || precio == "N/A") {
+    precio = "-";
+  } else {
+    precio = Number(precio).toLocaleString("es-ES", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  let nombre = activo.nombre;
+
+  bloque.innerHTML += `
+    <div style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.08);">
+      <strong>${nombre}</strong> <span style="opacity:0.7;">(${activo.ticker})</span><br>
+      <span style="color:#7dd3fc;">${precio}</span>
+    </div>
+  `;
+}
 
   const contenedor = document.querySelector(".wrap");
 
