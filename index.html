@@ -121,7 +121,7 @@ async function cargarDatos() {
 
   contenedor.appendChild(bloque);
 try {
-  const res = await fetch('/.netlify/functions/prices');
+  const res = await fetch('/api/quote?symbol=SOL.MC');
   const data = await res.json();
 
  data.forEach(function(item) {
