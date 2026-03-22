@@ -124,7 +124,7 @@ try {
   const res = await fetch('/api/quote?symbol=SOL.MC');
   const data = await res.json();
 
- data.forEach(function(item) {
+const item = data;
   let precio = item.price;
 
   if (precio === null || precio === undefined || precio === "N/A") {
