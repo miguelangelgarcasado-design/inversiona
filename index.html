@@ -139,9 +139,7 @@ async function cargarDatos() {
 
   contenedor.appendChild(bloque);
 try {
-  const res = await fetch('/api/quote?symbol=SOL.MC');
-  const data = await res.json();
-
+ 
 for (let activo of activos) {
 
   const res = await fetch(`/api/quote?symbol=${activo.ticker}`);
