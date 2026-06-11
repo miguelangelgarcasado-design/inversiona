@@ -1,2 +1,2 @@
 # inversiona
-App inversion IA
+App inversion IA.
