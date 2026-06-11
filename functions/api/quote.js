@@ -1,6 +1,7 @@
 export async function onRequestGet(context) {
   try {
     const { request, env } = context;
+
     const url = new URL(request.url);
     const symbol = url.searchParams.get("symbol");
 
@@ -8,27 +9,25 @@ export async function onRequestGet(context) {
       return Response.json({ error: "Falta symbol" }, { status: 400 });
     }
 
-    const apiKey = env.ALPHA_VANTAGE_API_KEY;
+    const token = env.ALPHA_VANTAGE_API_KEY;
 
-    const apiUrl =
-      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`;
+    const response = await fetch(
+      `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${token}`
+    );
 
-    const res = await fetch(apiUrl);
-    const data = await res.json();
-
-    const q = data["Global Quote"];
-
-    if (!q || !q["05. price"]) {
-      return Response.json({ error: "Sin datos", data }, { status: 404 });
-    }
+    const data = await response.json();
 
     return Response.json({
-      symbol: q["01. symbol"],
-      price: q["05. price"],
-      change: q["09. change"],
-      changePercent: q["10. change percent"]
+      symbol,
+      price: data.c,
+      change: data.d,
+      changePercent: data.dp
     });
+
   } catch (e) {
-    return Response.json({ error: "Error interno", message: String(e) }, { status: 500 });
+    return Response.json({
+      error: "Error interno",
+      message: String(e)
+    }, { status: 500 });
   }
 }
