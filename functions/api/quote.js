@@ -1,5 +1,6 @@
 export async function onRequestGet(context) {
   const { request, env } = context;
+
   const url = new URL(request.url);
   const symbol = url.searchParams.get("symbol");
 
@@ -9,14 +10,15 @@ export async function onRequestGet(context) {
 
   const apiKey = env.ALPHA_VANTAGE_API_KEY;
 
-  const apiUrl = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${apiKey}`;
+  const apiUrl =
+    `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${apiKey}`;
 
   const res = await fetch(apiUrl);
   const data = await res.json();
 
   const q = data["Global Quote"];
 
-  if (!q) {
+  if (!q || !q["05. price"]) {
     return Response.json({ error: "Sin datos" }, { status: 404 });
   }
 
