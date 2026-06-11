@@ -3,9 +3,7 @@ export async function onRequestGet(context) {
     const url = new URL(context.request.url);
     const symbol = url.searchParams.get("symbol");
 
-    if (!symbol) {
-      return Response.json({ error: "Falta symbol" }, { status: 400 });
-    }
+    if (!symbol) return Response.json({ error: "Falta symbol" }, { status: 400 });
 
     const mapa = {
       AAPL: "aapl.us",
@@ -16,15 +14,18 @@ export async function onRequestGet(context) {
     };
 
     const stooqSymbol = mapa[symbol.toUpperCase()] || symbol.toLowerCase();
-
-    const apiUrl = `https://stooq.com/q/l/?s=${stooqSymbol}&f=sd2t2ohlcv&h&e=csv`;
+    const apiUrl = `https://stooq.com/q/l/?s=${stooqSymbol}&f=sd2t2ohlcv&e=csv`;
 
     const res = await fetch(apiUrl);
     const text = await res.text();
 
-    const lines = text.trim().split("\n");
-    const values = lines[1].split(",");
+    const lines = text.trim().split(/\r?\n/);
 
+    if (lines.length < 2) {
+      return Response.json({ error: "Respuesta incompleta", raw: text }, { status: 500 });
+    }
+
+    const values = lines[1].split(",");
     const close = values[6];
 
     if (!close || close === "N/D") {
