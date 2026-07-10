@@ -33,4 +33,3 @@ export async function onRequestGet(context) {
     price: data.c
   });
 }
-
