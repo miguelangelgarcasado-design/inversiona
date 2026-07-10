@@ -1,45 +1,36 @@
 export async function onRequestGet(context) {
-  try {
-    const url = new URL(context.request.url);
-    const symbol = url.searchParams.get("symbol");
+  const url = new URL(context.request.url);
+  const symbol = url.searchParams.get("symbol");
 
-    if (!symbol) return Response.json({ error: "Falta symbol" }, { status: 400 });
-
-    const mapa = {
-      AAPL: "aapl.us",
-      MSFT: "msft.us",
-      IBM: "ibm.us",
-      TSLA: "tsla.us",
-      AMZN: "amzn.us"
-    };
-
-    const stooqSymbol = mapa[symbol.toUpperCase()] || symbol.toLowerCase();
-    const apiUrl = `https://stooq.com/q/l/?s=${stooqSymbol}&f=sd2t2ohlcv&e=csv`;
-
-    const res = await fetch(apiUrl);
-    const text = await res.text();
-
-    const lines = text.trim().split(/\r?\n/);
-
-    if (lines.length < 2) {
-      return Response.json({ error: "Respuesta incompleta", raw: text }, { status: 500 });
-    }
-
-    const values = lines[1].split(",");
-    const close = values[6];
-
-    if (!close || close === "N/D") {
-      return Response.json({ error: "Sin datos", raw: text }, { status: 404 });
-    }
-
-    return Response.json({
-      symbol,
-      price: close,
-      change: "",
-      changePercent: ""
-    });
-
-  } catch (e) {
-    return Response.json({ error: "Error interno", message: String(e) }, { status: 500 });
+  if (!symbol) {
+    return Response.json({ error: "Falta symbol" }, { status: 400 });
   }
+
+  const apiKey = context.env.FINNHUB_API_KEY;
+
+  if (!apiKey) {
+    return Response.json(
+      { error: "Falta la API Key de Finnhub" },
+      { status: 500 }
+    );
+  }
+
+  const res = await fetch(
+    `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${apiKey}`
+  );
+
+  const data = await res.json();
+
+  if (!data || data.c === undefined) {
+    return Response.json(
+      { error: "Sin datos", raw: data },
+      { status: 404 }
+    );
+  }
+
+  return Response.json({
+    symbol,
+    price: data.c
+  });
 }
+
