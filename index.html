@@ -104,33 +104,15 @@
     </div>
   </div>
 <script>
+const activos = [
+  { nombre: "Apple", ticker: "AAPL" },
+  { nombre: "Microsoft", ticker: "MSFT" },
+  { nombre: "IBM", ticker: "IBM" },
+  { nombre: "Tesla", ticker: "TSLA" },
+  { nombre: "Amazon", ticker: "AMZN" }
+];
+
 async function cargarDatos() {
-  for (let activo of activos) {
-
-  const res = await fetch(`/api/quote?symbol=${activo.ticker}`);
-  const item = await res.json();
-
-  let precio = item.price;
-
-  if (precio == null || precio == undefined || precio == "N/A") {
-    precio = "-";
-  } else {
-    precio = Number(precio).toLocaleString("es-ES", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  }
-
-  let nombre = activo.nombre;
-
-  bloque.innerHTML += `
-    <div style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.08);">
-      <strong>${nombre}</strong> <span style="opacity:0.7;">(${activo.ticker})</span><br>
-      <span style="color:#7dd3fc;">${precio}</span>
-    </div>
-  `;
-}
-
   const contenedor = document.querySelector(".wrap");
 
   const bloque = document.createElement("div");
@@ -138,37 +120,51 @@ async function cargarDatos() {
   bloque.innerHTML = "<h2>📊 Cartera en tiempo real</h2>";
 
   contenedor.appendChild(bloque);
-try {
- 
-for (let activo of activos) {
 
-  const res = await fetch(`/api/quote?symbol=${activo.ticker}`);
-  const item = await res.json();
+  for (const activo of activos) {
+    try {
+      const res = await fetch(
+        `/api/quote?symbol=${encodeURIComponent(activo.ticker)}`
+      );
 
-  let precio = item.price;
+      const item = await res.json();
 
-  if (precio == null || precio == undefined || precio == "N/A") {
-    precio = "-";
-  } else {
-    precio = Number(precio).toLocaleString("es-ES", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+      if (!res.ok) {
+        throw new Error(item.error || "No se pudo obtener el precio");
+      }
+
+      let precio = item.price;
+
+      if (
+        precio === null ||
+        precio === undefined ||
+        precio === "N/A"
+      ) {
+        precio = "—";
+      } else {
+        precio = Number(precio).toLocaleString("es-ES", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      }
+
+      bloque.innerHTML += `
+        <div style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.08);">
+          <strong>${activo.nombre}</strong>
+          <span style="opacity:0.7;">(${activo.ticker})</span><br>
+          <span style="color:#7dd3fc;">${precio}</span>
+        </div>
+      `;
+    } catch (error) {
+      bloque.innerHTML += `
+        <div style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.08);">
+          <strong>${activo.nombre}</strong>
+          <span style="opacity:0.7;">(${activo.ticker})</span><br>
+          <span style="color:#fca5a5;">Sin datos</span>
+        </div>
+      `;
+    }
   }
-
-  let nombre = activo.nombre;
-
-  bloque.innerHTML += `
-    <div style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.08);">
-      <strong>${nombre}</strong> <span style="opacity:0.7;">(${activo.ticker})</span><br>
-      <span style="color:#7dd3fc;">${precio}</span>
-    </div>
-  `;
-}
-
-} catch (e) {
-  bloque.innerHTML += '<p>Error cargando datos</p>';
-}
 }
 
 cargarDatos();
