@@ -1,35 +1,68 @@
 export async function onRequestGet(context) {
-  const url = new URL(context.request.url);
-  const symbol = url.searchParams.get("symbol");
+  try {
+    const url = new URL(context.request.url);
+    const symbol = url.searchParams.get("symbol");
 
-  if (!symbol) {
-    return Response.json({ error: "Falta symbol" }, { status: 400 });
-  }
+    if (!symbol) {
+      return Response.json(
+        { error: "Falta symbol" },
+        { status: 400 }
+      );
+    }
 
-  const apiKey = context.env.FINNHUB_API_KEY;
+    const apiKey = context.env.FINNHUB_API_KEY;
 
-  if (!apiKey) {
+    if (!apiKey) {
+      return Response.json(
+        { error: "Falta la API Key de Finnhub" },
+        { status: 500 }
+      );
+    }
+
+    const finnhubUrl =
+      `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${apiKey}`;
+
+    const res = await fetch(finnhubUrl, {
+      headers: {
+        "Accept": "application/json"
+      }
+    });
+
+    if (!res.ok) {
+      return Response.json(
+        {
+          error: "Error al consultar Finnhub",
+          status: res.status
+        },
+        { status: 502 }
+      );
+    }
+
+    const data = await res.json();
+
+    if (!data || data.c === undefined || data.c === null || data.c === 0) {
+      return Response.json(
+        {
+          error: "Sin datos",
+          symbol,
+          raw: data
+        },
+        { status: 404 }
+      );
+    }
+
+    return Response.json({
+      symbol,
+      price: data.c
+    });
+
+  } catch (error) {
     return Response.json(
-      { error: "Falta la API Key de Finnhub" },
+      {
+        error: "Error interno",
+        message: error?.message || "Error desconocido"
+      },
       { status: 500 }
     );
   }
-
-  const res = await fetch(
-    `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${apiKey}`
-  );
-
-  const data = await res.json();
-
-  if (!data || data.c === undefined) {
-    return Response.json(
-      { error: "Sin datos", raw: data },
-      { status: 404 }
-    );
-  }
-
-  return Response.json({
-    symbol,
-    price: data.c
-  });
 }
