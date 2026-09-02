@@ -9,71 +9,121 @@ export async function onRequestGet(context) {
         { status: 400 }
       );
     }
-const cache = caches.default;
-const cacheKey = new Request(
-  `${url.origin}/api/quote?symbol=${encodeURIComponent(symbol)}`
-);
 
-const cachedResponse = await cache.match(cacheKey);
+    const cache = caches.default;
+    const cacheKey = new Request(
+      `${url.origin}/api/quote?symbol=${encodeURIComponent(symbol)}`
+    );
 
-if (cachedResponse) {
-  return cachedResponse;
-}
-    const apiKey = context.env.FINNHUB_API_KEY;
+    const cachedResponse = await cache.match(cacheKey);
 
-    if (!apiKey) {
-      return Response.json(
-        { error: "Falta la API Key de Finnhub" },
-        { status: 500 }
-      );
+    if (cachedResponse) {
+      return cachedResponse;
     }
 
-    const finnhubUrl =
-      `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${apiKey}`;
+    let price = null;
+    let source = "";
 
-    const res = await fetch(finnhubUrl, {
-      headers: {
-        "Accept": "application/json"
+    // ACCIONES EUROPEAS
+    if (symbol.endsWith(".MC") || symbol.endsWith(".MI")) {
+      const yahooUrl =
+        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
+
+      const yahooRes = await fetch(yahooUrl, {
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          "Accept": "application/json"
+        }
+      });
+
+      if (!yahooRes.ok) {
+        return Response.json(
+          {
+            error: "Error al consultar cotización europea",
+            status: yahooRes.status
+          },
+          { status: 502 }
+        );
       }
-    });
 
-    if (!res.ok) {
-      return Response.json(
-        {
-          error: "Error al consultar Finnhub",
-          status: res.status
-        },
-        { status: 502 }
-      );
+      const yahooData = await yahooRes.json();
+
+      const result = yahooData?.chart?.result?.[0];
+
+      price =
+        result?.meta?.regularMarketPrice ??
+        result?.meta?.previousClose ??
+        null;
+
+      source = "Yahoo";
     }
 
-    const data = await res.json();
+    // ACCIONES USA
+    else {
+      const apiKey = context.env.FINNHUB_API_KEY;
 
-    if (!data || data.c === undefined || data.c === null || data.c === 0) {
+      if (!apiKey) {
+        return Response.json(
+          { error: "Falta la API Key de Finnhub" },
+          { status: 500 }
+        );
+      }
+
+      const finnhubUrl =
+        `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${apiKey}`;
+
+      const res = await fetch(finnhubUrl, {
+        headers: {
+          "Accept": "application/json"
+        }
+      });
+
+      if (!res.ok) {
+        return Response.json(
+          {
+            error: "Error al consultar Finnhub",
+            status: res.status
+          },
+          { status: 502 }
+        );
+      }
+
+      const data = await res.json();
+
+      price = data?.c;
+      source = "Finnhub";
+    }
+
+    if (
+      price === null ||
+      price === undefined ||
+      Number(price) === 0
+    ) {
       return Response.json(
         {
           error: "Sin datos",
-          symbol,
-          raw: data
+          symbol
         },
         { status: 404 }
       );
     }
-   const response = Response.json(
-  {
-    symbol,
-    price: data.c
-  },
-  {
-    headers: {
-      "Cache-Control": "public, max-age=60"
-    }
-  }
-);
 
-await cache.put(cacheKey, response.clone());
+    const response = Response.json(
+      {
+        symbol,
+        price: Number(price),
+        source
+      },
+      {
+        headers: {
+          "Cache-Control": "public, max-age=60"
+        }
+      }
+    );
 
-return response;
+    await cache.put(cacheKey, response.clone());
+
+    return response;
 
   } catch (error) {
     return Response.json(
