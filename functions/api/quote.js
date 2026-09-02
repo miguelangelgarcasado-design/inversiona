@@ -9,7 +9,16 @@ export async function onRequestGet(context) {
         { status: 400 }
       );
     }
+const cache = caches.default;
+const cacheKey = new Request(
+  `${url.origin}/api/quote?symbol=${encodeURIComponent(symbol)}`
+);
 
+const cachedResponse = await cache.match(cacheKey);
+
+if (cachedResponse) {
+  return cachedResponse;
+}
     const apiKey = context.env.FINNHUB_API_KEY;
 
     if (!apiKey) {
@@ -50,11 +59,21 @@ export async function onRequestGet(context) {
         { status: 404 }
       );
     }
+   const response = Response.json(
+  {
+    symbol,
+    price: data.c
+  },
+  {
+    headers: {
+      "Cache-Control": "public, max-age=60"
+    }
+  }
+);
 
-    return Response.json({
-      symbol,
-      price: data.c
-    });
+await cache.put(cacheKey, response.clone());
+
+return response;
 
   } catch (error) {
     return Response.json(
