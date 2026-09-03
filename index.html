@@ -90,14 +90,17 @@
   </div>
 <script>
 const activos = [
- { nombre: "Leonardo", ticker: "LDO.MI" },
-{ nombre: "IREN", ticker: "IREN" },
-{ nombre: "eDreams", ticker: "EDR.MC" },
-{ nombre: "Repsol", ticker: "REP.MC" },
-{ nombre: "Enagás", ticker: "ENG.MC" }
-
+  { nombre: "Leonardo", ticker: "LDO.MI", titulos: 23.607176, compra: 42.37, moneda: "€" },
+  { nombre: "IREN", ticker: "IREN", titulos: 185, compra: 37.30, moneda: "$" },
+  { nombre: "OHL", ticker: "OHLA.MC", titulos: 10485, compra: 0.3277, moneda: "€" },
+  { nombre: "Audax Renovables", ticker: "ADX.MC", titulos: 802, compra: 1.8740, moneda: "€" },
+  { nombre: "Namib Minerals", ticker: "NAMM", titulos: 535, compra: 1.40, moneda: "$" },
+  { nombre: "Rocket Lab", ticker: "RKLB", titulos: 9, compra: 119.57, moneda: "$" },
+  { nombre: "AST SpaceMobile", ticker: "ASTS", titulos: 9, compra: 106.00, moneda: "$" },
+  { nombre: "eDreams", ticker: "EDR.MC", titulos: 0, compra: 0, moneda: "€" },
+  { nombre: "Repsol", ticker: "REP.MC", titulos: 0, compra: 0, moneda: "€" },
+  { nombre: "Enagás", ticker: "ENG.MC", titulos: 0, compra: 0, moneda: "€" }
 ];
-
 async function cargarDatos() {
   const contenedor = document.querySelector(".wrap");
 
