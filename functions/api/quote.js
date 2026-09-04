@@ -37,7 +37,7 @@ if (
   symbol.endsWith(".MI")
 ) {
        const yahooUrl =
-        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahoosymbol)}?interval=1d&range=1d`;
+        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?interval=1d&range=1d`;
 
       const yahooRes = await fetch(yahooUrl, {
         headers: {
