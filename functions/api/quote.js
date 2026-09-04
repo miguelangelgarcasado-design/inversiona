@@ -25,9 +25,19 @@ export async function onRequestGet(context) {
     let source = "";
 
     // ACCIONES EUROPEAS
-    if (symbol.endsWith(".MC") || symbol.endsWith(".MI")) {
-      const yahooUrl =
-        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
+const yahooSymbol =
+  symbol === "BTC" ? "BTC-EUR" :
+  symbol === "SOL" ? "SOL-EUR" :
+  symbol;
+
+if (
+  symbol === "BTC" ||
+  symbol === "SOL" ||
+  symbol.endsWith(".MC") ||
+  symbol.endsWith(".MI")
+) {
+       const yahooUrl =
+        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahoosymbol)}?interval=1d&range=1d`;
 
       const yahooRes = await fetch(yahooUrl, {
         headers: {
