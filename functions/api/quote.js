@@ -33,9 +33,14 @@ const yahooSymbol =
 if (
   symbol === "BTC" ||
   symbol === "SOL" ||
+  symbol === "MBLY" ||
+  symbol === "HIMS" ||
+  symbol === "TSLA" ||
+  symbol === "RXRX" ||
   symbol.endsWith(".MC") ||
   symbol.endsWith(".MI")
 ) {
+
        const yahooUrl =
         `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?interval=1d&range=1d`;
 
