@@ -89,20 +89,30 @@
     </div>
   </div>
 <script>
-const activos = [
-  { nombre: "Leonardo", ticker: "LDO.MI", titulos: 23.607176, compra: 42.37, moneda: "€" },
-  { nombre: "IREN", ticker: "IREN", titulos: 185, compra: 37.30, moneda: "$" },
-  { nombre: "OHL", ticker: "OHLA.MC", titulos: 10485, compra: 0.3277, moneda: "€" },
+  { nombre: "Leonardo", ticker: "LDO.MI", titulos: 23.607176, compra: 42.46, moneda: "€" },
+  { nombre: "IREN", ticker: "IREN", titulos: 185, compra: 37.561, moneda: "$" },
+  { nombre: "OHL", ticker: "OHLA.MC", titulos: 10485, compra: 0.3377, moneda: "€" },
   { nombre: "Audax Renovables", ticker: "ADX.MC", titulos: 802, compra: 1.8740, moneda: "€" },
   { nombre: "Namib Minerals", ticker: "NAMM", titulos: 535, compra: 1.40, moneda: "$" },
   { nombre: "Rocket Lab", ticker: "RKLB", titulos: 9, compra: 119.57, moneda: "$" },
   { nombre: "AST SpaceMobile", ticker: "ASTS", titulos: 9, compra: 106.00, moneda: "$" },
-  { nombre: "eDreams", ticker: "EDR.MC", titulos: 0, compra: 0, moneda: "€" },
-  { nombre: "Repsol", ticker: "REP.MC", titulos: 0, compra: 0, moneda: "€" },
-  { nombre: "Enagás", ticker: "ENG.MC", titulos: 0, compra: 0, moneda: "€" },
-{ nombre: "Bitcoin", ticker: "BTC", cantidad: 0.01230506, moneda: "€", tipo: "crypto" },
-  { nombre: "Solana", ticker: "SOL", cantidad: 1.824239351, compra: 137.04, moneda: "€", tipo: "crypto" }
-  ];
+  { nombre: "eDreams", ticker: "EDR.MC", titulos: 601, compra: 3.33, moneda: "€" },
+  { nombre: "Amper", ticker: "AMP.MC", titulos: 492, compra: 3.247, moneda: "€" },
+  { nombre: "Apple", ticker: "AAPL", titulos: 26, compra: 185.81, moneda: "$" },
+  { nombre: "UiPath", ticker: "PATH", titulos: 160, compra: 12.50, moneda: "$" },
+  { nombre: "Under Armour", ticker: "UAA", titulos: 384, compra: 5.01, moneda: "$" },
+  { nombre: "Mobileye", ticker: "MBLY", titulos: 213, compra: 7.50, moneda: "$" },
+  { nombre: "Hims & Hers", ticker: "HIMS", titulos: 60, compra: 25.00, moneda: "$" },
+  { nombre: "Tesla", ticker: "TSLA", titulos: 4, compra: 327.79, moneda: "$" },
+  { nombre: "Skyworks Solutions", ticker: "SWKS", titulos: 17, compra: 55.00, moneda: "$" },
+  { nombre: "Recursion Pharmaceuticals", ticker: "RXRX", titulos: 344, compra: 2.90, moneda: "$" },
+  { nombre: "Red Cat Holdings", ticker: "RCAT", titulos: 125, compra: 8.00, moneda: "$" },
+  { nombre: "Grifols Clase B", ticker: "GRF-P.MC", titulos: 128, compra: 7.80, moneda: "€" },
+  { nombre: "Cellnex", ticker: "CLNX.MC", titulos: 30, compra: 32.50, moneda: "€" },
+  { nombre: "Bitcoin", ticker: "BTC", cantidad: 0.01230506, moneda: "€", tipo: "crypto" },
+  { nombre: "Solana", ticker: "SOL", cantidad: 1.824239351, compra: 137.04, moneda: "€", tipo: "crypto" },
+  { nombre: "SUI", ticker: "SUI", cantidad: 49.559011098, moneda: "€", tipo: "crypto" }
+];
 async function cargarDatos() {
   const contenedor = document.querySelector(".wrap");
 
