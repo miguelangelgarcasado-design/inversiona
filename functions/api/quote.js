@@ -28,11 +28,13 @@ export async function onRequestGet(context) {
 const yahooSymbol =
   symbol === "BTC" ? "BTC-EUR" :
   symbol === "SOL" ? "SOL-EUR" :
+  symbol === "SUI" ? "SUI-EUR" :
   symbol;
 
 if (
   symbol === "BTC" ||
   symbol === "SOL" ||
+  symbol === "SUI" ||
   symbol === "MBLY" ||
   symbol === "HIMS" ||
   symbol === "TSLA" ||
