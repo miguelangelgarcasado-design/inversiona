@@ -37,6 +37,9 @@ if (
   symbol === "HIMS" ||
   symbol === "TSLA" ||
   symbol === "RXRX" ||
+  symbol === "PATH" ||
+symbol === "UAA" ||
+
   symbol.endsWith(".MC") ||
   symbol.endsWith(".MI")
 ) {
