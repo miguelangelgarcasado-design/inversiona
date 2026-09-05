@@ -135,28 +135,70 @@ async function cargarDatos() {
         throw new Error(item.error || "No se pudo obtener el precio");
       }
 
-      let precio = item.price;
+      let precioNumero = Number(item.price);
 
-      if (
-        precio === null ||
-        precio === undefined ||
-        precio === "N/A"
-      ) {
-        precio = "—";
-      } else {
-        precio = Number(precio).toLocaleString("es-ES", {
+if (
+  item.price === null ||
+  item.price === undefined ||
+  item.price === "N/A"
+) {
+  throw new Error("Precio no disponible");
+}
+
+let precio = precioNumero.toLocaleString("es-ES", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+});
+
+let detalle = "";
+
+if (activo.titulos && activo.compra) {
+  const invertido = activo.titulos * activo.compra;
+  const valorActual = activo.titulos * precioNumero;
+  const beneficio = valorActual - invertido;
+  const porcentaje = (beneficio / invertido) * 100;
+
+  const colorResultado =
+    beneficio >= 0 ? "#86efac" : "#fca5a5";
+
+  const signo = beneficio >= 0 ? "+" : "";
+
+  detalle = `
+    <div style="margin-top:8px; line-height:1.5; opacity:0.95;">
+      Títulos: ${activo.titulos.toLocaleString("es-ES")}<br>
+      Precio compra: ${activo.compra.toLocaleString("es-ES")} ${activo.moneda}<br>
+      Invertido: ${invertido.toLocaleString("es-ES", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })} ${activo.moneda}<br>
+      Valor actual: ${valorActual.toLocaleString("es-ES", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })} ${activo.moneda}<br>
+      <span style="color:${colorResultado}; font-weight:bold;">
+        PyG: ${signo}${beneficio.toLocaleString("es-ES", {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2
-        });
-      }
+        })} ${activo.moneda}
+        (${signo}${porcentaje.toLocaleString("es-ES", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })}%)
+      </span>
+    </div>
+  `;
+}
 
-      bloque.innerHTML += `
-        <div style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.08);">
-          <strong>${activo.nombre}</strong>
-          <span style="opacity:0.7;">(${activo.ticker})</span><br>
-          <span style="color:#7dd3fc;">${precio}</span>
-        </div>
-      `;
+bloque.innerHTML += `
+  <div style="padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.08);">
+    <strong>${activo.nombre}</strong>
+    <span style="opacity:0.7;">(${activo.ticker})</span><br>
+    <span style="color:#7dd3fc; font-size:20px;">
+      ${precio} ${activo.moneda}
+    </span>
+    ${detalle}
+  </div>
+`;
     } catch (error) {
       bloque.innerHTML += `
         <div style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.08);">
