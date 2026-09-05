@@ -28,7 +28,7 @@ export async function onRequestGet(context) {
 const yahooSymbol =
   symbol === "BTC" ? "BTC-EUR" :
   symbol === "SOL" ? "SOL-EUR" :
-  symbol === "SUI" ? "SUI-EUR" :
+  symbol === "SUI" ? "SUI20947-USD" :
   symbol;
 
 if (
