@@ -39,9 +39,11 @@ if (
   symbol === "RXRX" ||
   symbol === "PATH" ||
 symbol === "UAA" ||
-
-  symbol.endsWith(".MC") ||
-  symbol.endsWith(".MI")
+symbol === "NAMM" ||
+symbol === "RKLB" ||
+symbol === "RCAT" ||
+symbol.endsWith(".MC") ||
+   symbol.endsWith(".MI")
 ) {
 
        const yahooUrl =
