@@ -42,6 +42,7 @@ symbol === "UAA" ||
 symbol === "NAMM" ||
 symbol === "RKLB" ||
 symbol === "RCAT" ||
+symbol === "IREN" ||
 symbol.endsWith(".MC") ||
    symbol.endsWith(".MI")
 ) {
