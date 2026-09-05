@@ -152,9 +152,12 @@ let precio = precioNumero.toLocaleString("es-ES", {
 
 let detalle = "";
 
-if (activo.titulos && activo.compra) {
-  const invertido = activo.titulos * activo.compra;
-  const valorActual = activo.titulos * precioNumero;
+const unidades = activo.titulos ?? activo.cantidad;
+
+if (unidades && activo.compra) {
+
+ const invertido = unidades * activo.compra;
+const valorActual = unidades * precioNumero;
   const beneficio = valorActual - invertido;
   const porcentaje = (beneficio / invertido) * 100;
 
@@ -165,7 +168,7 @@ if (activo.titulos && activo.compra) {
 
   detalle = `
     <div style="margin-top:8px; line-height:1.5; opacity:0.95;">
-      Títulos: ${activo.titulos.toLocaleString("es-ES")}<br>
+     Cantidad: ${unidades.toLocaleString("es-ES")}<br>
       Precio compra: ${activo.compra.toLocaleString("es-ES")} ${activo.moneda}<br>
       Invertido: ${invertido.toLocaleString("es-ES", {
         minimumFractionDigits: 2,
