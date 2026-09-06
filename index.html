@@ -122,7 +122,13 @@ async function cargarDatos() {
   bloque.innerHTML = "<h2>📊 Cartera en tiempo real</h2>";
 
   contenedor.appendChild(bloque);
+let totalInvertidoEUR = 0;
+let totalActualEUR = 0;
+let totalPyGEUR = 0;
 
+let totalInvertidoUSD = 0;
+let totalActualUSD = 0;
+let totalPyGUSD = 0;
   for (const activo of activos) {
     try {
       const res = await fetch(
@@ -149,9 +155,7 @@ let precio = precioNumero.toLocaleString("es-ES", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2
 });
-
 let detalle = "";
-
 const unidades = activo.titulos ?? activo.cantidad;
 
 if (unidades && activo.compra) {
@@ -159,6 +163,16 @@ if (unidades && activo.compra) {
  const invertido = unidades * activo.compra;
 const valorActual = unidades * precioNumero;
   const beneficio = valorActual - invertido;
+ if (activo.moneda === "€") {
+  totalInvertidoEUR += invertido;
+  totalActualEUR += valorActual;
+  totalPyGEUR += beneficio;
+} else if (activo.moneda === "$") {
+  totalInvertidoUSD += invertido;
+  totalActualUSD += valorActual;
+  totalPyGUSD += beneficio;
+}
+
   const porcentaje = (beneficio / invertido) * 100;
 
   const colorResultado =
@@ -213,6 +227,32 @@ bloque.innerHTML += `
     }
     await new Promise(resolve => setTimeout(resolve, 3000));
   }
+  const porcentajeEUR = totalInvertidoEUR
+  ? (totalPyGEUR / totalInvertidoEUR) * 100
+  : 0;
+
+const porcentajeUSD = totalInvertidoUSD
+  ? (totalPyGUSD / totalInvertidoUSD) * 100
+  : 0;
+
+bloque.innerHTML += `
+  <div style="margin-top:22px; padding:16px; background:#08152f; border-radius:12px;">
+    <h2>💰 Resumen de cartera</h2>
+
+    <strong>EUROS (€)</strong><br>
+    Invertido: ${totalInvertidoEUR.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} €<br>
+    Valor actual: ${totalActualEUR.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} €<br>
+    PyG: ${totalPyGEUR.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} €
+    (${porcentajeEUR.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})}%)<br><br>
+
+    <strong>DÓLARES ($)</strong><br>
+    Invertido: ${totalInvertidoUSD.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} $<br>
+    Valor actual: ${totalActualUSD.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} $<br>
+    PyG: ${totalPyGUSD.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} $
+    (${porcentajeUSD.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})}%)
+  </div>
+`;
+
 }
 
 cargarDatos();
