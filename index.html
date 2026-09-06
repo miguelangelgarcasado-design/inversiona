@@ -77,6 +77,11 @@
 </div>
       <p>Aquí aparecerán tus alertas de compra y venta.</p>
     </div>
+<div id="panelPrincipal" class="card" style="border:1px solid #0a5cff;">
+  <h2>💼 Mi cartera</h2>
+  <div id="valorCartera" style="font-size:30px;font-weight:bold;">Calculando...</div>
+  <div id="gananciaCartera" style="font-size:20px;margin-top:8px;"></div>
+</div>
 
     <div class="card">
       <h2>Cartera</h2>
@@ -242,6 +247,33 @@ const totalPyGTodoEUR =
 const porcentajeTodoEUR = totalInvertidoTodoEUR
   ? (totalPyGTodoEUR / totalInvertidoTodoEUR) * 100
   : 0;
+const valorCartera = document.getElementById("valorCartera");
+const gananciaCartera = document.getElementById("gananciaCartera");
+
+if (valorCartera && gananciaCartera) {
+  valorCartera.textContent =
+    totalActualTodoEUR.toLocaleString("es-ES", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }) + " €";
+
+  gananciaCartera.textContent =
+    (totalPyGTodoEUR >= 0 ? "+" : "") +
+    totalPyGTodoEUR.toLocaleString("es-ES", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }) +
+    " € (" +
+    (totalPyGTodoEUR >= 0 ? "+" : "") +
+    porcentajeTodoEUR.toLocaleString("es-ES", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }) +
+    "%)";
+
+  gananciaCartera.style.color =
+    totalPyGTodoEUR >= 0 ? "#86efac" : "#fca5a5";
+}
 
 
 bloque.innerHTML += `
