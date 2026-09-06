@@ -129,6 +129,9 @@ let totalPyGEUR = 0;
 let totalInvertidoUSD = 0;
 let totalActualUSD = 0;
 let totalPyGUSD = 0;
+  const cambioRes = await fetch("/api/quote?symbol=EURUSD");
+const cambioData = await cambioRes.json();
+const eurUsd = Number(cambioData.price);
   for (const activo of activos) {
     try {
       const res = await fetch(
@@ -227,13 +230,19 @@ bloque.innerHTML += `
     }
     await new Promise(resolve => setTimeout(resolve, 3000));
   }
-  const porcentajeEUR = totalInvertidoEUR
-  ? (totalPyGEUR / totalInvertidoEUR) * 100
+const totalInvertidoTodoEUR =
+  totalInvertidoEUR + (totalInvertidoUSD / eurUsd);
+
+const totalActualTodoEUR =
+  totalActualEUR + (totalActualUSD / eurUsd);
+
+const totalPyGTodoEUR =
+  totalActualTodoEUR - totalInvertidoTodoEUR;
+
+const porcentajeTodoEUR = totalInvertidoTodoEUR
+  ? (totalPyGTodoEUR / totalInvertidoTodoEUR) * 100
   : 0;
 
-const porcentajeUSD = totalInvertidoUSD
-  ? (totalPyGUSD / totalInvertidoUSD) * 100
-  : 0;
 
 bloque.innerHTML += `
   <div style="margin-top:22px; padding:16px; background:#08152f; border-radius:12px;">
@@ -248,8 +257,14 @@ bloque.innerHTML += `
     <strong>DÓLARES ($)</strong><br>
     Invertido: ${totalInvertidoUSD.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} $<br>
     Valor actual: ${totalActualUSD.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} $<br>
-    PyG: ${totalPyGUSD.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} $
-    (${porcentajeUSD.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})}%)
+    PyG: ${totalPyGUSD.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} $ 
+    (${porcentajeUSD.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})}%) 
+    <br><br>
+<strong>TOTAL CARTERA EN EUROS (€)</strong><br>
+Invertido: ${totalInvertidoTodoEUR.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} €<br>
+Valor actual: ${totalActualTodoEUR.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} €<br>
+PyG: ${totalPyGTodoEUR.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} €
+(${porcentajeTodoEUR.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})}%)
   </div>
 `;
 
