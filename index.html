@@ -251,8 +251,11 @@ bloque.innerHTML += `
 <strong>TOTAL CARTERA EN EUROS (€)</strong><br>
 Invertido: ${totalInvertidoTodoEUR.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} €<br>
 Valor actual: ${totalActualTodoEUR.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} €<br>
-PyG: ${totalPyGTodoEUR.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} €
-(${porcentajeTodoEUR.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})}%)
+<span style="color:${totalPyGTodoEUR >= 0 ? '#86efac' : '#fca5a5'}; font-size:20px; font-weight:bold;">
+PyG: ${totalPyGTodoEUR >= 0 ? '+' : ''}${totalPyGTodoEUR.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} €
+(${totalPyGTodoEUR >= 0 ? '+' : ''}${porcentajeTodoEUR.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})}%)
+</span>
+
   </div>
 `;
 
