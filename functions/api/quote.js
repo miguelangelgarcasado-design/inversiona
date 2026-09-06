@@ -26,13 +26,15 @@ export async function onRequestGet(context) {
 
     // ACCIONES EUROPEAS
 const yahooSymbol =
-  symbol === "BTC" ? "BTC-EUR" :
+  symbol === "EURUSD" ? "EURUSD=X" :
+    symbol === "BTC" ? "BTC-EUR" :
   symbol === "SOL" ? "SOL-EUR" :
   symbol === "SUI" ? "SUI20947-USD" :
   symbol;
 
 if (
   symbol === "BTC" ||
+ symbol === "EURUSD" ||
   symbol === "SOL" ||
   symbol === "SUI" ||
   symbol === "MBLY" ||
