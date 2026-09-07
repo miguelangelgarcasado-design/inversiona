@@ -65,6 +65,7 @@
 <div id="panelPrincipal" class="card" style="border:1px solid #0a5cff;">
   <h2>💼 Mi cartera</h2>
   <div id="valorCartera" style="font-size:30px;font-weight:bold;">Calculando...</div>
+  <div id="invertidoCartera" style="font-size:18px;margin-top:8px;">Total invertido: Calculando...</div>
   <div id="gananciaCartera" style="font-size:20px;margin-top:8px;"></div>
 </div>
 
@@ -224,6 +225,7 @@ const porcentajeTodoEUR = totalInvertidoTodoEUR
   ? (totalPyGTodoEUR / totalInvertidoTodoEUR) * 100
   : 0;
 const valorCartera = document.getElementById("valorCartera");
+  const invertidoCartera = document.getElementById("invertidoCartera");
 const gananciaCartera = document.getElementById("gananciaCartera");
 
 if (valorCartera && gananciaCartera) {
