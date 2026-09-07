@@ -275,20 +275,6 @@ if (valorCartera && gananciaCartera) {
     totalPyGTodoEUR >= 0 ? "#86efac" : "#fca5a5";
 }
 
-
-bloque.innerHTML += `
-  <div style="margin-top:22px; padding:16px; background:#08152f; border-radius:12px;">
-    <h2>💰 Resumen de cartera</h2>
-    
-<strong>TOTAL CARTERA EN EUROS (€)</strong><br>
-Invertido: ${totalInvertidoTodoEUR.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} €<br>
-Valor actual: ${totalActualTodoEUR.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} €<br>
-<span style="color:${totalPyGTodoEUR >= 0 ? '#86efac' : '#fca5a5'}; font-size:20px; font-weight:bold;">
-PyG: ${totalPyGTodoEUR >= 0 ? '+' : ''}${totalPyGTodoEUR.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})} €
-(${totalPyGTodoEUR >= 0 ? '+' : ''}${porcentajeTodoEUR.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})}%)
-</span>
-
-  </div>
 `;
 
 }
