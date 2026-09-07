@@ -234,6 +234,12 @@ if (valorCartera && gananciaCartera) {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }) + " €";
+invertidoCartera.textContent =
+  "Total invertido: " +
+  totalInvertidoTodoEUR.toLocaleString("es-ES", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }) + " €";
 
   gananciaCartera.textContent =
     (totalPyGTodoEUR >= 0 ? "+" : "") +
