@@ -1,4 +1,4 @@
-const CACHE_NAME = "inversionia-cache-v1";
+const CACHE_NAME = "inversionia-cache-v2";
 
 const urlsToCache = [
   "./",
