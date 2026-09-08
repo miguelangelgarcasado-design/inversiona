@@ -67,6 +67,10 @@
   <div id="valorCartera" style="font-size:30px;font-weight:bold;">Calculando...</div>
   <div id="invertidoCartera" style="font-size:18px;margin-top:8px;">Total invertido: Calculando...</div>
   <div id="gananciaCartera" style="font-size:20px;margin-top:8px;"></div>
+  <div id="resumenPosiciones" style="font-size:18px;margin-top:10px;">
+  🟢 Ganadoras: Calculando... &nbsp;&nbsp; 🔴 Perdedoras: Calculando...
+</div>
+
 </div>
 
       </div>
@@ -111,6 +115,9 @@ let totalPyGEUR = 0;
 let totalInvertidoUSD = 0;
 let totalActualUSD = 0;
 let totalPyGUSD = 0;
+  let posicionesGanadoras = 0;
+let posicionesPerdedoras = 0;
+
   const cambioRes = await fetch("/api/quote?symbol=EURUSD");
 const cambioData = await cambioRes.json();
 const eurUsd = Number(cambioData.price);
@@ -148,6 +155,12 @@ if (unidades && activo.compra) {
  const invertido = unidades * activo.compra;
 const valorActual = unidades * precioNumero;
   const beneficio = valorActual - invertido;
+  if (beneficio >= 0) {
+  posicionesGanadoras++;
+} else {
+  posicionesPerdedoras++;
+}
+
  if (activo.moneda === "€") {
   totalInvertidoEUR += invertido;
   totalActualEUR += valorActual;
@@ -227,7 +240,7 @@ const porcentajeTodoEUR = totalInvertidoTodoEUR
 const valorCartera = document.getElementById("valorCartera");
   const invertidoCartera = document.getElementById("invertidoCartera");
 const gananciaCartera = document.getElementById("gananciaCartera");
-
+const resumenPosiciones = document.getElementById("resumenPosiciones");
 if (valorCartera && gananciaCartera) {
   valorCartera.textContent =
     totalActualTodoEUR.toLocaleString("es-ES", {
@@ -257,6 +270,11 @@ invertidoCartera.textContent =
 
   gananciaCartera.style.color =
     totalPyGTodoEUR >= 0 ? "#86efac" : "#fca5a5";
+}
+if (resumenPosiciones) {
+  resumenPosiciones.innerHTML =
+    "🟢 Ganadoras: " + posicionesGanadoras +
+    "&nbsp;&nbsp;&nbsp; 🔴 Perdedoras: " + posicionesPerdedoras;
 }
 
 }
