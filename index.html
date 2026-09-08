@@ -176,10 +176,13 @@ const valorActual = unidades * precioNumero;
 
   const porcentaje = (beneficio / invertido) * 100;
  if (porcentaje >= 25) {
-  alertas.push(`🟢 ${activo.nombre}: +${porcentaje.toFixed(1)}% sobre tu precio de compra`);
+  alertas.push(`🟢 VIGILAR BENEFICIOS — ${activo.nombre}: +${porcentaje.toFixed(1)}%`);
+} else if (porcentaje <= -40) {
+  alertas.push(`🔴 RIESGO ALTO — ${activo.nombre}: ${porcentaje.toFixed(1)}%`);
 } else if (porcentaje <= -20) {
-  alertas.push(`🔴 ${activo.nombre}: ${porcentaje.toFixed(1)}% desde tu precio de compra`);
+  alertas.push(`🟠 REVISAR — ${activo.nombre}: ${porcentaje.toFixed(1)}%`);
 }
+
   const colorResultado =
     beneficio >= 0 ? "#86efac" : "#fca5a5";
 
