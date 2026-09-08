@@ -286,9 +286,10 @@ if (resumenPosiciones) {
 if (alertasDinamicas) {
   alertasDinamicas.innerHTML =
     alertas.length > 0
-      ? alertas.join("<br><br>")
-      : "<span style='opacity:0.7;'>Sin alertas destacadas ahora mismo.</span>";
+      ? "<strong>⚠️ Movimientos destacados</strong><br><br>" + alertas.join("<br><br>")
+      : "<span style='opacity:0.7;'>✅ Sin movimientos destacados ahora mismo.</span>";
 }
+
 
 }
 
