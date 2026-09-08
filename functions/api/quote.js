@@ -40,6 +40,9 @@ if (
   symbol === "MBLY" ||
   symbol === "HIMS" ||
   symbol === "TSLA" ||
+  symbol === "SWKS" ||
+  symbol === "AAPL" ||
+symbol === "ASTS" ||
   symbol === "RXRX" ||
   symbol === "PATH" ||
 symbol === "UAA" ||
