@@ -117,6 +117,8 @@ let totalActualUSD = 0;
 let totalPyGUSD = 0;
   let posicionesGanadoras = 0;
 let posicionesPerdedoras = 0;
+const alertasDinamicas = document.getElementById("alertasDinamicas");
+let alertas = [];
 
   const cambioRes = await fetch("/api/quote?symbol=EURUSD");
 const cambioData = await cambioRes.json();
@@ -155,6 +157,7 @@ if (unidades && activo.compra) {
  const invertido = unidades * activo.compra;
 const valorActual = unidades * precioNumero;
   const beneficio = valorActual - invertido;
+ 
   if (beneficio >= 0) {
   posicionesGanadoras++;
 } else {
@@ -172,7 +175,11 @@ const valorActual = unidades * precioNumero;
 }
 
   const porcentaje = (beneficio / invertido) * 100;
-
+ if (porcentaje >= 25) {
+  alertas.push(`🟢 ${activo.nombre}: +${porcentaje.toFixed(1)}% sobre tu precio de compra`);
+} else if (porcentaje <= -20) {
+  alertas.push(`🔴 ${activo.nombre}: ${porcentaje.toFixed(1)}% desde tu precio de compra`);
+}
   const colorResultado =
     beneficio >= 0 ? "#86efac" : "#fca5a5";
 
@@ -275,6 +282,12 @@ if (resumenPosiciones) {
   resumenPosiciones.innerHTML =
     "🟢 Ganadoras: " + posicionesGanadoras +
     "&nbsp;&nbsp;&nbsp; 🔴 Perdedoras: " + posicionesPerdedoras;
+}
+if (alertasDinamicas) {
+  alertasDinamicas.innerHTML =
+    alertas.length > 0
+      ? alertas.join("<br><br>")
+      : "<span style='opacity:0.7;'>Sin alertas destacadas ahora mismo.</span>";
 }
 
 }
