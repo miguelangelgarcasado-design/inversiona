@@ -29,7 +29,7 @@ const yahooSymbol =
   symbol === "EURUSD" ? "EURUSD=X" :
     symbol === "BTC" ? "BTC-EUR" :
   symbol === "SOL" ? "SOL-EUR" :
-  symbol === "SUI" ? "SUI20947-EUR" :
+  symbol === "SUI" ? "SUI20947-USD" :
   symbol;
 
 if (
@@ -82,6 +82,21 @@ symbol.endsWith(".MC") ||
         result?.meta?.regularMarketPrice ??
         result?.meta?.previousClose ??
         null;
+if (symbol === "SUI" && price) {
+  const cambioRes = await fetch(
+    "https://query1.finance.yahoo.com/v8/finance/chart/EURUSD=X?interval=1d&range=1d"
+  );
+
+  if (cambioRes.ok) {
+    const cambioData = await cambioRes.json();
+    const eurUsd =
+      cambioData?.chart?.result?.[0]?.meta?.regularMarketPrice;
+
+    if (eurUsd) {
+      price = price / eurUsd;
+    }
+  }
+}
 
       source = "Yahoo";
     }
