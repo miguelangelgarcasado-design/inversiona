@@ -1,28 +1,62 @@
-async function traducir(texto) {
-  if (!texto) return "";
+let colaTraduccion = [];
+let temporizadorTraduccion = null;
+
+async function procesarTraducciones() {
+  const lote = colaTraduccion.splice(0);
+  temporizadorTraduccion = null;
+
+  if (!lote.length) return;
+
+  const separador = "\n<<<INVERSIONIA_SEP>>>\n";
+  const textoCompleto = lote.map(x => x.texto).join(separador);
 
   try {
-    const url =
-      "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=es&dt=t&q=" +
-      encodeURIComponent(texto);
+    const res = await fetch(
+      "https://translate.googleapis.com/translate_a/single",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+        },
+        body:
+          "client=gtx&sl=en&tl=es&dt=t&q=" +
+          encodeURIComponent(textoCompleto)
+      }
+    );
 
-    const res = await fetch(url);
-
-  if (!res.ok) return "[ERROR TRADUCCION HTTP " + res.status + "]";
+    if (!res.ok) {
+      lote.forEach(x => x.resolve(x.texto));
+      return;
+    }
 
     const data = await res.json();
 
-    return data[0]
+    const traducido = data[0]
       .map(parte => parte[0])
       .join("");
+
+    const partes = traducido.split("<<<INVERSIONIA_SEP>>>");
+
+    lote.forEach((x, i) => {
+      x.resolve((partes[i] || x.texto).trim());
+    });
+
   } catch (error) {
-    return texto;
+    lote.forEach(x => x.resolve(x.texto));
   }
 }
 
+function traducir(texto) {
+  if (!texto) return Promise.resolve("");
 
+  return new Promise(resolve => {
+    colaTraduccion.push({ texto, resolve });
 
-
+    if (!temporizadorTraduccion) {
+      temporizadorTraduccion = setTimeout(procesarTraducciones, 100);
+    }
+  });
+}
 
 export async function onRequestGet(context) {
   try {
