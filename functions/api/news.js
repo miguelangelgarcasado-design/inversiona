@@ -2,30 +2,28 @@ async function traducir(texto) {
   if (!texto) return "";
 
   try {
-    const url =
-      "https://api.mymemory.translated.net/get?q=" +
-      encodeURIComponent(texto) +
-      "&langpair=en|es";
-
-    const res = await fetch(url);
+    const res = await fetch("https://translate.googleapis.com/translate_a/single", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+      },
+      body:
+        "client=gtx&sl=en&tl=es&dt=t&q=" +
+        encodeURIComponent(texto)
+    });
 
     if (!res.ok) return texto;
 
     const data = await res.json();
 
-    if (
-      data &&
-      data.responseData &&
-      data.responseData.translatedText
-    ) {
-      return data.responseData.translatedText;
-    }
-
-    return texto;
+    return data[0]
+      .map(parte => parte[0])
+      .join("");
   } catch (error) {
     return texto;
   }
 }
+
 
 
 export async function onRequestGet(context) {
