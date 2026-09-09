@@ -29,7 +29,7 @@ const yahooSymbol =
   symbol === "EURUSD" ? "EURUSD=X" :
     symbol === "BTC" ? "BTC-EUR" :
   symbol === "SOL" ? "SOL-EUR" :
-  symbol === "SUI" ? "SUI20947-USD" :
+  symbol === "SUI" ? "SUI20947-EUR" :
   symbol;
 
 if (
