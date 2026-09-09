@@ -3,8 +3,9 @@ async function traducir(texto) {
 
   try {
     const url =
-      "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=es&dt=t&q=" +
-      encodeURIComponent(texto);
+      "https://api.mymemory.translated.net/get?q=" +
+      encodeURIComponent(texto) +
+      "&langpair=en|es";
 
     const res = await fetch(url);
 
@@ -12,13 +13,20 @@ async function traducir(texto) {
 
     const data = await res.json();
 
-    return data[0]
-      .map(parte => parte[0])
-      .join("");
+    if (
+      data &&
+      data.responseData &&
+      data.responseData.translatedText
+    ) {
+      return data.responseData.translatedText;
+    }
+
+    return texto;
   } catch (error) {
     return texto;
   }
 }
+
 
 export async function onRequestGet(context) {
   try {
