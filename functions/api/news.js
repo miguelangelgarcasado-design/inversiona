@@ -2,15 +2,11 @@ async function traducir(texto) {
   if (!texto) return "";
 
   try {
-    const res = await fetch("https://translate.googleapis.com/translate_a/single", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-      },
-      body:
-        "client=gtx&sl=en&tl=es&dt=t&q=" +
-        encodeURIComponent(texto)
-    });
+    const url =
+      "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=es&dt=t&q=" +
+      encodeURIComponent(texto);
+
+    const res = await fetch(url);
 
     if (!res.ok) return texto;
 
@@ -23,6 +19,8 @@ async function traducir(texto) {
     return texto;
   }
 }
+
+
 
 
 
