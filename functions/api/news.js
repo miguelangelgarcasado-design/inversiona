@@ -8,7 +8,7 @@ async function traducir(texto) {
 
     const res = await fetch(url);
 
-    if (!res.ok) return texto;
+  if (!res.ok) return "[ERROR TRADUCCION HTTP " + res.status + "]";
 
     const data = await res.json();
 
