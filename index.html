@@ -299,7 +299,33 @@ if (alertasDinamicas) {
 
 }
 
-cargarDatos();
+async function cargarNoticias() {
+  const contenedorNoticias = document.getElementById("noticiasDinamicas");
+
+  try {
+    const res = await fetch("/api/news");
+    const data = await res.json();
+
+    if (!data.ok || !data.noticias || data.noticias.length === 0) {
+      contenedorNoticias.innerHTML = "<p>No hay noticias disponibles ahora.</p>";
+      return;
+    }
+
+    contenedorNoticias.innerHTML = data.noticias.map(n => `
+      <div style="margin-bottom:18px;">
+        <strong>${n.titular}</strong><br>
+        <span style="opacity:0.8;">${n.fuente || ""}</span>
+      </div>
+    `).join("");
+
+  } catch (error) {
+    contenedorNoticias.innerHTML = "<p>No se pudieron cargar las noticias.</p>";
+  }
+}
+
+cargarNoticias();
+
+  cargarDatos();
 </script>
 <div class="wrap">
   <div class="card">
