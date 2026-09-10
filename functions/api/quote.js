@@ -49,6 +49,7 @@ symbol === "UAA" ||
 symbol === "NAMM" ||
 symbol === "RKLB" ||
 symbol === "RCAT" ||
+symbol === "MNDY" ||  
 symbol === "IREN" ||
 symbol.endsWith(".MC") ||
    symbol.endsWith(".MI")
@@ -82,7 +83,7 @@ symbol.endsWith(".MC") ||
         result?.meta?.regularMarketPrice ??
         result?.meta?.previousClose ??
         null;
-if (symbol === "SUI" && price) {
+if ((symbol === "SUI" || symbol === "MNDY") && price) {
   const cambioRes = await fetch(
     "https://query1.finance.yahoo.com/v8/finance/chart/EURUSD=X?interval=1d&range=1d"
   );
