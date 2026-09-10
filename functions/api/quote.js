@@ -73,7 +73,7 @@ symbol.endsWith(".MC") ||
         result?.meta?.regularMarketPrice ??
         result?.meta?.previousClose ??
         null;
-if (symbol === "MNDY" && price) {
+if ((symbol === "MNDY" || symbol === "SUI") && price) {
   const cambioRes = await fetch(
     "https://query1.finance.yahoo.com/v8/finance/chart/EURUSD=X?interval=1d&range=1d"
   );
