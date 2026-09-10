@@ -10,17 +10,7 @@ export async function onRequestGet(context) {
       );
     }
 
-    const cache = caches.default;
-    const cacheKey = new Request(
-      `${url.origin}/api/quote?symbol=${encodeURIComponent(symbol)}`
-    );
-
-    const cachedResponse = await cache.match(cacheKey);
-
-    if (cachedResponse) {
-      return cachedResponse;
-    }
-
+  
     let price = null;
     let source = "";
 
@@ -165,7 +155,7 @@ if (symbol === "MNDY" && price) {
       }
     );
 
-    await cache.put(cacheKey, response.clone());
+    
 
     return response;
 
