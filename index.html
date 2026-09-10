@@ -140,6 +140,10 @@ const eurUsd = Number(cambioData.price);
       }
 
       let precioNumero = Number(item.price);
+      if (activo.ticker === "MNDY" && eurUsd) {
+  precioNumero = precioNumero / eurUsd;
+}
+
 
 if (
   item.price === null ||
