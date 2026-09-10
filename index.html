@@ -183,13 +183,16 @@ const valorActual = unidades * precioNumero;
 }
 
   const porcentaje = (beneficio / invertido) * 100;
- if (porcentaje >= 25) {
-  alertas.push(`🟢 VIGILAR BENEFICIOS — ${activo.nombre}: +${porcentaje.toFixed(1)}%`);
+if (porcentaje >= 25) {
+  alertas.push(`🔴 VENDER / RECOGER BENEFICIOS — ${activo.nombre}: +${porcentaje.toFixed(1)}%`);
+} else if (porcentaje >= 5) {
+  alertas.push(`🟢 MANTENER — ${activo.nombre}: +${porcentaje.toFixed(1)}%`);
 } else if (porcentaje <= -40) {
-  alertas.push(`🔴 RIESGO ALTO — ${activo.nombre}: ${porcentaje.toFixed(1)}%`);
+  alertas.push(`🔴 REVISAR / RIESGO ALTO — ${activo.nombre}: ${porcentaje.toFixed(1)}%`);
 } else if (porcentaje <= -20) {
   alertas.push(`🟠 REVISAR — ${activo.nombre}: ${porcentaje.toFixed(1)}%`);
 }
+
 
   const colorResultado =
     beneficio >= 0 ? "#86efac" : "#fca5a5";
