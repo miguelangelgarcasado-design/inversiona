@@ -183,7 +183,19 @@ const valorActual = unidades * precioNumero;
 }
 
   const porcentaje = (beneficio / invertido) * 100;
-if (porcentaje >= 25) {
+if (activo.ticker === "IREN") {
+  if (precioNumero >= 78) {
+    alertas.push(`🔴 VENDER / RECOGER BENEFICIOS — IREN: ${precioNumero.toFixed(2)} $`);
+  } else if (precioNumero <= 29.90) {
+    alertas.push(`🔴 REVISAR / STOP — IREN: ${precioNumero.toFixed(2)} $`);
+  } else if (precioNumero <= 31.50) {
+    alertas.push(`🟢 ZONA DE COMPRA FUERTE — IREN: ${precioNumero.toFixed(2)} $`);
+  } else if (precioNumero <= 33.50) {
+    alertas.push(`🟢 ZONA DE COMPRA — IREN: ${precioNumero.toFixed(2)} $`);
+  } else {
+    alertas.push(`🟢 MANTENER — IREN: ${precioNumero.toFixed(2)} $`);
+  }
+} else if (porcentaje >= 25) {
   alertas.push(`🔴 VENDER / RECOGER BENEFICIOS — ${activo.nombre}: +${porcentaje.toFixed(1)}%`);
 } else if (porcentaje >= 5) {
   alertas.push(`🟢 MANTENER — ${activo.nombre}: +${porcentaje.toFixed(1)}%`);
@@ -192,6 +204,7 @@ if (porcentaje >= 25) {
 } else if (porcentaje <= -20) {
   alertas.push(`🟠 REVISAR — ${activo.nombre}: ${porcentaje.toFixed(1)}%`);
 }
+
 
 
   const colorResultado =
