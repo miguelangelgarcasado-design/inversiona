@@ -140,9 +140,7 @@ const eurUsd = Number(cambioData.price);
       }
 
       let precioNumero = Number(item.price);
-      if (activo.ticker === "MNDY" && eurUsd) {
-  precioNumero = precioNumero / eurUsd;
-}
+      
 
 
 if (
@@ -356,7 +354,7 @@ async function cargarNoticias() {
 
 cargarNoticias();
 
-  cargarDatos();
+  setTimeout(() => cargarDatos(), 1000);
 </script>
 <div class="wrap">
   <div class="card">
