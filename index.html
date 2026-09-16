@@ -130,7 +130,7 @@ const eurUsd = Number(cambioData.price);
   for (const activo of activos) {
     try {
       const res = await fetch(
-      `/api/quote?symbol=${encodeURIComponent(activo.ticker)}`
+    `/api/quote?symbol=${encodeURIComponent(activo.ticker)}&v=${Date.now()}`
               );
 
       const item = await res.json();
