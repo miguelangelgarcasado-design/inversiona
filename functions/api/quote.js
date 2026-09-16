@@ -150,7 +150,8 @@ if ((symbol === "MNDY" || symbol === "SUI") && price) {
       },
       {
         headers: {
-          "Cache-Control": "public, max-age=60"
+        "Cache-Control": "no-store"
+
         }
       }
     );
