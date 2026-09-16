@@ -124,7 +124,7 @@ let posicionesPerdedoras = 0;
 const alertasDinamicas = document.getElementById("alertasDinamicas");
 let alertas = [];
 
-  const cambioRes = await fetch("/api/quote?symbol=EURUSD");
+ const cambioRes = await fetch("/api/quote?symbol=EURUSD&v=" + Date.now());
 const cambioData = await cambioRes.json();
 const eurUsd = Number(cambioData.price);
   for (const activo of activos) {
