@@ -12,7 +12,7 @@ async function procesarTraducciones() {
 
   try {
     const res = await fetch(
-      "https://translate.googleapis.com/translate_a/single",
+    "https://translate.googleapis.com/translate_a/t?client=gtx&sl=en&tl=es&dt=t",
       {
         method: "POST",
         headers: {
