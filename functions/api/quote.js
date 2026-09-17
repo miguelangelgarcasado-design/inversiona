@@ -76,7 +76,7 @@ export async function onRequestGet(context) {
         yahooData?.chart?.result?.[0]?.meta?.previousClose ??
         null;
 
-      source = "Yahoo-v3;
+      source = "Yahoo-v3";
 
       // SUI y monday.com llegan de Yahoo en USD.
       // Los convertimos a EUR porque en la cartera se muestran en euros.
