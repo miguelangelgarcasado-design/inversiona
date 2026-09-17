@@ -11,7 +11,7 @@ export async function onRequestGet(context) {
     }
 
     let price = null;
-    let source = "";
+   let source = "v2";
 
     // Símbolos especiales de Yahoo Finance
     const yahooSymbol =
