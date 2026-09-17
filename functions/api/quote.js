@@ -19,6 +19,7 @@ export async function onRequestGet(context) {
       symbol === "BTC" ? "BTC-EUR" :
       symbol === "SOL" ? "SOL-EUR" :
       symbol === "SUI" ? "SUI20947-USD" :
+      symbol === "MNDY" ? "MNDY" :
       symbol;
 
     // Activos que consultamos mediante Yahoo Finance
@@ -100,6 +101,7 @@ export async function onRequestGet(context) {
 
           if (eurUsd) {
             price = Number(price) / Number(eurUsd);
+            source = "Yahoo-v4-EUR";
           }
         }
       }
