@@ -1,472 +1,186 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InversiónIA</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0a5cff">
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(180deg, #08102a, #0b1220);
-      color: white;
-    }
-
-    header {
-      background: #0a5cff;
-      padding: 18px;
-      text-align: center;
-      font-size: 28px;
-      font-weight: bold;
-    }
-
-    .wrap {
-      padding: 20px;
-      max-width: 900px;
-      margin: auto;
-    }
-
-    .card {
-      background: #0f1b3a;
-      border-radius: 14px;
-      padding: 20px;
-      margin: 16px 0;
-      box-shadow: 0 4px 12px rgba(0,0,0,.25);
-    }
-
-    h2 {
-      margin-top: 0;
-      color: #7fb3ff;
-    }
-
-    .precio {
-      color: #7dd3fc;
-      font-size: 20px;
-    }
-
-    .positivo {
-      color: #86efac;
-      font-weight: bold;
-    }
-
-    .negativo {
-      color: #fca5a5;
-      font-weight: bold;
-    }
-
-    .activo {
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      line-height: 1.5;
-    }
-
-    .muted {
-      opacity: .7;
-    }
-  </style>
-</head>
-
-<body>
-
-<header>InversiónIA</header>
-
-<div class="wrap">
-
-  <div class="card">
-    <h2>📰 Noticias del mercado</h2>
-    <div id="noticiasDinamicas">
-      <span class="muted">Cargando noticias...</span>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>Alertas</h2>
-    <div id="alertasDinamicas">
-      <span class="muted">Cargando alertas...</span>
-    </div>
-  </div>
-
-  <div id="panelPrincipal" class="card" style="border:1px solid #0a5cff;">
-    <h2>💼 Mi cartera</h2>
-
-    <div id="valorCartera"
-         style="font-size:30px;font-weight:bold;">
-      Calculando...
-    </div>
-
-    <div id="invertidoCartera"
-         style="font-size:18px;margin-top:8px;">
-      Total invertido: Calculando...
-    </div>
-
-    <div id="gananciaCartera"
-         style="font-size:20px;margin-top:8px;">
-    </div>
-
-    <div id="resumenPosiciones"
-         style="font-size:18px;margin-top:10px;">
-      🟢 Ganadoras: Calculando...
-      &nbsp;&nbsp;&nbsp;
-      🔴 Perdedoras: Calculando...
-    </div>
-  </div>
-
-  <div id="carteraTiempoReal" class="card">
-    <h2>📊 Cartera en tiempo real</h2>
-    <div id="listaActivos">
-      <span class="muted">Cargando cotizaciones...</span>
-    </div>
-  </div>
-
-</div>
-
-<script>
-const activos = [
-  { nombre: "Leonardo", ticker: "LDO.MI", titulos: 23.607176, compra: 42.46, moneda: "€" },
-  { nombre: "IREN", ticker: "IREN", titulos: 185, compra: 37.561, moneda: "$" },
-  { nombre: "OHL", ticker: "OHLA.MC", titulos: 10485, compra: 0.3377, moneda: "€" },
-  { nombre: "Audax Renovables", ticker: "ADX.MC", titulos: 802, compra: 1.8740, moneda: "€" },
-  { nombre: "Namib Minerals", ticker: "NAMM", titulos: 535, compra: 1.40, moneda: "$" },
-  { nombre: "Rocket Lab", ticker: "RKLB", titulos: 9, compra: 119.57, moneda: "$" },
-  { nombre: "AST SpaceMobile", ticker: "ASTS", titulos: 9, compra: 106.00, moneda: "$" },
-  { nombre: "eDreams", ticker: "EDR.MC", titulos: 601, compra: 3.33, moneda: "€" },
-  { nombre: "Amper", ticker: "AMP.MC", titulos: 492, compra: 3.247, moneda: "€" },
-  { nombre: "Apple", ticker: "AAPL", titulos: 26, compra: 185.81, moneda: "$" },
-  { nombre: "UiPath", ticker: "PATH", titulos: 160, compra: 12.50, moneda: "$" },
-  { nombre: "Under Armour", ticker: "UAA", titulos: 384, compra: 5.01, moneda: "$" },
-  { nombre: "Mobileye", ticker: "MBLY", titulos: 213, compra: 7.50, moneda: "$" },
-  { nombre: "Hims & Hers", ticker: "HIMS", titulos: 60, compra: 25.00, moneda: "$" },
-  { nombre: "Tesla", ticker: "TSLA", titulos: 4, compra: 327.79, moneda: "$" },
-  { nombre: "Skyworks Solutions", ticker: "SWKS", titulos: 17, compra: 55.00, moneda: "$" },
-  { nombre: "Recursion Pharmaceuticals", ticker: "RXRX", titulos: 344, compra: 2.90, moneda: "$" },
-  { nombre: "Red Cat Holdings", ticker: "RCAT", titulos: 125, compra: 8.00, moneda: "$" },
-  { nombre: "Grifols Clase B", ticker: "GRF-P.MC", titulos: 128, compra: 7.80, moneda: "€" },
-  { nombre: "Cellnex", ticker: "CLNX.MC", titulos: 30, compra: 32.50, moneda: "€" },
-  { nombre: "monday.com", ticker: "MNDY", titulos: 28, compra: 71.80, moneda: "€" },
-  { nombre: "Bitcoin", ticker: "BTC", cantidad: 0.01230506, compra: 73953, moneda: "€", tipo: "crypto" },
-  { nombre: "Solana", ticker: "SOL", cantidad: 1.824239351, compra: 137.04, moneda: "€", tipo: "crypto" },
-  { nombre: "SUI", ticker: "SUI", cantidad: 49.559011098, compra: 4.04, moneda: "€", tipo: "crypto" }
-];
-
-function formatoNumero(numero, decimales = 2) {
-  return Number(numero).toLocaleString("es-ES", {
-    minimumFractionDigits: decimales,
-    maximumFractionDigits: decimales
-  });
-}
-
-async function obtenerPrecio(ticker) {
-  const res = await fetch(
-    "/api/quote?symbol=" + encodeURIComponent(ticker),
-    { cache: "no-store" }
-  );
-
-  if (!res.ok) {
-    throw new Error("Error HTTP " + res.status);
-  }
-
-  const data = await res.json();
-  const precio = Number(data.price);
-
-  if (!Number.isFinite(precio) || precio <= 0) {
-    throw new Error("Precio no disponible");
-  }
-
-  return precio;
-}
-
-async function cargarDatos() {
-  const lista = document.getElementById("listaActivos");
-  const alertasDinamicas = document.getElementById("alertasDinamicas");
-
-  lista.innerHTML = "";
-
-  let eurUsd = 1;
-
+export async function onRequestGet(context) {
   try {
-    eurUsd = await obtenerPrecio("EURUSD");
+    const url = new URL(context.request.url);
+    const symbol = url.searchParams.get("symbol");
 
-    if (!Number.isFinite(eurUsd) || eurUsd <= 0) {
-      eurUsd = 1;
+    if (!symbol) {
+      return Response.json(
+        { error: "Falta symbol" },
+        { status: 400 }
+      );
     }
-  } catch (error) {
-    console.error("No se pudo obtener EUR/USD", error);
-    eurUsd = 1;
-  }
 
-  let totalInvertidoEUR = 0;
-  let totalActualEUR = 0;
-  let posicionesGanadoras = 0;
-  let posicionesPerdedoras = 0;
-  let posicionesCalculadas = 0;
+    let price = null;
+    let source = "";
 
-  const alertas = [];
+    // Símbolos especiales de Yahoo Finance
+    const yahooSymbol =
+      symbol === "EURUSD" ? "EURUSD=X" :
+      symbol === "BTC" ? "BTC-EUR" :
+      symbol === "SOL" ? "SOL-EUR" :
+      symbol === "SUI" ? "SUI20947-USD" :
+      symbol;
 
-  for (const activo of activos) {
-    const div = document.createElement("div");
-    div.className = "activo";
+    // Activos que consultamos mediante Yahoo Finance
+    const useYahoo =
+      symbol === "BTC" ||
+      symbol === "EURUSD" ||
+      symbol === "SOL" ||
+      symbol === "SUI" ||
+      symbol === "MBLY" ||
+      symbol === "HIMS" ||
+      symbol === "TSLA" ||
+      symbol === "SWKS" ||
+      symbol === "AAPL" ||
+      symbol === "ASTS" ||
+      symbol === "RXRX" ||
+      symbol === "PATH" ||
+      symbol === "UAA" ||
+      symbol === "NAMM" ||
+      symbol === "RKLB" ||
+      symbol === "RCAT" ||
+      symbol === "MNDY" ||
+      symbol === "IREN" ||
+      symbol.endsWith(".MC") ||
+      symbol.endsWith(".MI");
 
-    try {
-      const precioNumero = await obtenerPrecio(activo.ticker);
-      const unidades = activo.titulos ?? activo.cantidad;
+    if (useYahoo) {
+      const yahooUrl =
+        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?interval=1d&range=1d`;
 
-      const invertido = unidades * activo.compra;
-      const valorActual = unidades * precioNumero;
-      const beneficio = valorActual - invertido;
-      const porcentaje = invertido !== 0
-        ? (beneficio / invertido) * 100
-        : 0;
+      const yahooRes = await fetch(yahooUrl, {
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          "Accept": "application/json"
+        }
+      });
 
-      posicionesCalculadas++;
-
-      if (beneficio >= 0) {
-        posicionesGanadoras++;
-      } else {
-        posicionesPerdedoras++;
+      if (!yahooRes.ok) {
+        return Response.json(
+          {
+            error: "Error al consultar Yahoo Finance",
+            status: yahooRes.status,
+            symbol
+          },
+          {
+            status: 502,
+            headers: { "Cache-Control": "no-store" }
+          }
+        );
       }
 
-      let invertidoEUR = invertido;
-      let actualEUR = valorActual;
+      const yahooData = await yahooRes.json();
 
-      if (activo.moneda === "$") {
-        invertidoEUR = invertido / eurUsd;
-        actualEUR = valorActual / eurUsd;
-      }
+      price =
+        yahooData?.chart?.result?.[0]?.meta?.regularMarketPrice ??
+        yahooData?.chart?.result?.[0]?.meta?.previousClose ??
+        null;
 
-      totalInvertidoEUR += invertidoEUR;
-      totalActualEUR += actualEUR;
+      source = "Yahoo";
 
-      if (activo.ticker === "IREN") {
-        if (precioNumero >= 78) {
-          alertas.push(
-            "🔴 IREN: zona de recogida de beneficios — " +
-            formatoNumero(precioNumero) + " $"
-          );
-        } else if (precioNumero <= 29.90) {
-          alertas.push(
-            "🔴 IREN: revisar nivel de riesgo — " +
-            formatoNumero(precioNumero) + " $"
-          );
-        } else if (precioNumero <= 31.50) {
-          alertas.push(
-            "🟢 IREN: zona de compra fuerte — " +
-            formatoNumero(precioNumero) + " $"
-          );
-        } else if (precioNumero <= 33.50) {
-          alertas.push(
-            "🟢 IREN: zona de compra — " +
-            formatoNumero(precioNumero) + " $"
-          );
+      // SUI y monday.com llegan de Yahoo en USD.
+      // Los convertimos a EUR porque en la cartera se muestran en euros.
+      if ((symbol === "SUI" || symbol === "MNDY") && price) {
+        const cambioRes = await fetch(
+          "https://query1.finance.yahoo.com/v8/finance/chart/EURUSD=X?interval=1d&range=1d",
+          {
+            headers: {
+              "User-Agent": "Mozilla/5.0",
+              "Accept": "application/json"
+            }
+          }
+        );
+
+        if (cambioRes.ok) {
+          const cambioData = await cambioRes.json();
+
+          const eurUsd =
+            cambioData?.chart?.result?.[0]?.meta?.regularMarketPrice ??
+            cambioData?.chart?.result?.[0]?.meta?.previousClose;
+
+          if (eurUsd) {
+            price = Number(price) / Number(eurUsd);
+          }
         }
       }
+    } else {
+      // Resto de acciones estadounidenses: Finnhub
+      const apiKey = context.env.FINNHUB_API_KEY;
 
-      if (activo.ticker === "LDO.MI") {
-        if (precioNumero >= 60) {
-          alertas.push(
-            "🔴 Leonardo: zona de recogida de beneficios — " +
-            formatoNumero(precioNumero) + " €"
-          );
-        } else if (precioNumero <= 42) {
-          alertas.push(
-            "🟢 Leonardo: zona de compra — " +
-            formatoNumero(precioNumero) + " €"
-          );
-        }
+      if (!apiKey) {
+        return Response.json(
+          { error: "Falta FINNHUB_API_KEY" },
+          {
+            status: 500,
+            headers: { "Cache-Control": "no-store" }
+          }
+        );
       }
 
-      const color =
-        beneficio >= 0 ? "#86efac" : "#fca5a5";
+      const finnhubUrl =
+        `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${encodeURIComponent(apiKey)}`;
 
-      const signo =
-        beneficio >= 0 ? "+" : "";
+      const finnhubRes = await fetch(finnhubUrl);
 
-      div.innerHTML = `
-        <strong>${activo.nombre}</strong>
-        <span class="muted"> (${activo.ticker})</span><br>
+      if (!finnhubRes.ok) {
+        return Response.json(
+          {
+            error: "Error al consultar Finnhub",
+            status: finnhubRes.status,
+            symbol
+          },
+          {
+            status: 502,
+            headers: { "Cache-Control": "no-store" }
+          }
+        );
+      }
 
-        <span class="precio">
-          ${formatoNumero(precioNumero)} ${activo.moneda}
-        </span>
+      const finnhubData = await finnhubRes.json();
 
-        <div style="margin-top:8px;">
-          Cantidad: ${unidades.toLocaleString("es-ES")}<br>
-          Precio compra: ${formatoNumero(activo.compra)} ${activo.moneda}<br>
-          Invertido: ${formatoNumero(invertido)} ${activo.moneda}<br>
-          Valor actual: ${formatoNumero(valorActual)} ${activo.moneda}<br>
-
-          <span style="color:${color};font-weight:bold;">
-            PyG: ${signo}${formatoNumero(beneficio)} ${activo.moneda}
-            (${signo}${formatoNumero(porcentaje)}%)
-          </span>
-        </div>
-      `;
-
-    } catch (error) {
-      console.error("Error en " + activo.ticker, error);
-
-      div.innerHTML = `
-        <strong>${activo.nombre}</strong>
-        <span class="muted"> (${activo.ticker})</span><br>
-        <span class="negativo">Sin datos</span>
-      `;
+      price = finnhubData?.c || null;
+      source = "Finnhub";
     }
 
-    lista.appendChild(div);
-  }
+    if (price === null || price === undefined || Number(price) <= 0) {
+      return Response.json(
+        {
+          error: "Sin cotización disponible",
+          symbol
+        },
+        {
+          status: 404,
+          headers: { "Cache-Control": "no-store" }
+        }
+      );
+    }
 
-  const totalPyGEUR =
-    totalActualEUR - totalInvertidoEUR;
-
-  const porcentajeTotal =
-    totalInvertidoEUR !== 0
-      ? (totalPyGEUR / totalInvertidoEUR) * 100
-      : 0;
-
-  const valorCartera =
-    document.getElementById("valorCartera");
-
-  const invertidoCartera =
-    document.getElementById("invertidoCartera");
-
-  const gananciaCartera =
-    document.getElementById("gananciaCartera");
-
-  const resumenPosiciones =
-    document.getElementById("resumenPosiciones");
-
-  valorCartera.textContent =
-    formatoNumero(totalActualEUR) + " €";
-
-  invertidoCartera.textContent =
-    "Total invertido: " +
-    formatoNumero(totalInvertidoEUR) +
-    " €";
-
-  const signoTotal =
-    totalPyGEUR >= 0 ? "+" : "";
-
-  gananciaCartera.textContent =
-    signoTotal +
-    formatoNumero(totalPyGEUR) +
-    " € (" +
-    signoTotal +
-    formatoNumero(porcentajeTotal) +
-    "%)";
-
-  gananciaCartera.style.color =
-    totalPyGEUR >= 0
-      ? "#86efac"
-      : "#fca5a5";
-
-  resumenPosiciones.innerHTML =
-    "🟢 Ganadoras: " +
-    posicionesGanadoras +
-    "&nbsp;&nbsp;&nbsp; 🔴 Perdedoras: " +
-    posicionesPerdedoras +
-    "<br><span class='muted'>Posiciones calculadas: " +
-    posicionesCalculadas +
-    " de " +
-    activos.length +
-    "</span>";
-
-  if (alertas.length > 0) {
-    alertasDinamicas.innerHTML =
-      "<strong>⚠️ Movimientos destacados</strong><br><br>" +
-      alertas.join("<br><br>");
-  } else {
-    alertasDinamicas.innerHTML =
-      "<span class='muted'>✅ Sin movimientos destacados ahora mismo.</span>";
-  }
-}
-
-async function cargarNoticias() {
-  const contenedor =
-    document.getElementById("noticiasDinamicas");
-
-  try {
-    const res = await fetch(
-      "/api/news",
-      { cache: "no-store" }
+    return Response.json(
+      {
+        symbol,
+        price: Number(price),
+        source
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store"
+        }
+      }
     );
 
-    if (!res.ok) {
-      throw new Error("Error HTTP " + res.status);
-    }
-
-    const data = await res.json();
-
-    if (
-      !data.ok ||
-      !Array.isArray(data.noticias) ||
-      data.noticias.length === 0
-    ) {
-      contenedor.innerHTML =
-        "<p>No hay noticias disponibles ahora.</p>";
-      return;
-    }
-
-    contenedor.innerHTML =
-      data.noticias.map(n => `
-        <div style="margin-bottom:18px;">
-          <strong>${n.titular || ""}</strong><br>
-          <span class="muted">${n.fuente || ""}</span>
-        </div>
-      `).join("");
-
   } catch (error) {
-    console.error("Error cargando noticias", error);
-
-    contenedor.innerHTML =
-      "<p>No se pudieron cargar las noticias.</p>";
+    return Response.json(
+      {
+        error: "Error interno",
+        detail: String(error)
+      },
+      {
+        status: 500,
+        headers: {
+          "Cache-Control": "no-store"
+        }
+      }
+    );
   }
 }
-
-cargarNoticias();
-cargarDatos();
-</script>
-
-<div class="wrap">
-  <div class="card">
-    <h2>📈 Gráfico profesional</h2>
-
-    <div
-      class="tradingview-widget-container"
-      style="height:520px;width:100%;"
-    >
-      <div
-        class="tradingview-widget-container__widget"
-        style="height:100%;width:100%;"
-      ></div>
-
-      <script
-        type="text/javascript"
-        src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
-        async
-      >
-      {
-        "autosize": true,
-        "symbol": "NASDAQ:AAPL",
-        "interval": "D",
-        "timezone": "Europe/Madrid",
-        "theme": "dark",
-        "style": "1",
-        "locale": "es",
-        "allow_symbol_change": true,
-        "calendar": false,
-        "support_host": "https://www.tradingview.com"
-      }
-      </script>
-    </div>
-  </div>
-</div>
-
-</body>
-</html>
 
