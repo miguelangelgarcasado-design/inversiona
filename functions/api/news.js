@@ -1,7 +1,7 @@
 export async function onRequestGet() {
   try {
     const response = await fetch(
-      "https://query1.finance.yahoo.com/v1/finance/search?q=stock%20market&quotesCount=0&newsCount=8&lang=es-ES&region=ES",
+      "https://query1.finance.yahoo.com/v1/finance/search?q=bolsa%20mercados%20acciones&quotesCount=0&newsCount=20&lang=es-ES&region=ES",
           {
         headers: {
           "User-Agent": "Mozilla/5.0"
