@@ -1,25 +1,24 @@
 export async function onRequestGet() {
   try {
-    const rssUrl =
-      "https://news.google.com/rss/search?q=bolsa%20OR%20IBEX%20OR%20Wall%20Street%20OR%20mercados%20financieros&hl=es&gl=ES&ceid=ES:es";
+    const url =
+      "https://feeds.bbci.co.uk/mundo/topics/cyx5krnw38vt/rss.xml";
 
-    const response = await fetch(rssUrl, {
+    const response = await fetch(url, {
       headers: {
         "User-Agent": "Mozilla/5.0"
       }
     });
 
     if (!response.ok) {
-    throw new Error("Google News HTTP " + response.status);
+      throw new Error("Noticias HTTP " + response.status);
     }
 
     const xml = await response.text();
-
     const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
 
-    const limpiar = texto =>
+    const limpiar = (texto = "") =>
       texto
-        .replace(/<!\[CDATA\[|\]\]>/g, "")
+        .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
         .replace(/&amp;/g, "&")
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, "'")
@@ -39,14 +38,10 @@ export async function onRequestGet() {
       const fecha =
         bloque.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || "";
 
-      const fuente =
-        bloque.match(/<source[^>]*>([\s\S]*?)<\/source>/)?.[1] ||
-        "Google News";
-
       return {
         titular: limpiar(titulo),
         resumen: "",
-        fuente: limpiar(fuente),
+        fuente: "BBC Mundo",
         url: limpiar(enlace),
         fecha
       };
@@ -60,7 +55,7 @@ export async function onRequestGet() {
   } catch (error) {
     return Response.json({
       ok: false,
-     error: error.message || "No se pudieron cargar las noticias",
+      error: error.message,
       noticias: []
     });
   }
