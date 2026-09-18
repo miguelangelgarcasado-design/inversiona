@@ -1,8 +1,7 @@
 export async function onRequestGet() {
   try {
     const url =
-    "https://feeds.bbci.co.uk/mundo/topics/c06gq9v4xp3t/rss.xml";
-
+"https://feeds.bbci.co.uk/mundo/topics/cyx5krnw38vt/rss.xml";
     const response = await fetch(url, {
       headers: {
         "User-Agent": "Mozilla/5.0"
