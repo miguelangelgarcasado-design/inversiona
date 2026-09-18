@@ -60,7 +60,7 @@ export async function onRequestGet() {
   } catch (error) {
     return Response.json({
       ok: false,
-      error: "No se pudieron cargar las noticias",
+     error: error.message || "No se pudieron cargar las noticias",
       noticias: []
     });
   }
