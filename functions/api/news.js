@@ -1,50 +1,56 @@
 export async function onRequestGet() {
   try {
-    const consultas = [
-      "bolsa mercados acciones",
-      "economía mercados financieros",
-      "Wall Street bolsa"
-    ];
+    const rssUrl =
+      "https://news.google.com/rss/search?q=bolsa%20OR%20IBEX%20OR%20Wall%20Street%20OR%20mercados%20financieros&hl=es&gl=ES&ceid=ES:es";
 
-    let noticias = [];
+    const response = await fetch(rssUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      }
+    });
 
-    for (const consulta of consultas) {
-      const response = await fetch(
-        `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(consulta)}&quotesCount=0&newsCount=10&lang=es-ES&region=ES`,
-        {
-          headers: {
-            "User-Agent": "Mozilla/5.0"
-          }
-        }
-      );
-
-      if (!response.ok) continue;
-
-      const data = await response.json();
-
-      const nuevas = (data.news || []).map(n => ({
-        titular: n.title || "",
-        resumen: "",
-        fuente: n.publisher || "Yahoo Finance",
-        url: n.link || "",
-        fecha: n.providerPublishTime || 0
-      }));
-
-      noticias.push(...nuevas);
+    if (!response.ok) {
+      throw new Error("Error al obtener noticias");
     }
 
-    // Eliminar noticias duplicadas
-    noticias = noticias.filter(
-      (noticia, index, self) =>
-        noticia.url &&
-        index === self.findIndex(n => n.url === noticia.url)
-    );
+    const xml = await response.text();
 
-    // Más recientes primero
-    noticias.sort((a, b) => b.fecha - a.fecha);
+    const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
 
-    // Mostrar las 8 más recientes
-    noticias = noticias.slice(0, 8);
+    const limpiar = texto =>
+      texto
+        .replace(/<!\[CDATA\[|\]\]>/g, "")
+        .replace(/&amp;/g, "&")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .trim();
+
+    const noticias = items.slice(0, 8).map(item => {
+      const bloque = item[1];
+
+      const titulo =
+        bloque.match(/<title>([\s\S]*?)<\/title>/)?.[1] || "";
+
+      const enlace =
+        bloque.match(/<link>([\s\S]*?)<\/link>/)?.[1] || "";
+
+      const fecha =
+        bloque.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || "";
+
+      const fuente =
+        bloque.match(/<source[^>]*>([\s\S]*?)<\/source>/)?.[1] ||
+        "Google News";
+
+      return {
+        titular: limpiar(titulo),
+        resumen: "",
+        fuente: limpiar(fuente),
+        url: limpiar(enlace),
+        fecha
+      };
+    });
 
     return Response.json({
       ok: true,
