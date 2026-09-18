@@ -10,7 +10,7 @@ export async function onRequestGet() {
     });
 
     if (!response.ok) {
-      throw new Error("Error al obtener noticias");
+    throw new Error("Google News HTTP " + response.status);
     }
 
     const xml = await response.text();
