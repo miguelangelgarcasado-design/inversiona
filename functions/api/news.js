@@ -40,7 +40,7 @@ export async function onRequestGet() {
       return {
         titular: limpiar(titulo),
         resumen: "",
-        fuente: "BBC Mundo",
+        fuente: "Cinco Dias",
         url: limpiar(enlace),
         fecha
       };
