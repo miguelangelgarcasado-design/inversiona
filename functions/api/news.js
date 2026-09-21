@@ -1,7 +1,7 @@
 export async function onRequestGet() {
   try {
     const url =
-"https://feeds.bbci.co.uk/mundo/topics/cyx5krnw38vt/rss.xml";
+https://feeds.elpais.com/mrss-s/list/ep/site/cincodias.elpais.com/section/mercados-financieros";
     const response = await fetch(url, {
       headers: {
         "User-Agent": "Mozilla/5.0"
