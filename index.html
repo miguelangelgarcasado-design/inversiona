@@ -354,6 +354,86 @@ if (activo.ticker === "EDR.MC") {
     alertas.push("🟢 eDreams: zona de compra - " + formatoNumero(precioNumero) + " €");
   }
 }
+if (activo.ticker === "RKLB") {
+  if (precioNumero >= 150) {
+    alertas.push("🔴 Rocket Lab: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
+  } else if (precioNumero <= 90) {
+    alertas.push("🟢 Rocket Lab: zona de compra - " + formatoNumero(precioNumero) + " $");
+  }
+}
+
+if (activo.ticker === "ASTS") {
+  if (precioNumero >= 140) {
+    alertas.push("🔴 AST SpaceMobile: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
+  } else if (precioNumero <= 80) {
+    alertas.push("🟢 AST SpaceMobile: zona de compra - " + formatoNumero(precioNumero) + " $");
+  }
+}
+
+if (activo.ticker === "RXRX") {
+  if (precioNumero >= 5) {
+    alertas.push("🔴 Recursion: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
+  } else if (precioNumero <= 2.50) {
+    alertas.push("🟢 Recursion: zona de compra - " + formatoNumero(precioNumero) + " $");
+  }
+}
+
+if (activo.ticker === "AAPL") {
+  if (precioNumero >= 300) {
+    alertas.push("🔴 Apple: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
+  } else if (precioNumero <= 220) {
+    alertas.push("🟢 Apple: zona de compra - " + formatoNumero(precioNumero) + " $");
+  }
+}
+
+if (activo.ticker === "TSLA") {
+  if (precioNumero >= 500) {
+    alertas.push("🔴 Tesla: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
+  } else if (precioNumero <= 280) {
+    alertas.push("🟢 Tesla: zona de compra - " + formatoNumero(precioNumero) + " $");
+  }
+}
+
+if (activo.ticker === "HIMS") {
+  if (precioNumero >= 45) {
+    alertas.push("🔴 Hims & Hers: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
+  } else if (precioNumero <= 25) {
+    alertas.push("🟢 Hims & Hers: zona de compra - " + formatoNumero(precioNumero) + " $");
+  }
+}
+
+if (activo.ticker === "MBLY") {
+  if (precioNumero >= 15) {
+    alertas.push("🔴 Mobileye: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
+  } else if (precioNumero <= 7) {
+    alertas.push("🟢 Mobileye: zona de compra - " + formatoNumero(precioNumero) + " $");
+  }
+}
+
+if (activo.ticker === "UAA") {
+  if (precioNumero >= 8) {
+    alertas.push("🔴 Under Armour: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
+  } else if (precioNumero <= 4.50) {
+    alertas.push("🟢 Under Armour: zona de compra - " + formatoNumero(precioNumero) + " $");
+  }
+}
+
+if (activo.ticker === "PATH") {
+  if (precioNumero >= 20) {
+    alertas.push("🔴 UiPath: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
+  } else if (precioNumero <= 10) {
+    alertas.push("🟢 UiPath: zona de compra - " + formatoNumero(precioNumero) + " $");
+  }
+}
+
+if (activo.ticker === "CLNX.MC") {
+  if (precioNumero >= 40) {
+    alertas.push("🔴 Cellnex: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " €");
+  } else if (precioNumero <= 27) {
+    alertas.push("🟢 Cellnex: zona de compra - " + formatoNumero(precioNumero) + " €");
+  }
+}
+
 
     } catch (error) {
       console.error("Error en " + activo.ticker, error);
