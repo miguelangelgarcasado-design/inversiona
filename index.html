@@ -128,6 +128,30 @@
 </div>
 
 <script>
+  const reglas = {
+  "LDO.MI":  { compra: 42, venta: 60 },
+  "IREN":    { compra: 33.50, venta: 78 },
+  "OHLA.MC": { compra: 0.30, venta: 0.50 },
+  "ADX.MC":  { compra: 1.50, venta: 2.50 },
+  "NAMM":    { compra: 1.00, venta: 1.40 },
+  "RKLB":    { compra: 70, venta: 120 },
+  "ASTS":    { compra: 62, venta: 106 },
+  "EDR.MC":  { compra: 3.50, venta: 9 },
+  "AMP.MC":  { compra: 3.25, venta: 5 },
+  "AAPL":    { compra: 250, venta: 330 },
+  "PATH":    { compra: 10, venta: 20 },
+  "UAA":     { compra: 4.50, venta: 8 },
+  "MBLY":    { compra: 7, venta: 15 },
+  "HIMS":    { compra: 25, venta: 45 },
+  "TSLA":    { compra: 300, venta: 450 },
+  "SWKS":    { compra: 55, venta: 90 },
+  "RXRX":    { compra: 2.50, venta: 6 },
+  "RCAT":    { compra: 6, venta: 12 },
+  "GRF-P.MC":{ compra: 7, venta: 12 },
+  "CLNX.MC": { compra: 27, venta: 40 },
+  "MNDY":    { compra: 70, venta: 100 }
+};
+
 const activos = [
   { nombre: "Leonardo", ticker: "LDO.MI", titulos: 23.607176, compra: 42.46, moneda: "€" },
   { nombre: "IREN", ticker: "IREN", titulos: 185, compra: 37.561, moneda: "$" },
@@ -215,6 +239,7 @@ async function cargarDatos() {
 
     try {
      const alertasAntes = alertas.length;
+     const regla = reglas[activo.ticker]; 
       const precioNumero = await obtenerPrecio(activo.ticker);
       const unidades = activo.titulos ?? activo.cantidad;
 
@@ -224,6 +249,16 @@ async function cargarDatos() {
       const porcentaje = invertido !== 0
         ? (beneficio / invertido) * 100
         : 0;
+     if (regla) {
+  if (precioNumero <= regla.compra) {
+    alertas.push("🟢 " + activo.nombre + ": zona de compra - " + formatoNumero(precioNumero) + " " + activo.moneda);
+  } else if (precioNumero >= regla.venta) {
+    alertas.push("🔴 " + activo.nombre + ": zona de recogida de beneficios - " + formatoNumero(precioNumero) + " " + activo.moneda);
+  } else {
+    alertas.push("🟡 " + activo.nombre + ": MANTENER - " + formatoNumero(precioNumero) + " " + activo.moneda);
+  }
+}
+ 
 
       posicionesCalculadas++;
 
@@ -244,50 +279,9 @@ async function cargarDatos() {
       totalInvertidoEUR += invertidoEUR;
       totalActualEUR += actualEUR;
 
-      if (activo.ticker === "IREN") {
-        if (precioNumero >= 78) {
-          alertas.push(
-            "🔴 IREN: zona de recogida de beneficios — " +
-            formatoNumero(precioNumero) + " $"
-          );
-        } else if (precioNumero <= 29.90) {
-          alertas.push(
-            "🔴 IREN: revisar nivel de riesgo — " +
-            formatoNumero(precioNumero) + " $"
-          );
-        } else if (precioNumero <= 31.50) {
-          alertas.push(
-            "🟢 IREN: zona de compra fuerte — " +
-            formatoNumero(precioNumero) + " $"
-          );
-        } else if (precioNumero <= 33.50) {
-          alertas.push(
-            "🟢 IREN: zona de compra — " +
-            formatoNumero(precioNumero) + " $"
-          );
-          } else {
-  alertas.push("🟡 IREN: MANTENER - " + formatoNumero(precioNumero) + " $");
+     
 
-        }
-      }
-
-      if (activo.ticker === "LDO.MI") {
-        if (precioNumero >= 60) {
-          alertas.push(
-            "🔴 Leonardo: zona de recogida de beneficios — " +
-            formatoNumero(precioNumero) + " €"
-          );
-        } else if (precioNumero <= 42) {
-          alertas.push(
-            "🟢 Leonardo: zona de compra — " +
-            formatoNumero(precioNumero) + " €"
-          );
-        }
-        else {
-  alertas.push("🟡 Leonardo: MANTENER - " + formatoNumero(precioNumero) + " €");
-}
-
-      }
+     
 
       const color =
         beneficio >= 0 ? "#86efac" : "#fca5a5";
@@ -315,132 +309,7 @@ async function cargarDatos() {
           </span>
         </div>
       `;
-if (activo.ticker === "LDO.MI") {
-  if (precioNumero >= 60) {
-    alertas.push("🔴 Leonardo: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " €");
-  } else if (precioNumero <= 42) {
-    alertas.push("🟢 Leonardo: zona de compra - " + formatoNumero(precioNumero) + " €");
-  }
-}
 
-if (activo.ticker === "OHLA.MC") {
-  if (precioNumero >= 0.50) {
-    alertas.push("🔴 OHL: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " €");
-  } else if (precioNumero <= 0.30) {
-    alertas.push("🟢 OHL: zona de compra - " + formatoNumero(precioNumero) + " €");
-  }
-}
-
-if (activo.ticker === "ADX.MC") {
-  if (precioNumero >= 2.50) {
-    alertas.push("🔴 Audax: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " €");
-  } else if (precioNumero <= 1.50) {
-    alertas.push("🟢 Audax: zona de compra - " + formatoNumero(precioNumero) + " €");
-  }
-}
-
-if (activo.ticker === "NAMM") {
-  if (precioNumero >= 1.40) {
-    alertas.push("🔴 Namib Minerals: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
-  } else if (precioNumero <= 1.00) {
-    alertas.push("🟢 Namib Minerals: zona de compra - " + formatoNumero(precioNumero) + " $");
-  }
-}
-
-if (activo.ticker === "MNDY") {
-  if (precioNumero >= 100) {
-    alertas.push("🔴 monday.com: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " €");
-  } else if (precioNumero <= 70) {
-    alertas.push("🟢 monday.com: zona de compra - " + formatoNumero(precioNumero) + " €");
-  }
-}
-
-if (activo.ticker === "EDR.MC") {
-  if (precioNumero >= 9) {
-    alertas.push("🔴 eDreams: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " €");
-  } else if (precioNumero <= 3) {
-    alertas.push("🟢 eDreams: zona de compra - " + formatoNumero(precioNumero) + " €");
-  }
-}
-if (activo.ticker === "RKLB") {
-  if (precioNumero >= 150) {
-    alertas.push("🔴 Rocket Lab: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
-  } else if (precioNumero <= 90) {
-    alertas.push("🟢 Rocket Lab: zona de compra - " + formatoNumero(precioNumero) + " $");
-  }
-}
-
-if (activo.ticker === "ASTS") {
-  if (precioNumero >= 140) {
-    alertas.push("🔴 AST SpaceMobile: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
-  } else if (precioNumero <= 80) {
-    alertas.push("🟢 AST SpaceMobile: zona de compra - " + formatoNumero(precioNumero) + " $");
-  }
-}
-
-if (activo.ticker === "RXRX") {
-  if (precioNumero >= 5) {
-    alertas.push("🔴 Recursion: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
-  } else if (precioNumero <= 2.50) {
-    alertas.push("🟢 Recursion: zona de compra - " + formatoNumero(precioNumero) + " $");
-  }
-}
-
-if (activo.ticker === "AAPL") {
-  if (precioNumero >= 300) {
-    alertas.push("🔴 Apple: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
-  } else if (precioNumero <= 220) {
-    alertas.push("🟢 Apple: zona de compra - " + formatoNumero(precioNumero) + " $");
-  }
-}
-
-if (activo.ticker === "TSLA") {
-  if (precioNumero >= 500) {
-    alertas.push("🔴 Tesla: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
-  } else if (precioNumero <= 280) {
-    alertas.push("🟢 Tesla: zona de compra - " + formatoNumero(precioNumero) + " $");
-  }
-}
-
-if (activo.ticker === "HIMS") {
-  if (precioNumero >= 45) {
-    alertas.push("🔴 Hims & Hers: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
-  } else if (precioNumero <= 25) {
-    alertas.push("🟢 Hims & Hers: zona de compra - " + formatoNumero(precioNumero) + " $");
-  }
-}
-
-if (activo.ticker === "MBLY") {
-  if (precioNumero >= 15) {
-    alertas.push("🔴 Mobileye: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
-  } else if (precioNumero <= 7) {
-    alertas.push("🟢 Mobileye: zona de compra - " + formatoNumero(precioNumero) + " $");
-  }
-}
-
-if (activo.ticker === "UAA") {
-  if (precioNumero >= 8) {
-    alertas.push("🔴 Under Armour: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
-  } else if (precioNumero <= 4.50) {
-    alertas.push("🟢 Under Armour: zona de compra - " + formatoNumero(precioNumero) + " $");
-  }
-}
-
-if (activo.ticker === "PATH") {
-  if (precioNumero >= 20) {
-    alertas.push("🔴 UiPath: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
-  } else if (precioNumero <= 10) {
-    alertas.push("🟢 UiPath: zona de compra - " + formatoNumero(precioNumero) + " $");
-  }
-}
-
-if (activo.ticker === "CLNX.MC") {
-  if (precioNumero >= 40) {
-    alertas.push("🔴 Cellnex: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " €");
-  } else if (precioNumero <= 27) {
-    alertas.push("🟢 Cellnex: zona de compra - " + formatoNumero(precioNumero) + " €");
-  }
-}
 
 // Si ninguna regla anterior ha generado alerta para este activo,
 // mostramos MANTENER para que todos tengan una indicación.
