@@ -307,6 +307,53 @@ async function cargarDatos() {
           </span>
         </div>
       `;
+if (activo.ticker === "LDO.MI") {
+  if (precioNumero >= 60) {
+    alertas.push("🔴 Leonardo: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " €");
+  } else if (precioNumero <= 42) {
+    alertas.push("🟢 Leonardo: zona de compra - " + formatoNumero(precioNumero) + " €");
+  }
+}
+
+if (activo.ticker === "OHLA.MC") {
+  if (precioNumero >= 0.50) {
+    alertas.push("🔴 OHL: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " €");
+  } else if (precioNumero <= 0.30) {
+    alertas.push("🟢 OHL: zona de compra - " + formatoNumero(precioNumero) + " €");
+  }
+}
+
+if (activo.ticker === "ADX.MC") {
+  if (precioNumero >= 2.50) {
+    alertas.push("🔴 Audax: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " €");
+  } else if (precioNumero <= 1.50) {
+    alertas.push("🟢 Audax: zona de compra - " + formatoNumero(precioNumero) + " €");
+  }
+}
+
+if (activo.ticker === "NAMM") {
+  if (precioNumero >= 1.40) {
+    alertas.push("🔴 Namib Minerals: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " $");
+  } else if (precioNumero <= 1.00) {
+    alertas.push("🟢 Namib Minerals: zona de compra - " + formatoNumero(precioNumero) + " $");
+  }
+}
+
+if (activo.ticker === "MNDY") {
+  if (precioNumero >= 100) {
+    alertas.push("🔴 monday.com: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " €");
+  } else if (precioNumero <= 70) {
+    alertas.push("🟢 monday.com: zona de compra - " + formatoNumero(precioNumero) + " €");
+  }
+}
+
+if (activo.ticker === "EDR.MC") {
+  if (precioNumero >= 9) {
+    alertas.push("🔴 eDreams: zona de recogida de beneficios - " + formatoNumero(precioNumero) + " €");
+  } else if (precioNumero <= 3) {
+    alertas.push("🟢 eDreams: zona de compra - " + formatoNumero(precioNumero) + " €");
+  }
+}
 
     } catch (error) {
       console.error("Error en " + activo.ticker, error);
