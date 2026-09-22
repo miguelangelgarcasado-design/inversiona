@@ -264,6 +264,9 @@ async function cargarDatos() {
             "🟢 IREN: zona de compra — " +
             formatoNumero(precioNumero) + " $"
           );
+          } else {
+  alertas.push("🟡 IREN: MANTENER - " + formatoNumero(precioNumero) + " $");
+
         }
       }
 
@@ -279,6 +282,10 @@ async function cargarDatos() {
             formatoNumero(precioNumero) + " €"
           );
         }
+        else {
+  alertas.push("🟡 Leonardo: MANTENER - " + formatoNumero(precioNumero) + " €");
+}
+
       }
 
       const color =
@@ -434,6 +441,19 @@ if (activo.ticker === "CLNX.MC") {
   }
 }
 
+// Si ninguna regla anterior ha generado alerta para este activo,
+// mostramos MANTENER para que todos tengan una indicación.
+const nombreAlerta = activo.nombre || activo.ticker;
+const yaTieneAlerta = alertas.some(a =>
+  a.includes(nombreAlerta) || a.includes(activo.ticker)
+);
+
+if (!yaTieneAlerta) {
+  alertas.push(
+    "🟡 " + nombreAlerta + ": MANTENER - " +
+    formatoNumero(precioNumero) + " " + activo.moneda
+  );
+}
 
     } catch (error) {
       console.error("Error en " + activo.ticker, error);
