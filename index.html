@@ -214,6 +214,7 @@ async function cargarDatos() {
     div.className = "activo";
 
     try {
+     const alertasAntes = alertas.length;
       const precioNumero = await obtenerPrecio(activo.ticker);
       const unidades = activo.titulos ?? activo.cantidad;
 
@@ -444,9 +445,7 @@ if (activo.ticker === "CLNX.MC") {
 // Si ninguna regla anterior ha generado alerta para este activo,
 // mostramos MANTENER para que todos tengan una indicación.
 const nombreAlerta = activo.nombre || activo.ticker;
-const yaTieneAlerta = alertas.some(a =>
-  a.includes(nombreAlerta) || a.includes(activo.ticker)
-);
+const yaTieneAlerta = alertas.length > alertasAntes;
 
 if (!yaTieneAlerta) {
   alertas.push(
