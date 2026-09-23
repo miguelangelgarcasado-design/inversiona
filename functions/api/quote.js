@@ -18,6 +18,7 @@ export async function onRequestGet(context) {
       symbol === "EURUSD" ? "EURUSD=X" :
       symbol === "BTC" ? "BTC-EUR" :
       symbol === "SOL" ? "SOL-EUR" :
+      symbol === "PEPE" ? "PEPE-EUR" :
       symbol === "SUI" ? "SUI20947-USD" :
       symbol === "MNDY" ? "MNDY" :
       symbol;
@@ -27,6 +28,7 @@ export async function onRequestGet(context) {
       symbol === "BTC" ||
       symbol === "EURUSD" ||
       symbol === "SOL" ||
+      symbol === "PEPE" ||
       symbol === "SUI" ||
       symbol === "MBLY" ||
       symbol === "HIMS" ||
