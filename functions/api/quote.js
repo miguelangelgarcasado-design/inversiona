@@ -83,7 +83,7 @@ export async function onRequestGet(context) {
 
       // SUI y monday.com llegan de Yahoo en USD.
       // Los convertimos a EUR porque en la cartera se muestran en euros.
-      if ((symbol === "SUI" || symbol === "MNDY") && price) {
+    if ((symbol === "SUI" || symbol === "MNDY" || symbol === "PEPE") && price) {
         const cambioRes = await fetch(
           "https://query1.finance.yahoo.com/v8/finance/chart/EURUSD=X?interval=1d&range=1d",
           {
