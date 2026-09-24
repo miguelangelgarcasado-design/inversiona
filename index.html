@@ -250,15 +250,20 @@ async function cargarDatos() {
       const porcentaje = invertido !== 0
         ? (beneficio / invertido) * 100
         : 0;
-     if (regla) {
-  if (precioNumero <= regla.compra) {
-    alertas.push("🟢 " + activo.nombre + ": zona de compra - " + formatoNumero(precioNumero) + " " + activo.moneda);
-  } else if (precioNumero >= regla.venta) {
-    alertas.push("🔴 " + activo.nombre + ": zona de recogida de beneficios - " + formatoNumero(precioNumero) + " " + activo.moneda);
+    if (regla) {
+  if (precioNumero >= regla.venta) {
+    alertas.push("🔵 " + activo.nombre + ": RECOGER BENEFICIOS - " + formatoNumero(precioNumero) + " " + activo.moneda);
+  } else if (precioNumero <= regla.compra && porcentaje > -20) {
+    alertas.push("🟢 " + activo.nombre + ": POSIBLE COMPRA - " + formatoNumero(precioNumero) + " " + activo.moneda);
+  } else if (porcentaje <= -35) {
+    alertas.push("🔴 " + activo.nombre + ": REVISAR / RIESGO - " + formatoNumero(precioNumero) + " " + activo.moneda);
+  } else if (porcentaje >= 30) {
+    alertas.push("🟠 " + activo.nombre + ": VIGILAR BENEFICIOS - " + formatoNumero(precioNumero) + " " + activo.moneda);
   } else {
     alertas.push("🟡 " + activo.nombre + ": MANTENER - " + formatoNumero(precioNumero) + " " + activo.moneda);
   }
 }
+
  
 
       posicionesCalculadas++;
