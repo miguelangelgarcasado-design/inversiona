@@ -181,6 +181,7 @@ const activos = [
 ];
 
 function formatoNumero(numero, decimales = 2) {
+  if (Math.abs(Number(numero)) > 0 && Math.abs(Number(numero)) < 0.01) decimales = 8;
   return Number(numero).toLocaleString("es-ES", {
     minimumFractionDigits: decimales,
     maximumFractionDigits: decimales
