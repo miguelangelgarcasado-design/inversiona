@@ -438,7 +438,7 @@ async function cargarNoticias() {
       data.noticias.map(n => `
         <div style="margin-bottom:18px;">
         <a href="${n.url || '#'}" target="_blank" rel="noopener noreferrer" style="color:white;text-decoration:none;"><strong>${n.titular || ""}</strong></a><br>
-          <span class="muted">${n.fuente || ""}</span>
+        <span class="muted">${n.fuente || ""}${n.fecha ? " · " + new Date(n.fecha).toLocaleDateString("es-ES") : ""}</span>
         </div>
       `).join("");
 
