@@ -10,6 +10,29 @@ export async function onRequestGet() {
         .replace(/&gt;/g, ">")
         .trim();
 
+    const traducirTitulo = async (texto = "") => {
+  if (!texto) return "";
+
+  try {
+    const url =
+      "https://api.mymemory.translated.net/get?q=" +
+      encodeURIComponent(texto) +
+      "&langpair=en|es";
+
+    const respuesta = await fetch(url);
+
+    if (!respuesta.ok) return texto;
+
+    const datos = await respuesta.json();
+
+    return datos?.responseData?.translatedText || texto;
+  } catch (error) {
+    return texto;
+  }
+};
+
+
+
     // 1. CINCO DÍAS: economía y mercados
     const urlCincoDias =
       "https://feeds.elpais.com/mrss-s/list/ep/site/cincodias.elpais.com/section/mercados-financieros";
@@ -100,7 +123,7 @@ export async function onRequestGet() {
           if (!noticia.title || !noticia.link) continue;
 
           noticiasCartera.push({
-            titular: limpiar(noticia.title),
+           titular: await traducirTitulo(limpiar(noticia.title)),
             resumen: "",
             fuente: noticia.publisher || "Yahoo Finance",
             url: noticia.link,
