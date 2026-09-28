@@ -122,7 +122,7 @@ export async function onRequestGet() {
           if (!noticia.title || !noticia.link) continue;
 
           noticiasCartera.push({
-           titular: await traducirTitulo(limpiar(noticia.title)),
+      titular: await traducirTitulo(limpiar(noticia.title), "en", "es"),
             resumen: "",
             fuente: noticia.publisher || "Yahoo Finance",
             url: noticia.link,
