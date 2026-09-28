@@ -10,121 +10,138 @@ export async function onRequestGet() {
         .replace(/&gt;/g, ">")
         .trim();
 
-    // 1. NOTICIAS DE CINCO DÍAS
+    // 1. CINCO DÍAS: economía y mercados
     const urlCincoDias =
       "https://feeds.elpais.com/mrss-s/list/ep/site/cincodias.elpais.com/section/mercados-financieros";
 
-    const respuestaCincoDias = await fetch(urlCincoDias, {
-      headers: {
-        "User-Agent": "Mozilla/5.0"
-      }
-    });
-
     let noticiasCincoDias = [];
 
-    if (respuestaCincoDias.ok) {
-      const xml = await respuestaCincoDias.text();
-      const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
-
-      noticiasCincoDias = items.map(item => {
-        const bloque = item[1];
-
-        const titulo =
-          bloque.match(/<title>([\s\S]*?)<\/title>/)?.[1] || "";
-
-        const enlace =
-          bloque.match(/<link>([\s\S]*?)<\/link>/)?.[1] || "";
-
-        const fecha =
-          bloque.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || "";
-
-        return {
-          titular: limpiar(titulo),
-          resumen: "",
-          fuente: "Cinco Días",
-          url: limpiar(enlace),
-          fecha,
-          cartera: false
-        };
+    try {
+      const respuesta = await fetch(urlCincoDias, {
+        headers: { "User-Agent": "Mozilla/5.0" }
       });
-    }
 
-    // 2. NOTICIAS ESPECÍFICAS DE LA CARTERA
-    const busquedas = [
-      "IREN Leonardo Apple Tesla",
-      "Rocket Lab AST SpaceMobile Hims monday.com",
-      "OHL Audax eDreams Amper Cellnex Grifols",
-      "Bitcoin Solana SUI PEPE"
+      if (respuesta.ok) {
+        const xml = await respuesta.text();
+        const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
+
+        noticiasCincoDias = items.map(item => {
+          const bloque = item[1];
+
+          const titulo =
+            bloque.match(/<title>([\s\S]*?)<\/title>/)?.[1] || "";
+
+          const enlace =
+            bloque.match(/<link>([\s\S]*?)<\/link>/)?.[1] || "";
+
+          const fecha =
+            bloque.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || "";
+
+          return {
+            titular: limpiar(titulo),
+            resumen: "",
+            fuente: "Cinco Días",
+            url: limpiar(enlace),
+            fecha,
+            cartera: false
+          };
+        });
+      }
+    } catch (error) {}
+
+    // 2. TICKERS PRINCIPALES DE TU CARTERA
+    const activos = [
+      "IREN",
+      "LDO.MI",
+      "OHLA.MC",
+      "ADX.MC",
+      "NAMM",
+      "RKLB",
+      "ASTS",
+      "EDR.MC",
+      "AMP.MC",
+      "AAPL",
+      "PATH",
+      "UAA",
+      "MBLY",
+      "HIMS",
+      "TSLA",
+      "SWKS",
+      "RXRX",
+      "RCAT",
+      "CLNX.MC",
+      "MNDY",
+      "BTC-USD",
+      "SOL-USD"
     ];
 
     let noticiasCartera = [];
 
-    for (const busqueda of busquedas) {
+    // Consultamos cada activo por separado
+    for (const ticker of activos) {
       try {
         const urlYahoo =
           "https://query2.finance.yahoo.com/v1/finance/search?q=" +
-          encodeURIComponent(busqueda) +
-          "&quotesCount=0&newsCount=6&enableFuzzyQuery=false&region=ES&lang=es-ES";
+          encodeURIComponent(ticker) +
+          "&quotesCount=1&newsCount=2";
 
-        const respuestaYahoo = await fetch(urlYahoo, {
+        const respuesta = await fetch(urlYahoo, {
           headers: {
-            "User-Agent": "Mozilla/5.0"
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "application/json"
           }
         });
 
-        if (!respuestaYahoo.ok) continue;
+        if (!respuesta.ok) continue;
 
-        const datos = await respuestaYahoo.json();
+        const datos = await respuesta.json();
 
-        const encontradas = (datos.news || []).map(noticia => ({
-          titular: limpiar(noticia.title || ""),
-          resumen: "",
-          fuente: noticia.publisher || "Yahoo Finance",
-          url: noticia.link || "",
-          fecha: noticia.providerPublishTime || "",
-          cartera: true
-        }));
+        for (const noticia of (datos.news || [])) {
+          if (!noticia.title || !noticia.link) continue;
 
-        noticiasCartera.push(...encontradas);
-
-      } catch (error) {
-        // Si una búsqueda falla, continúa con las demás.
-      }
+          noticiasCartera.push({
+            titular: limpiar(noticia.title),
+            resumen: "",
+            fuente: noticia.publisher || "Yahoo Finance",
+            url: noticia.link,
+            fecha: noticia.providerPublishTime || "",
+            cartera: true,
+            ticker
+          });
+        }
+      } catch (error) {}
     }
 
     // 3. ELIMINAR DUPLICADOS
     const todas = [...noticiasCartera, ...noticiasCincoDias];
 
-    const unicas = [];
+    const noticiasUnicas = [];
     const vistos = new Set();
 
     for (const noticia of todas) {
       const clave = noticia.titular.toLowerCase().trim();
 
-      if (
-        clave &&
-        noticia.url &&
-        !vistos.has(clave)
-      ) {
+      if (clave && noticia.url && !vistos.has(clave)) {
         vistos.add(clave);
-        unicas.push(noticia);
+        noticiasUnicas.push(noticia);
       }
     }
 
-    // 4. MOSTRAR PRIMERO CARTERA Y DESPUÉS MERCADO GENERAL
-    const cartera = unicas
-      .filter(noticia => noticia.cartera)
-      .slice(0, 5);
+    // 4. Hasta 6 noticias de cartera + 4 de mercado
+    const cartera = noticiasUnicas
+      .filter(n => n.cartera)
+      .slice(0, 6);
 
-    const mercado = unicas
-      .filter(noticia => !noticia.cartera)
-      .slice(0, 5);
+    const mercado = noticiasUnicas
+      .filter(n => !n.cartera)
+      .slice(0, 4);
 
-    const noticias = [...cartera, ...mercado].slice(0, 10);
+    const noticias = [...cartera, ...mercado];
 
     return Response.json({
       ok: true,
-      noticias
+      noticias,
+      encontradasCartera: noticiasCartera.length
     });
 
   } catch (error) {
