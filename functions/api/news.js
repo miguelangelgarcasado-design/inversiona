@@ -14,10 +14,9 @@ export async function onRequestGet() {
   if (!texto) return "";
 
   try {
-    const url =
-      "https://api.mymemory.translated.net/get?q=" +
-      encodeURIComponent(texto) +
-      "&langpair=en|es";
+       const url =
+  "https://api.mymemory.translated.net/get?langpair=en%7Ces&q=" +
+  encodeURIComponent(texto);
 
     const respuesta = await fetch(url);
 
