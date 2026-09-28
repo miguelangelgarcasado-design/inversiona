@@ -1,7 +1,8 @@
 export async function onRequestGet() {
   try {
     const url =
-"https://feeds.elpais.com/mrss-s/list/ep/site/cincodias.elpais.com/section/mercados-financieros";
+      "https://feeds.elpais.com/mrss-s/list/ep/site/cincodias.elpais.com/section/mercados-financieros";
+
     const response = await fetch(url, {
       headers: {
         "User-Agent": "Mozilla/5.0"
@@ -25,7 +26,51 @@ export async function onRequestGet() {
         .replace(/&gt;/g, ">")
         .trim();
 
-    const noticias = items.slice(0, 8).map(item => {
+    const palabrasImportantes = [
+      "bolsa",
+      "bolsas",
+      "mercado",
+      "mercados",
+      "acciones",
+      "ibex",
+      "nasdaq",
+      "wall street",
+      "dow jones",
+      "economía",
+      "inflación",
+      "tipos",
+      "interés",
+      "bce",
+      "fed",
+      "petróleo",
+      "bonos",
+      "dólar",
+      "euro",
+      "bitcoin",
+      "cripto",
+      "inteligencia artificial",
+      "ia",
+      "apple",
+      "tesla",
+      "leonardo",
+      "iren",
+      "ohl",
+      "audax",
+      "edreams",
+      "amper",
+      "cellnex",
+      "grifols",
+      "monday",
+      "mobileye",
+      "uipath",
+      "rocket lab",
+      "ast spacemobile",
+      "hims",
+      "recursion",
+      "red cat"
+    ];
+
+    const todas = items.map(item => {
       const bloque = item[1];
 
       const titulo =
@@ -40,11 +85,24 @@ export async function onRequestGet() {
       return {
         titular: limpiar(titulo),
         resumen: "",
-        fuente: "Cinco Dias",
+        fuente: "Cinco Días",
         url: limpiar(enlace),
         fecha
       };
     });
+
+    const prioritarias = todas.filter(noticia => {
+      const texto = noticia.titular.toLowerCase();
+
+      return palabrasImportantes.some(palabra =>
+        texto.includes(palabra)
+      );
+    });
+
+    const noticias = [
+      ...prioritarias,
+      ...todas.filter(noticia => !prioritarias.includes(noticia))
+    ].slice(0, 8);
 
     return Response.json({
       ok: true,
