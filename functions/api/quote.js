@@ -21,7 +21,7 @@ export async function onRequestGet(context) {
      symbol === "PEPE" ? "PEPE24478-USD" :
       symbol === "SUI" ? "SUI20947-USD" :
       symbol === "MNDY" ? "MNDY" :
-   symbol === "PGS.DE" ? "TPG.DE" :
+      symbol === "PGS.DE" ? "TPG0.DE" :
       symbol;
 
     // Activos que consultamos mediante Yahoo Finance
