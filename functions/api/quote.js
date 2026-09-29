@@ -21,6 +21,7 @@ export async function onRequestGet(context) {
      symbol === "PEPE" ? "PEPE24478-USD" :
       symbol === "SUI" ? "SUI20947-USD" :
       symbol === "MNDY" ? "MNDY" :
+      symbol === "PGS.DE" ? "PGS.DE" :
       symbol;
 
     // Activos que consultamos mediante Yahoo Finance
@@ -44,6 +45,7 @@ export async function onRequestGet(context) {
       symbol === "RCAT" ||
       symbol === "MNDY" ||
       symbol === "IREN" ||
+      symbol === "PGS.DE" ||
       symbol.endsWith(".MC") ||
       symbol.endsWith(".MI");
 
