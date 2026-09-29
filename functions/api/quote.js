@@ -52,7 +52,7 @@ export async function onRequestGet(context) {
 
     if (useYahoo) {
       const yahooUrl =
-        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?interval=1d&range=1d`;
+        `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?interval=1d&range=1d`;
 
       const yahooRes = await fetch(yahooUrl, {
         headers: {
