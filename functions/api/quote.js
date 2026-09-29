@@ -46,6 +46,7 @@ export async function onRequestGet(context) {
       symbol === "MNDY" ||
       symbol === "IREN" ||
       symbol === "PGS.DE" ||
+      symbol === "TPGO.DE" ||
       symbol.endsWith(".MC") ||
       symbol.endsWith(".MI");
 
