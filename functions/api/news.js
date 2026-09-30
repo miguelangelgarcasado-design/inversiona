@@ -93,8 +93,10 @@ export async function onRequestGet() {
       "RCAT",
       "CLNX.MC",
       "MNDY",
-      "BTC-USD",
-      "SOL-USD"
+     "BTC-USD",
+"SOL-USD",
+"PGS.DE",
+
     ];
 
     let noticiasCartera = [];
