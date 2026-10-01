@@ -17,16 +17,29 @@ export async function onRequestGet() {
     const url =
       "https://api.mymemory.translated.net/get?q=" +
       encodeURIComponent(texto) +
-      "&langpair=en|es";
+      "&langpair=en%7Ces";
 
-    const respuesta = await fetch(url);
+    const respuesta = await fetch(url, {
+      headers: {
+        "Accept": "application/json"
+      }
+    });
 
     if (!respuesta.ok) return texto;
 
     const datos = await respuesta.json();
 
-    return datos?.responseData?.translatedText || texto;
+    if (
+      datos &&
+      datos.responseData &&
+      datos.responseData.translatedText
+    ) {
+      return limpiar(datos.responseData.translatedText);
+    }
+
+    return texto;
   } catch (error) {
+    console.log("Error traduciendo:", error);
     return texto;
   }
 };
