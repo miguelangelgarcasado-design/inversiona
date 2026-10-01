@@ -10,7 +10,7 @@ export async function onRequestGet() {
         .replace(/&gt;/g, ">")
         .trim();
 
-   const traducirTitulo = async (texto = "") => {
+const traducirTitulo = async (texto = "") => {
   if (!texto) return "";
 
   try {
@@ -25,10 +25,10 @@ export async function onRequestGet() {
       }
     });
 
-  if (!respuesta.ok) {
-  return texto;
-}
-
+    // Si MyMemory bloquea por límite (429), dejamos el título original
+    if (!respuesta.ok) {
+      return texto;
+    }
 
     const datos = await respuesta.json();
 
@@ -37,7 +37,18 @@ export async function onRequestGet() {
       datos.responseData &&
       datos.responseData.translatedText
     ) {
-      return limpiar(datos.responseData.translatedText);
+      const traduccion = limpiar(datos.responseData.translatedText);
+
+      // Evita mostrar mensajes de error de MyMemory como título
+      if (
+        traduccion.includes("ERROR 429") ||
+        traduccion.includes("MYMEMORY WARNING") ||
+        traduccion.includes("QUERY LENGTH LIMIT")
+      ) {
+        return texto;
+      }
+
+      return traduccion;
     }
 
     return texto;
