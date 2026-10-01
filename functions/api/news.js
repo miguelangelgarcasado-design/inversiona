@@ -25,9 +25,10 @@ export async function onRequestGet() {
       }
     });
 
-   if (!respuesta.ok) {
-  return "[ERROR " + respuesta.status + "] " + texto;
+  if (!respuesta.ok) {
+  return texto;
 }
+
 
     const datos = await respuesta.json();
 
