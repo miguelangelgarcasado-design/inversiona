@@ -10,13 +10,14 @@ export async function onRequestGet() {
         .replace(/&gt;/g, ">")
         .trim();
 
-    const traducirTitulo = async (texto = "") => {
+   const traducirTitulo = async (texto = "") => {
   if (!texto) return "";
 
   try {
-       const url =
-  "https://api.mymemory.translated.net/get?langpair=en%7Ces&q=" +
-  encodeURIComponent(texto);
+    const url =
+      "https://api.mymemory.translated.net/get?q=" +
+      encodeURIComponent(texto) +
+      "&langpair=en|es";
 
     const respuesta = await fetch(url);
 
@@ -29,6 +30,9 @@ export async function onRequestGet() {
     return texto;
   }
 };
+
+};
+
 
 
 
