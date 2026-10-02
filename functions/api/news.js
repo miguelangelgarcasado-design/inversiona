@@ -14,41 +14,21 @@ const traducirTitulo = async (texto = "") => {
   if (!texto) return "";
 
   try {
-    const url =
-      "https://api.mymemory.translated.net/get?q=" +
-      encodeURIComponent(texto) +
-      "&langpair=en%7Ces";
+    const respuesta = await fetch(
+      "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=es&dt=t&q=" +
+      encodeURIComponent(texto)
+    );
 
-    const respuesta = await fetch(url, {
-      headers: {
-        "Accept": "application/json"
-      }
-    });
-
-    // Si MyMemory bloquea por límite (429), dejamos el título original
-    if (!respuesta.ok) {
-      return texto;
-    }
+    if (!respuesta.ok) return texto;
 
     const datos = await respuesta.json();
 
-    if (
-      datos &&
-      datos.responseData &&
-      datos.responseData.translatedText
-    ) {
-      const traduccion = limpiar(datos.responseData.translatedText);
+    if (datos && datos[0]) {
+      const traduccion = datos[0]
+        .map(parte => parte[0])
+        .join("");
 
-      // Evita mostrar mensajes de error de MyMemory como título
-      if (
-        traduccion.includes("ERROR 429") ||
-        traduccion.includes("MYMEMORY WARNING") ||
-        traduccion.includes("QUERY LENGTH LIMIT")
-      ) {
-        return texto;
-      }
-
-      return traduccion;
+      return limpiar(traduccion);
     }
 
     return texto;
@@ -57,6 +37,7 @@ const traducirTitulo = async (texto = "") => {
     return texto;
   }
 };
+
 
 
 
