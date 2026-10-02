@@ -19,7 +19,11 @@ const traducirTitulo = async (texto = "") => {
       encodeURIComponent(texto)
     );
 
-    if (!respuesta.ok) return texto;
+  if (!respuesta.ok) {
+  console.log("GOOGLE STATUS:", respuesta.status);
+  return texto;
+}
+
 
     const datos = await respuesta.json();
 
@@ -33,7 +37,7 @@ const traducirTitulo = async (texto = "") => {
 
     return texto;
   } catch (error) {
-    console.log("Error traduciendo:", error);
+   console.log("ERROR TRADUCCION GOOGLE:", error.message);
     return texto;
   }
 };
