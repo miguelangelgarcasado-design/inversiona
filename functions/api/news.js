@@ -15,29 +15,34 @@ const traducirTitulo = async (texto = "") => {
 
   try {
     const respuesta = await fetch(
-      "https://api.mymemory.translated.net/get?q=" +
-      encodeURIComponent(texto) +
-      "&langpair=en|es"
+      "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=es&dt=t&q=" +
+      encodeURIComponent(texto),
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0"
+        }
+      }
     );
 
     if (!respuesta.ok) {
-      console.log("MYMEMORY STATUS:", respuesta.status);
+      console.log("TRADUCCION STATUS:", respuesta.status);
       return texto;
     }
 
     const datos = await respuesta.json();
 
-    if (
-      datos &&
-      datos.responseData &&
-      datos.responseData.translatedText
-    ) {
-      return limpiar(datos.responseData.translatedText);
+    if (datos && datos[0]) {
+      const traduccion = datos[0]
+        .map(parte => parte[0])
+        .join("");
+
+      return limpiar(traduccion);
     }
 
     return texto;
+
   } catch (error) {
-    console.log("ERROR TRADUCCION MYMEMORY:", error.message);
+    console.log("ERROR TRADUCCION:", error.message);
     return texto;
   }
 };
