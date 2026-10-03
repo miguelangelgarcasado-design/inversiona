@@ -254,17 +254,40 @@ async function cargarDatos() {
       const porcentaje = invertido !== 0
         ? (beneficio / invertido) * 100
         : 0;
-   if (regla) {
+  if (regla) {
+  const porcentajeTexto =
+    (porcentaje >= 0 ? "+" : "") + formatoNumero(porcentaje) + "%";
+
+  const detalle =
+    " | Compra: " + formatoNumero(activo.compra) + " " + activo.moneda +
+    " | PyG: " + porcentajeTexto +
+    " | Objetivo: " + formatoNumero(regla.venta) + " " + activo.moneda;
+
   if (porcentaje <= -35) {
-    alertas.push("🔴 " + activo.nombre + ": REVISAR / RIESGO - " + formatoNumero(precioNumero) + " " + activo.moneda);
+    alertas.push(
+      "🔴 " + activo.nombre + ": REVISAR / RIESGO - " +
+      formatoNumero(precioNumero) + " " + activo.moneda + detalle
+    );
   } else if (precioNumero >= regla.venta) {
-    alertas.push("🔵 " + activo.nombre + ": OBJETIVO DE VENTA - " + formatoNumero(precioNumero) + " " + activo.moneda);
+    alertas.push(
+      "🔵 " + activo.nombre + ": OBJETIVO DE VENTA - " +
+      formatoNumero(precioNumero) + " " + activo.moneda + detalle
+    );
   } else if (porcentaje >= 30) {
-    alertas.push("🟠 " + activo.nombre + ": VIGILAR BENEFICIOS - " + formatoNumero(precioNumero) + " " + activo.moneda);
+    alertas.push(
+      "🟠 " + activo.nombre + ": VIGILAR BENEFICIOS - " +
+      formatoNumero(precioNumero) + " " + activo.moneda + detalle
+    );
   } else if (precioNumero <= regla.compra) {
-    alertas.push("🟢 " + activo.nombre + ": ZONA DE COMPRA - " + formatoNumero(precioNumero) + " " + activo.moneda);
+    alertas.push(
+      "🟢 " + activo.nombre + ": ZONA DE COMPRA - " +
+      formatoNumero(precioNumero) + " " + activo.moneda + detalle
+    );
   } else {
-    alertas.push("🟡 " + activo.nombre + ": MANTENER - " + formatoNumero(precioNumero) + " " + activo.moneda);
+    alertas.push(
+      "🟡 " + activo.nombre + ": MANTENER - " +
+      formatoNumero(precioNumero) + " " + activo.moneda + detalle
+    );
   }
 }
 
