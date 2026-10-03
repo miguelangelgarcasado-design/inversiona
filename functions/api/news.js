@@ -11,8 +11,26 @@ export async function onRequestGet() {
         .trim();
 
 const traducirTitulo = async (texto = "") => {
-  return texto;
+  if (!texto) return "";
+
+  try {
+    const url =
+      "https://api.mymemory.translated.net/get?q=" +
+      encodeURIComponent(texto) +
+      "&langpair=en|es";
+
+    const respuesta = await fetch(url);
+
+    if (!respuesta.ok) return texto;
+
+    const datos = await respuesta.json();
+
+    return datos?.responseData?.translatedText || texto;
+  } catch (error) {
+    return texto;
+  }
 };
+
 
 
 
