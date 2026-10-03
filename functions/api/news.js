@@ -10,43 +10,95 @@ export async function onRequestGet() {
         .replace(/&gt;/g, ">")
         .trim();
 
+const esperar = (ms) =>
+  new Promise(resolve => setTimeout(resolve, ms));
+
 const traducirTitulo = async (texto = "") => {
+  texto = limpiar(texto);
   if (!texto) return "";
 
-  try {
-    const respuesta = await fetch(
-      "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=es&dt=t&q=" +
-      encodeURIComponent(texto),
-      {
-        headers: {
-          "User-Agent": "Mozilla/5.0"
-        }
-      }
-    );
+  // Si parece estar ya en español, no gastamos una petición
+  const palabrasEspanol =
+    /\b(el|la|los|las|un|una|de|del|en|con|por|para|que|se|su|sus|tras|ante|mercado|bolsa|acciones)\b/i;
 
-    if (!respuesta.ok) {
-      console.log("TRADUCCION STATUS:", respuesta.status);
-      return texto;
-    }
-
-    const datos = await respuesta.json();
-
-    if (datos && datos[0]) {
-      const traduccion = datos[0]
-        .map(parte => parte[0])
-        .join("");
-
-      return limpiar(traduccion);
-    }
-
-    return texto;
-
-  } catch (error) {
-    console.log("ERROR TRADUCCION:", error.message);
+  if (palabrasEspanol.test(texto)) {
     return texto;
   }
-};
 
+  // PRIMER INTENTO: Google
+  try {
+    const urlGoogle =
+      "https://translate.googleapis.com/translate_a/single" +
+      "?client=gtx&sl=auto&tl=es&dt=t&q=" +
+      encodeURIComponent(texto);
+
+    const respuesta = await fetch(urlGoogle, {
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      }
+    });
+
+    if (respuesta.ok) {
+      const datos = await respuesta.json();
+
+      if (datos && datos[0]) {
+        const traduccion = datos[0]
+          .map(parte => parte[0])
+          .join("");
+
+        if (traduccion) {
+          return limpiar(traduccion);
+        }
+      }
+    }
+
+    console.log("GOOGLE STATUS:", respuesta.status);
+
+  } catch (error) {
+    console.log("ERROR GOOGLE:", error.message);
+  }
+
+  // Evitamos lanzar inmediatamente otra petición
+  await esperar(300);
+
+  // SEGUNDO INTENTO: MyMemory
+  try {
+    const urlMyMemory =
+      "https://api.mymemory.translated.net/get?q=" +
+      encodeURIComponent(texto) +
+      "&langpair=en|es";
+
+    const respuesta = await fetch(urlMyMemory, {
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      }
+    });
+
+    if (respuesta.ok) {
+      const datos = await respuesta.json();
+
+      const traduccion =
+        datos?.responseData?.translatedText;
+
+      if (
+        traduccion &&
+        typeof traduccion === "string" &&
+        traduccion.toUpperCase() !==
+          "MYMEMORY WARNING: YOU USED ALL AVAILABLE FREE TRANSLATIONS FOR TODAY"
+      ) {
+        return limpiar(traduccion);
+      }
+    }
+
+    console.log("MYMEMORY STATUS:", respuesta.status);
+
+  } catch (error) {
+    console.log("ERROR MYMEMORY:", error.message);
+  }
+
+  // Si ambos servicios fallan, conservamos el titular original
+  return texto;
+};
 
 
 
