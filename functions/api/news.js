@@ -138,11 +138,11 @@ const traducirTitulo = async (texto = "") => {
     // 4. Hasta 6 noticias de cartera + 4 de mercado
     const cartera = noticiasUnicas
       .filter(n => n.cartera)
-      .slice(0, 6);
+      .slice(0, 12);
 
     const mercado = noticiasUnicas
       .filter(n => !n.cartera)
-      .slice(0, 4);
+      .slice(0, 8);
 
     const noticias = [...cartera, ...mercado];
 
