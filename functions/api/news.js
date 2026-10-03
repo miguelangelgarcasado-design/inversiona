@@ -10,100 +10,41 @@ export async function onRequestGet() {
         .replace(/&gt;/g, ">")
         .trim();
 
-const esperar = (ms) =>
-  new Promise(resolve => setTimeout(resolve, ms));
-
 const traducirTitulo = async (texto = "") => {
-  texto = limpiar(texto);
   if (!texto) return "";
 
-  // Si parece estar ya en español, no gastamos una petición
-  const palabrasEspanol =
-    /\b(el|la|los|las|un|una|de|del|en|con|por|para|que|se|su|sus|tras|ante|mercado|bolsa|acciones)\b/i;
-
-  if (palabrasEspanol.test(texto)) {
-    return texto;
-  }
-
-  // PRIMER INTENTO: Google
   try {
-    const urlGoogle =
-      "https://translate.googleapis.com/translate_a/single" +
-      "?client=gtx&sl=auto&tl=es&dt=t&q=" +
+    const url =
+      "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=es&dt=t&q=" +
       encodeURIComponent(texto);
 
-    const respuesta = await fetch(urlGoogle, {
-      headers: {
-        "User-Agent": "Mozilla/5.0"
-      }
-    });
-
-    if (respuesta.ok) {
-      const datos = await respuesta.json();
-
-      if (datos && datos[0]) {
-        const traduccion = datos[0]
-          .map(parte => parte[0])
-          .join("");
-
-        if (traduccion) {
-          return limpiar(traduccion);
-        }
-      }
-    }
+    const respuesta = await fetch(url);
 
     console.log("GOOGLE STATUS:", respuesta.status);
 
-  } catch (error) {
-    console.log("ERROR GOOGLE:", error.message);
-  }
-
-  // Evitamos lanzar inmediatamente otra petición
-  await esperar(300);
-
-  // SEGUNDO INTENTO: MyMemory
-  try {
-    const urlMyMemory =
-      "https://api.mymemory.translated.net/get?q=" +
-      encodeURIComponent(texto) +
-      "&langpair=en|es";
-
-    const respuesta = await fetch(urlMyMemory, {
-      headers: {
-        "User-Agent": "Mozilla/5.0"
-      }
-    });
-
-    if (respuesta.ok) {
-      const datos = await respuesta.json();
-
-      const traduccion =
-        datos?.responseData?.translatedText;
-
-      if (
-        traduccion &&
-        typeof traduccion === "string" &&
-        traduccion.toUpperCase() !==
-          "MYMEMORY WARNING: YOU USED ALL AVAILABLE FREE TRANSLATIONS FOR TODAY"
-      ) {
-        return limpiar(traduccion);
-      }
+    if (!respuesta.ok) {
+      return texto;
     }
 
-    console.log("MYMEMORY STATUS:", respuesta.status);
+    const datos = await respuesta.json();
 
+    if (datos && Array.isArray(datos[0])) {
+      const traduccion = datos[0]
+        .map(parte => parte && parte[0] ? parte[0] : "")
+        .join("");
+
+      console.log("ORIGINAL:", texto);
+      console.log("TRADUCIDO:", traduccion);
+
+      return traduccion || texto;
+    }
+
+    return texto;
   } catch (error) {
-    console.log("ERROR MYMEMORY:", error.message);
+    console.log("ERROR GOOGLE:", error.message);
+    return texto;
   }
-
-  // Si ambos servicios fallan, conservamos el titular original
-  return texto;
 };
-
-
-
-
-
 
 
     // 1. CINCO DÍAS: economía y mercados
