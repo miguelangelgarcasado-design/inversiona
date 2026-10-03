@@ -11,40 +11,9 @@ export async function onRequestGet() {
         .trim();
 
 const traducirTitulo = async (texto = "") => {
-  if (!texto) return "";
-
-  try {
-    const url =
-      "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=es&dt=t&q=" +
-      encodeURIComponent(texto);
-
-    const respuesta = await fetch(url);
-
-    console.log("GOOGLE STATUS:", respuesta.status);
-
-    if (!respuesta.ok) {
-      return texto;
-    }
-
-    const datos = await respuesta.json();
-
-    if (datos && Array.isArray(datos[0])) {
-      const traduccion = datos[0]
-        .map(parte => parte && parte[0] ? parte[0] : "")
-        .join("");
-
-      console.log("ORIGINAL:", texto);
-      console.log("TRADUCIDO:", traduccion);
-
-      return traduccion || texto;
-    }
-
-    return texto;
-  } catch (error) {
-    console.log("ERROR GOOGLE:", error.message);
-    return texto;
-  }
+  return texto;
 };
+
 
 
     // 1. CINCO DÍAS: economía y mercados
