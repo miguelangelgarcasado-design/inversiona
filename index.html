@@ -257,17 +257,16 @@ async function cargarDatos() {
    if (regla) {
   if (porcentaje <= -35) {
     alertas.push("🔴 " + activo.nombre + ": REVISAR / RIESGO - " + formatoNumero(precioNumero) + " " + activo.moneda);
-  } else if (precioNumero <= regla.compra && porcentaje > -20) {
-    alertas.push("🟢 " + activo.nombre + ": POSIBLE COMPRA - " + formatoNumero(precioNumero) + " " + activo.moneda);
   } else if (precioNumero >= regla.venta) {
-    alertas.push("🔵 " + activo.nombre + ": RECOGER BENEFICIOS - " + formatoNumero(precioNumero) + " " + activo.moneda);
+    alertas.push("🔵 " + activo.nombre + ": OBJETIVO DE VENTA - " + formatoNumero(precioNumero) + " " + activo.moneda);
   } else if (porcentaje >= 30) {
     alertas.push("🟠 " + activo.nombre + ": VIGILAR BENEFICIOS - " + formatoNumero(precioNumero) + " " + activo.moneda);
+  } else if (precioNumero <= regla.compra) {
+    alertas.push("🟢 " + activo.nombre + ": ZONA DE COMPRA - " + formatoNumero(precioNumero) + " " + activo.moneda);
   } else {
     alertas.push("🟡 " + activo.nombre + ": MANTENER - " + formatoNumero(precioNumero) + " " + activo.moneda);
   }
 }
-
 
  
 
