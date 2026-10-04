@@ -426,29 +426,55 @@ if (regla) {
 
     let colorAlerta = "🟡";
     let estado = "MANTENER";
-  let recomendacion = regla.accion || "";
-recomendacion = recomendacion.replace(/^MANTENER;\s*/i, "");
+    let recomendacion = regla.accion || "";
 
-    // 1. Riesgo elevado
+    recomendacion = recomendacion.replace(/^MANTENER;\s*/i, "");
+
+    // 1. RIESGO ALTO: caída igual o superior al 35 %
     if (porcentaje <= -35) {
         colorAlerta = "🔴";
         estado = "RIESGO ALTO";
 
-    // 2. Objetivo alcanzado
+        // Conservamos la recomendación específica de cada activo.
+        // No marcamos una gran caída automáticamente como compra.
+        if (!recomendacion) {
+            recomendacion = "REVISAR; NO AMPLIAR AHORA";
+        }
+
+    // 2. OBJETIVO DE VENTA ALCANZADO
     } else if (precioNumero >= regla.venta) {
         colorAlerta = "🔴";
         estado = "OBJETIVO ALCANZADO";
         recomendacion = "VALORAR VENTA / RECOGER BENEFICIOS";
 
-    // 3. Beneficio importante
+    // 3. BENEFICIO IMPORTANTE
     } else if (porcentaje >= 30) {
         colorAlerta = "🟠";
         estado = "BENEFICIO IMPORTANTE";
 
-    // 4. Zona de compra
+        if (!recomendacion) {
+            recomendacion = "VIGILAR / VALORAR BENEFICIOS PARCIALES";
+        }
+
+    // 4. ZONA DE COMPRA, pero sin caída extrema
     } else if (precioNumero <= regla.compra) {
         colorAlerta = "🟢";
         estado = "ZONA DE COMPRA";
+
+        if (!recomendacion) {
+            recomendacion = porcentaje < 0
+                ? "VIGILAR ANTES DE AMPLIAR"
+                : "VALORAR COMPRA / AMPLIAR";
+        }
+
+    // 5. SITUACIÓN NORMAL
+    } else {
+        colorAlerta = "🟡";
+        estado = "MANTENER";
+
+        if (!recomendacion) {
+            recomendacion = "MANTENER / VIGILAR";
+        }
     }
 
     alertas.push(
@@ -461,6 +487,7 @@ recomendacion = recomendacion.replace(/^MANTENER;\s*/i, "");
         "\n🎯 Objetivo: " + formatoNumero(regla.venta) + " " + activo.moneda
     );
 }
+
       posicionesCalculadas++;
 
       if (beneficio >= 0) {
