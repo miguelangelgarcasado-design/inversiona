@@ -426,7 +426,8 @@ if (regla) {
 
     let colorAlerta = "🟡";
     let estado = "MANTENER";
-    let recomendacion = regla.accion || "MANTENER";
+  let recomendacion = regla.accion || "";
+recomendacion = recomendacion.replace(/^MANTENER;\s*/i, "");
 
     // 1. Riesgo elevado
     if (porcentaje <= -35) {
