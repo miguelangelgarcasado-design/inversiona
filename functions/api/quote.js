@@ -76,10 +76,22 @@ export async function onRequestGet(context) {
       }
 
       const yahooData = await yahooRes.json();
+
+// Datos históricos para análisis técnico
 const resultado = yahooData?.chart?.result?.[0];
 
 const cierres = (resultado?.indicators?.quote?.[0]?.close || [])
   .filter(valor => Number.isFinite(valor));
+
+const media = (datos, periodos) => {
+  if (datos.length < periodos) return null;
+
+  const ultimos = datos.slice(-periodos);
+  return ultimos.reduce((suma, valor) => suma + valor, 0) / periodos;
+};
+
+const media20 = media(cierres, 20);
+const media50 = media(cierres, 50);
 
       price =
         yahooData?.chart?.result?.[0]?.meta?.regularMarketPrice ??
