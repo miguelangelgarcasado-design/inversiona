@@ -620,13 +620,22 @@ if (!yaTieneAlerta) {
     "</span>";
 
   if (alertas.length > 0) {
-    alertasDinamicas.innerHTML =
-      "<strong>⚠️ Movimientos destacados</strong><br><br>" +
-      alertas.join("<br><br>");
-  } else {
-    alertasDinamicas.innerHTML =
-      "<span class='muted'>✅ Sin movimientos destacados ahora mismo.</span>";
-  }
+  alertasDinamicas.innerHTML =
+    "<strong>⚠️ Movimientos destacados</strong>" +
+    '<div style="margin-top:14px;display:grid;gap:12px;">' +
+    alertas.map(alerta =>
+      '<div style="background:rgba(255,255,255,0.05);' +
+      'border:1px solid rgba(255,255,255,0.10);' +
+      'border-radius:12px;padding:14px;line-height:1.55;">' +
+      alerta.replace(/\n/g, "<br>") +
+      "</div>"
+    ).join("") +
+    "</div>";
+} else {
+  alertasDinamicas.innerHTML =
+    '<span class="muted">✅ Sin movimientos destacados ahora mismo.</span>';
+}
+
 }
 
 async function cargarNoticias() {
