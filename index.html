@@ -421,43 +421,44 @@ async function cargarDatos() {
         ? (beneficio / invertido) * 100
         : 0;
 if (regla) {
-  const porcentajeTexto =
-    (porcentaje >= 0 ? "+" : "") + formatoNumero(porcentaje) + "%";
+    const porcentajeTexto =
+        (porcentaje >= 0 ? "+" : "") + formatoNumero(porcentaje) + "%";
 
-  const detalle =
-    " | Compra: " + formatoNumero(activo.compra) + " " + activo.moneda +
-    " | PyG: " + porcentajeTexto +
-    " | Objetivo: " + formatoNumero(regla.venta) + " " + activo.moneda;
+    let colorAlerta = "🟡";
+    let estado = "MANTENER";
+    let recomendacion = regla.accion || "MANTENER";
 
-  let colorAlerta = "🟡";
-  let textoAccion = regla.accion || "MANTENER";
+    // 1. Riesgo elevado
+    if (porcentaje <= -35) {
+        colorAlerta = "🔴";
+        estado = "RIESGO ALTO";
 
-  // Riesgo elevado: prioridad máxima
-  if (porcentaje <= -35) {
-    colorAlerta = "🔴";
+    // 2. Objetivo alcanzado
+    } else if (precioNumero >= regla.venta) {
+        colorAlerta = "🔴";
+        estado = "OBJETIVO ALCANZADO";
+        recomendacion = "VALORAR VENTA / RECOGER BENEFICIOS";
 
-  // Objetivo de venta alcanzado
-  } else if (precioNumero >= regla.venta) {
-    colorAlerta = "🔴";
-    textoAccion = "VENDER / OBJETIVO ALCANZADO";
+    // 3. Beneficio importante
+    } else if (porcentaje >= 30) {
+        colorAlerta = "🟠";
+        estado = "BENEFICIO IMPORTANTE";
 
-  // Beneficio importante
-  } else if (porcentaje >= 30) {
-    colorAlerta = "🟠";
+    // 4. Zona de compra
+    } else if (precioNumero <= regla.compra) {
+        colorAlerta = "🟢";
+        estado = "ZONA DE COMPRA";
+    }
 
-  // Zona de compra
-  } else if (precioNumero <= regla.compra) {
-    colorAlerta = "🟢";
-
-  // Situación normal
-  } else {
-    colorAlerta = "🟡";
-  }
-
-  alertas.push(
-    colorAlerta + " " + activo.nombre + ": " + textoAccion + " - " +
-    formatoNumero(precioNumero) + " " + activo.moneda + detalle
-  );
+    alertas.push(
+        colorAlerta + " " + activo.nombre +
+        ": " + estado +
+        " | " + porcentajeTexto +
+        "\n➡️ " + recomendacion +
+        "\n💰 Precio: " + formatoNumero(precioNumero) + " " + activo.moneda +
+        " | Compra: " + formatoNumero(activo.compra) + " " + activo.moneda +
+        "\n🎯 Objetivo: " + formatoNumero(regla.venta) + " " + activo.moneda
+    );
 }
       posicionesCalculadas++;
 
