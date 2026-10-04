@@ -456,26 +456,35 @@ if (regla) {
             recomendacion = "VIGILAR / VALORAR BENEFICIOS PARCIALES";
         }
 
-    // 4. ZONA DE COMPRA, pero sin caída extrema
-    } else if (precioNumero <= regla.compra) {
-        colorAlerta = "🟢";
-        estado = "ZONA DE COMPRA";
+    // 4. DECISIÓN DE COMPRA / ESPERA
+} else if (precioNumero <= regla.compra) {
 
-        if (!recomendacion) {
-            recomendacion = porcentaje < 0
-                ? "VIGILAR ANTES DE AMPLIAR"
-                : "VALORAR COMPRA / AMPLIAR";
-        }
+    if (porcentaje <= -30) {
+        colorAlerta = "🔴";
+        estado = "NO AMPLIAR";
+        recomendacion = "ESPERAR; CAÍDA FUERTE";
 
-    // 5. SITUACIÓN NORMAL
-    } else {
+    } else if (porcentaje <= -15) {
         colorAlerta = "🟡";
-        estado = "MANTENER";
+        estado = "ESPERAR";
+        recomendacion = "VIGILAR ANTES DE COMPRAR";
 
-        if (!recomendacion) {
-            recomendacion = "MANTENER / VIGILAR";
-        }
+    } else {
+        colorAlerta = "🟢";
+        estado = "COMPRAR / AMPLIAR";
+        recomendacion = "ZONA DE COMPRA";
     }
+
+// 5. SITUACIÓN NORMAL
+} else {
+    colorAlerta = "🟡";
+    estado = "MANTENER";
+
+    if (!recomendacion) {
+        recomendacion = "MANTENER / VIGILAR";
+    }
+}
+
 
    alertas.push(
   colorAlerta + " " + activo.nombre +
