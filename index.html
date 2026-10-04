@@ -459,21 +459,30 @@ if (regla) {
     // 4. DECISIÓN DE COMPRA / ESPERA
 } else if (precioNumero <= regla.compra) {
 
-    if (porcentaje <= -30) {
-        colorAlerta = "🔴";
-        estado = "NO AMPLIAR";
-        recomendacion = "ESPERAR; CAÍDA FUERTE";
+    const distanciaCompra =
+        ((regla.compra - precioNumero) / regla.compra) * 100;
 
-    } else if (porcentaje <= -15) {
+    if (porcentaje <= -35) {
+        colorAlerta = "🔴";
+        estado = "NO COMPRAR TODAVÍA";
+        recomendacion = "CAÍDA MUY FUERTE; ESPERAR ESTABILIZACIÓN";
+
+    } else if (porcentaje <= -20) {
         colorAlerta = "🟡";
-        estado = "ESPERAR";
-        recomendacion = "VIGILAR ANTES DE COMPRAR";
+        estado = "VIGILAR";
+        recomendacion = "CERCA DE COMPRA; ESPERAR CONFIRMACIÓN";
+
+    } else if (distanciaCompra >= 5) {
+        colorAlerta = "🟢";
+        estado = "OPORTUNIDAD DE COMPRA";
+        recomendacion = "PRECIO POR DEBAJO DE LA ZONA DE COMPRA";
 
     } else {
         colorAlerta = "🟢";
-        estado = "COMPRAR / AMPLIAR";
-        recomendacion = "ZONA DE COMPRA";
+        estado = "ZONA DE COMPRA";
+        recomendacion = "VALORAR COMPRA / AMPLIAR";
     }
+
 
 // 5. SITUACIÓN NORMAL
 } else {
