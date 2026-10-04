@@ -51,8 +51,8 @@ export async function onRequestGet(context) {
       symbol.endsWith(".MI");
 
     if (useYahoo) {
-      const yahooUrl =
-        `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?interval=1d&range=1d`;
+     const yahooUrl =
+  `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?interval=1d&range=6mo`;
 
       const yahooRes = await fetch(yahooUrl, {
         headers: {
