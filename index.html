@@ -620,22 +620,62 @@ if (!yaTieneAlerta) {
     activos.length +
     "</span>";
 
-  if (alertas.length > 0) {
+ const gruposAlertas = {
+  compra: [],
+  riesgo: [],
+  beneficio: [],
+  mantener: []
+};
+
+alertas.forEach(alerta => {
+  if (alerta.includes("ZONA DE COMPRA")) {
+    gruposAlertas.compra.push(alerta);
+  } else if (
+    alerta.includes("RIESGO ALTO") ||
+    alerta.includes("NO AMPLIAR") ||
+    alerta.includes("NO PROMEDIAR")
+  ) {
+    gruposAlertas.riesgo.push(alerta);
+  } else if (
+    alerta.includes("OBJETIVO ALCANZADO") ||
+    alerta.includes("BENEFICIO IMPORTANTE")
+  ) {
+    gruposAlertas.beneficio.push(alerta);
+  } else {
+    gruposAlertas.mantener.push(alerta);
+  }
+});
+
+function crearGrupo(titulo, lista) {
+  if (lista.length === 0) return "";
+
+  return (
+    '<div style="margin-top:18px;">' +
+      '<strong style="font-size:20px;">' + titulo + '</strong>' +
+      '<div style="margin-top:12px;display:grid;gap:12px;">' +
+        lista.map(alerta =>
+          '<div style="background:rgba(255,255,255,0.05);' +
+          'border:1px solid rgba(255,255,255,0.10);' +
+          'border-radius:12px;padding:14px;line-height:1.55;">' +
+          alerta.replace(/\n/g, "<br>") +
+          '</div>'
+        ).join("") +
+      '</div>' +
+    '</div>'
+  );
+}
+
+if (alertas.length > 0) {
   alertasDinamicas.innerHTML =
-    "<strong>⚠️ Movimientos destacados</strong>" +
-    '<div style="margin-top:14px;display:grid;gap:12px;">' +
-    alertas.map(alerta =>
-      '<div style="background:rgba(255,255,255,0.05);' +
-      'border:1px solid rgba(255,255,255,0.10);' +
-      'border-radius:12px;padding:14px;line-height:1.55;">' +
-      alerta.replace(/\n/g, "<br>") +
-      "</div>"
-    ).join("") +
-    "</div>";
+    crearGrupo("🟢 Oportunidades de compra", gruposAlertas.compra) +
+    crearGrupo("🔴 Riesgo / revisar", gruposAlertas.riesgo) +
+    crearGrupo("🟠 Beneficios / objetivos", gruposAlertas.beneficio) +
+    crearGrupo("🟡 Mantener / vigilar", gruposAlertas.mantener);
 } else {
   alertasDinamicas.innerHTML =
     '<span class="muted">✅ Sin movimientos destacados ahora mismo.</span>';
 }
+
 
 }
 
