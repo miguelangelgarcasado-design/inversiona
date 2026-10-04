@@ -76,6 +76,10 @@ export async function onRequestGet(context) {
       }
 
       const yahooData = await yahooRes.json();
+const resultado = yahooData?.chart?.result?.[0];
+
+const cierres = (resultado?.indicators?.quote?.[0]?.close || [])
+  .filter(valor => Number.isFinite(valor));
 
       price =
         yahooData?.chart?.result?.[0]?.meta?.regularMarketPrice ??
