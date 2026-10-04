@@ -477,15 +477,15 @@ if (regla) {
         }
     }
 
-    alertas.push(
-        colorAlerta + " " + activo.nombre +
-        ": " + estado +
-        " | " + porcentajeTexto +
-        "\n➡️ " + recomendacion +
-        "\n💰 Precio: " + formatoNumero(precioNumero) + " " + activo.moneda +
-        " | Compra: " + formatoNumero(activo.compra) + " " + activo.moneda +
-        "\n🎯 Objetivo: " + formatoNumero(regla.venta) + " " + activo.moneda
-    );
+   alertas.push(
+  colorAlerta + " " + activo.nombre +
+  " — " + estado + " (" + porcentajeTexto + ")" +
+  "\n➡️ " + recomendacion +
+  "\n💰 " + formatoNumero(precioNumero) + " " + activo.moneda +
+  " · Compra " + formatoNumero(activo.compra) + " " + activo.moneda +
+  " · 🎯 " + formatoNumero(regla.venta) + " " + activo.moneda
+);
+
 }
 
       posicionesCalculadas++;
