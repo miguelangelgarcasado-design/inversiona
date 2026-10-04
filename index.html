@@ -129,35 +129,195 @@
 
 <script>
  const reglas = {
-  "LDO.MI":  { compra: 42, venta: 60, nombre: "Leonardo" },
-  "IREN":    { compra: 33.50, venta: 78, nombre: "IREN" },
-  "OHLA.MC": { compra: 0.30, venta: 0.50, nombre: "OHL" },
-  "ADX.MC":  { compra: 1.50, venta: 2.50, nombre: "Audax Renovables" },
-  "NAMM":    { compra: 1.00, venta: 1.40, nombre: "Namib Minerals" },
-  "RKLB":    { compra: 70, venta: 120, nombre: "Rocket Lab" },
-  "ASTS":    { compra: 62, venta: 106, nombre: "AST SpaceMobile" },
-  "EDR.MC":  { compra: 3.50, venta: 9, nombre: "eDreams" },
-  "AMP.MC":  { compra: 3.25, venta: 5, nombre: "Amper" },
-  "AAPL":    { compra: 250, venta: 330, nombre: "Apple" },
-  "PATH":    { compra: 10, venta: 20, nombre: "UiPath" },
-  "UAA":     { compra: 4.50, venta: 8, nombre: "Under Armour" },
-  "MBLY":    { compra: 7, venta: 15, nombre: "Mobileye" },
-  "HIMS":    { compra: 25, venta: 45, nombre: "Hims & Hers" },
-  "TSLA":    { compra: 300, venta: 450, nombre: "Tesla" },
-  "SWKS":    { compra: 55, venta: 90, nombre: "Skyworks Solutions" },
-  "RXRX":    { compra: 2.50, venta: 6, nombre: "Recursion Pharmaceuticals" },
-  "RCAT":    { compra: 6, venta: 12, nombre: "Red Cat Holdings" },
-  "GRF-P.MC":{ compra: 7, venta: 12, nombre: "Grifols Clase B" },
-  "CLNX.MC": { compra: 27, venta: 40, nombre: "Cellnex" },
-  "MNDY":    { compra: 70, venta: 100, nombre: "monday.com" },
-   "MNTS": { compra: 3.50, venta: 5.00, nombre: "Momentus" },
-   "PGS.DE": { compra: 0.90, venta: 1.40, nombre: "Platform Group" },
-   "BTC":  { compra: 70000, venta: 100000, nombre: "Bitcoin" },
-"SOL":  { compra: 100, venta: 180, nombre: "Solana" },
-"SUI":  { compra: 0.80, venta: 2.00, nombre: "SUI" },
-"PEPE": { compra: 0.000004, venta: 0.000015, nombre: "PEPE" },
+  "LDO.MI": {
+    compra: 42,
+    venta: 60,
+    nombre: "Leonardo",
+    accion: "MANTENER; VIGILAR OBJETIVO 60 €"
+  },
 
-  };
+  "IREN": {
+    compra: 33.50,
+    venta: 78,
+    nombre: "IREN",
+    accion: "MANTENER; AMPLIAR CERCA DE 33,50 $"
+  },
+
+  "OHLA.MC": {
+    compra: 0.30,
+    venta: 0.50,
+    nombre: "OHL",
+    accion: "MANTENER; VIGILAR OBJETIVO 0,50 €"
+  },
+
+  "ADX.MC": {
+    compra: 1.50,
+    venta: 2.50,
+    nombre: "Audax Renovables",
+    accion: "REVISAR; NO AMPLIAR AUTOMÁTICAMENTE"
+  },
+
+  "NAMM": {
+    compra: 1.00,
+    venta: 1.40,
+    nombre: "Namib Minerals",
+    accion: "MANTENER; VIGILAR 1,40 $"
+  },
+
+  "RKLB": {
+    compra: 70,
+    venta: 120,
+    nombre: "Rocket Lab",
+    accion: "MANTENER; NO AMPLIAR AHORA"
+  },
+
+  "ASTS": {
+    compra: 62,
+    venta: 106,
+    nombre: "AST SpaceMobile",
+    accion: "MANTENER; NO PROMEDIAR A LA BAJA AHORA"
+  },
+
+  "EDR.MC": {
+    compra: 3.50,
+    venta: 9,
+    nombre: "eDreams",
+    accion: "VIGILAR; VALORAR BENEFICIOS PARCIALES"
+  },
+
+  "AMP.MC": {
+    compra: 3.25,
+    venta: 5,
+    nombre: "Amper",
+    accion: "VIGILAR OBJETIVO 5 €"
+  },
+
+  "AAPL": {
+    compra: 250,
+    venta: 330,
+    nombre: "Apple",
+    accion: "MANTENER; VIGILAR OBJETIVO 330 $"
+  },
+
+  "PATH": {
+    compra: 10,
+    venta: 20,
+    nombre: "UiPath",
+    accion: "MANTENER; VIGILAR 20 $"
+  },
+
+  "UAA": {
+    compra: 4.50,
+    venta: 8,
+    nombre: "Under Armour",
+    accion: "MANTENER; VIGILAR 8 $"
+  },
+
+  "MBLY": {
+    compra: 7,
+    venta: 15,
+    nombre: "Mobileye",
+    accion: "MANTENER; VIGILAR 15 $"
+  },
+
+  "HIMS": {
+    compra: 25,
+    venta: 45,
+    nombre: "Hims & Hers",
+    accion: "MANTENER; VIGILAR OBJETIVO 45 $"
+  },
+
+  "TSLA": {
+    compra: 300,
+    venta: 450,
+    nombre: "Tesla",
+    accion: "MANTENER; VIGILAR OBJETIVO 450 $"
+  },
+
+  "SWKS": {
+    compra: 55,
+    venta: 90,
+    nombre: "Skyworks Solutions",
+    accion: "VIGILAR; VALORAR BENEFICIOS"
+  },
+
+  "RXRX": {
+    compra: 2.50,
+    venta: 6,
+    nombre: "Recursion Pharmaceuticals",
+    accion: "VIGILAR; VALORAR BENEFICIOS PARCIALES"
+  },
+
+  "RCAT": {
+    compra: 6,
+    venta: 12,
+    nombre: "Red Cat Holdings",
+    accion: "MANTENER; VIGILAR 12 $"
+  },
+
+  "GRF-P.MC": {
+    compra: 7,
+    venta: 12,
+    nombre: "Grifols Clase B",
+    accion: "VIGILAR ZONA DE COMPRA"
+  },
+
+  "CLNX.MC": {
+    compra: 27,
+    venta: 40,
+    nombre: "Cellnex",
+    accion: "VIGILAR ZONA DE COMPRA"
+  },
+
+  "MNDY": {
+    compra: 70,
+    venta: 100,
+    nombre: "monday.com",
+    accion: "MANTENER; VIGILAR 100 €"
+  },
+
+  "MNTS": {
+    compra: 3.50,
+    venta: 5.00,
+    nombre: "Momentus",
+    accion: "MANTENER; VIGILAR 5 $"
+  },
+
+  "PGS.DE": {
+    compra: 0.90,
+    venta: 1.40,
+    nombre: "Platform Group",
+    accion: "VIGILAR ZONA 0,90 €"
+  },
+
+  "BTC": {
+    compra: 70000,
+    venta: 100000,
+    nombre: "Bitcoin",
+    accion: "MANTENER; VIGILAR 100.000 €"
+  },
+
+  "SOL": {
+    compra: 100,
+    venta: 180,
+    nombre: "Solana",
+    accion: "MANTENER; VIGILAR 180 €"
+  },
+
+  "SUI": {
+    compra: 0.80,
+    venta: 2.00,
+    nombre: "SUI",
+    accion: "REVISAR; NO AMPLIAR AUTOMÁTICAMENTE"
+  },
+
+  "PEPE": {
+    compra: 0.000004,
+    venta: 0.000015,
+    nombre: "PEPE",
+    accion: "REVISAR; ALTA VOLATILIDAD"
+  }
+};
 
 const activos = [
   { nombre: "Leonardo", ticker: "LDO.MI", titulos: 23.607176, compra: 42.46, moneda: "€" },
