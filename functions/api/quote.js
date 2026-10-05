@@ -13,6 +13,9 @@ export async function onRequestGet(context) {
     let price = null;
    let source = "v2";
     let cierres = [];
+    let maximos = [];
+let minimos = [];
+let volumenes = [];
 let media20 = null;
 let media50 = null;
     let rsi14 = null;
@@ -87,6 +90,15 @@ const resultado = yahooData?.chart?.result?.[0];
 
  cierres = (resultado?.indicators?.quote?.[0]?.close || [])
   .filter(valor => Number.isFinite(valor));
+  maximos = (resultado?.indicators?.quote?.[0]?.high || [])
+  .filter(valor => Number.isFinite(valor));
+
+minimos = (resultado?.indicators?.quote?.[0]?.low || [])
+  .filter(valor => Number.isFinite(valor));
+
+volumenes = (resultado?.indicators?.quote?.[0]?.volume || [])
+  .filter(valor => Number.isFinite(valor));
+    
 
 const media = (datos, periodos) => {
   if (datos.length < periodos) return null;
