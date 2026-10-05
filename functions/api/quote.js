@@ -16,6 +16,7 @@ export async function onRequestGet(context) {
 let media20 = null;
 let media50 = null;
     let rsi14 = null;
+    let tendencia = "NEUTRAL";
 
     // Símbolos especiales de Yahoo Finance
     const yahooSymbol =
@@ -96,6 +97,16 @@ const media = (datos, periodos) => {
 
  media20 = media(cierres, 20);
  media50 = media(cierres, 50);
+  // Tendencia según medias móviles
+if (media20 !== null && media50 !== null) {
+  if (media20 > media50) {
+    tendencia = "ALCISTA";
+  } else if (media20 < media50) {
+    tendencia = "BAJISTA";
+  } else {
+    tendencia = "NEUTRAL";
+  }
+}    
      // RSI de 14 sesiones
 if (cierres.length >= 15) {
   let ganancias = 0;
@@ -218,7 +229,8 @@ if (cierres.length >= 15) {
   velas: cierres.length,
   media20,
   media50,
-  rsi14
+  rsi14,
+  tendencia      
 },
 
       {
