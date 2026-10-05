@@ -22,6 +22,8 @@ let media50 = null;
     let tendencia = "NEUTRAL";
     let soporte = null;
 let resistencia = null;
+    let volumenActual = null;
+    let volumenMedio20 = null;
 
     // Símbolos especiales de Yahoo Finance
     const yahooSymbol =
@@ -130,6 +132,17 @@ if (minimos.length >= 20 && maximos.length >= 20) {
 
     
      // RSI de 14 sesiones
+   // Volumen actual y volumen medio de 20 sesiones
+if (volumenes.length > 0) {
+  volumenActual = volumenes[volumenes.length - 1];
+}
+
+if (volumenes.length >= 20) {
+  const ultimos20Volumenes = volumenes.slice(-20);
+  volumenMedio20 =
+    ultimos20Volumenes.reduce((suma, valor) => suma + valor, 0) / 20;
+}
+   
 if (cierres.length >= 15) {
   let ganancias = 0;
   let perdidas = 0;
@@ -254,7 +267,9 @@ if (cierres.length >= 15) {
   rsi14,
   tendencia,
   soporte,
-  resistencia      
+  resistencia,
+  volumenActual,
+volumenMedio20      
 },
 
       {
