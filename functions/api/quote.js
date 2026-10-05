@@ -20,6 +20,8 @@ let media20 = null;
 let media50 = null;
     let rsi14 = null;
     let tendencia = "NEUTRAL";
+    let soporte = null;
+let resistencia = null;
 
     // Símbolos especiales de Yahoo Finance
     const yahooSymbol =
