@@ -118,7 +118,15 @@ if (media20 !== null && media50 !== null) {
   } else {
     tendencia = "NEUTRAL";
   }
-}    
+}   
+
+// Soporte y resistencia de los últimos 20 días
+if (minimos.length >= 20 && maximos.length >= 20) {
+  soporte = Math.min(...minimos.slice(-20));
+  resistencia = Math.max(...maximos.slice(-20));
+}
+
+    
      // RSI de 14 sesiones
 if (cierres.length >= 15) {
   let ganancias = 0;
@@ -242,7 +250,9 @@ if (cierres.length >= 15) {
   media20,
   media50,
   rsi14,
-  tendencia      
+  tendencia,
+  soporte,
+  resistencia      
 },
 
       {
