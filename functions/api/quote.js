@@ -12,6 +12,9 @@ export async function onRequestGet(context) {
 
     let price = null;
    let source = "v2";
+    let cierres = [];
+let media20 = null;
+let media50 = null;
 
     // Símbolos especiales de Yahoo Finance
     const yahooSymbol =
@@ -80,7 +83,7 @@ export async function onRequestGet(context) {
 // Datos históricos para análisis técnico
 const resultado = yahooData?.chart?.result?.[0];
 
-const cierres = (resultado?.indicators?.quote?.[0]?.close || [])
+ cierres = (resultado?.indicators?.quote?.[0]?.close || [])
   .filter(valor => Number.isFinite(valor));
 
 const media = (datos, periodos) => {
@@ -90,8 +93,8 @@ const media = (datos, periodos) => {
   return ultimos.reduce((suma, valor) => suma + valor, 0) / periodos;
 };
 
-const media20 = media(cierres, 20);
-const media50 = media(cierres, 50);
+ media20 = media(cierres, 20);
+ media50 = media(cierres, 50);
 
       price =
         yahooData?.chart?.result?.[0]?.meta?.regularMarketPrice ??
