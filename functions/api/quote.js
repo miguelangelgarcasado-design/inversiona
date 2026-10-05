@@ -15,6 +15,7 @@ export async function onRequestGet(context) {
     let cierres = [];
 let media20 = null;
 let media50 = null;
+    let rsi14 = null;
 
     // Símbolos especiales de Yahoo Finance
     const yahooSymbol =
@@ -95,6 +96,34 @@ const media = (datos, periodos) => {
 
  media20 = media(cierres, 20);
  media50 = media(cierres, 50);
+     // RSI de 14 sesiones
+if (cierres.length >= 15) {
+  let ganancias = 0;
+  let perdidas = 0;
+
+  const inicio = cierres.length - 15;
+
+  for (let i = inicio + 1; i < cierres.length; i++) {
+    const cambio = cierres[i] - cierres[i - 1];
+
+    if (cambio > 0) {
+      ganancias += cambio;
+    } else {
+      perdidas += Math.abs(cambio);
+    }
+  }
+
+  const mediaGanancias = ganancias / 14;
+  const mediaPerdidas = perdidas / 14;
+
+  if (mediaPerdidas === 0) {
+    rsi14 = 100;
+  } else {
+    const rs = mediaGanancias / mediaPerdidas;
+    rsi14 = 100 - (100 / (1 + rs));
+  }
+}
+ 
 
       price =
         yahooData?.chart?.result?.[0]?.meta?.regularMarketPrice ??
@@ -188,7 +217,8 @@ const media = (datos, periodos) => {
   source,
   velas: cierres.length,
   media20,
-  media50
+  media50,
+  rsi14
 },
 
       {
