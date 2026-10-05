@@ -25,6 +25,10 @@ export async function onRequestGet(context) {
     let macd = null;
     let macdSignal = null;
     let macdHistograma = null;
+    let bollingerMedia = null;
+let bollingerSuperior = null;
+let bollingerInferior = null;
+
     let volumenActual = null;
     let volumenMedio20 = null;
 
@@ -203,6 +207,24 @@ if (cierres.length >= 35) {
     macdHistograma = macd - macdSignal;
   }
 }
+// Bandas de Bollinger (20, 2)
+if (cierres.length >= 20) {
+  const ultimos20 = cierres.slice(-20);
+  const mediaBollinger =
+    ultimos20.reduce((suma, valor) => suma + valor, 0) / 20;
+
+  const varianza =
+    ultimos20.reduce(
+      (suma, valor) => suma + Math.pow(valor - mediaBollinger, 2),
+      0
+    ) / 20;
+
+  const desviacion = Math.sqrt(varianza);
+
+  bollingerMedia = mediaBollinger;
+  bollingerSuperior = mediaBollinger + (2 * desviacion);
+  bollingerInferior = mediaBollinger - (2 * desviacion);
+}
 
       price =
         yahooData?.chart?.result?.[0]?.meta?.regularMarketPrice ??
@@ -305,7 +327,10 @@ if (cierres.length >= 35) {
 volumenMedio20,
   macd,
 macdSignal,
-macdHistograma      
+macdHistograma,
+ bollingerMedia,
+bollingerSuperior,
+bollingerInferior       
 },
 
       {
