@@ -11,17 +11,20 @@ export async function onRequestGet(context) {
     }
 
     let price = null;
-   let source = "v2";
+    let source = "v2";
     let cierres = [];
     let maximos = [];
-let minimos = [];
-let volumenes = [];
-let media20 = null;
-let media50 = null;
+    let minimos = [];
+    let volumenes = [];
+    let media20 = null;
+    let media50 = null;
     let rsi14 = null;
     let tendencia = "NEUTRAL";
     let soporte = null;
-let resistencia = null;
+    let resistencia = null;
+    let macd = null;
+    let macdSignal = null;
+    let macdHistograma = null;
     let volumenActual = null;
     let volumenMedio20 = null;
 
@@ -170,6 +173,36 @@ if (cierres.length >= 15) {
   }
 }
  
+// MACD (12, 26, 9)
+if (cierres.length >= 35) {
+  const ema = (datos, periodo) => {
+    const k = 2 / (periodo + 1);
+    let valor = datos[0];
+
+    for (let i = 1; i < datos.length; i++) {
+      valor = datos[i] * k + valor * (1 - k);
+    }
+
+    return valor;
+  };
+
+  const macdValores = [];
+
+  for (let i = 25; i < cierres.length; i++) {
+    const datosHastaHoy = cierres.slice(0, i + 1);
+    const ema12 = ema(datosHastaHoy, 12);
+    const ema26 = ema(datosHastaHoy, 26);
+
+    macdValores.push(ema12 - ema26);
+  }
+
+  macd = macdValores[macdValores.length - 1];
+
+  if (macdValores.length >= 9) {
+    macdSignal = ema(macdValores.slice(-9), 9);
+    macdHistograma = macd - macdSignal;
+  }
+}
 
       price =
         yahooData?.chart?.result?.[0]?.meta?.regularMarketPrice ??
@@ -269,7 +302,10 @@ if (cierres.length >= 15) {
   soporte,
   resistencia,
   volumenActual,
-volumenMedio20      
+volumenMedio20,
+  macd,
+macdSignal,
+macdHistograma      
 },
 
       {
