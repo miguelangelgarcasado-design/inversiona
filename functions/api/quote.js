@@ -180,10 +180,14 @@ const media50 = media(cierres, 50);
 
     return Response.json(
       {
-        symbol,
-        price: Number(price),
-        source
-      },
+  symbol,
+  price: Number(price),
+  source,
+  velas: cierres.length,
+  media20,
+  media50
+},
+
       {
         headers: {
           "Cache-Control": "no-store"
