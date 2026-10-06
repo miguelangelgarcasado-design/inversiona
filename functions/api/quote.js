@@ -30,6 +30,9 @@ let bollingerSuperior = null;
 let bollingerInferior = null;
     let atr14 = null;
     let adx14 = null;
+    let estocasticoK = null;
+    let estocasticoD = null;
+
 
     let volumenActual = null;
     let volumenMedio20 = null;
@@ -280,7 +283,28 @@ if (maximos.length >= 15 && minimos.length >= 15 && cierres.length >= 15) {
     }
   }
 }
+      // Estocástico (14, 3, 3)
+if (maximos.length >= 16 && minimos.length >= 16 && cierres.length >= 16) {
+  const valoresK = [];
 
+  for (let i = cierres.length - 3; i < cierres.length; i++) {
+    const inicio = i - 13;
+    const max14 = Math.max(...maximos.slice(inicio, i + 1));
+    const min14 = Math.min(...minimos.slice(inicio, i + 1));
+
+    if (max14 !== min14) {
+      const k = ((cierres[i] - min14) / (max14 - min14)) * 100;
+      valoresK.push(k);
+    }
+  }
+
+  if (valoresK.length === 3) {
+    estocasticoK = valoresK[valoresK.length - 1];
+    estocasticoD =
+      valoresK.reduce((suma, valor) => suma + valor, 0) / valoresK.length;
+  }
+}
+54
       price =
         yahooData?.chart?.result?.[0]?.meta?.regularMarketPrice ??
         yahooData?.chart?.result?.[0]?.meta?.previousClose ??
@@ -387,7 +411,10 @@ macdHistograma,
 bollingerSuperior,
 bollingerInferior,
 atr14,
-adx14       
+adx14,
+estocasticoK,
+estocasticoD
+       
 },
 
       {
