@@ -28,6 +28,7 @@ export async function onRequestGet(context) {
     let bollingerMedia = null;
 let bollingerSuperior = null;
 let bollingerInferior = null;
+    let atr14 = null;
 
     let volumenActual = null;
     let volumenMedio20 = null;
@@ -225,6 +226,26 @@ if (cierres.length >= 20) {
   bollingerSuperior = mediaBollinger + (2 * desviacion);
   bollingerInferior = mediaBollinger - (2 * desviacion);
 }
+// ATR de 14 sesiones
+if (maximos.length >= 15 && minimos.length >= 15 && cierres.length >= 15) {
+  let sumaTR = 0;
+
+  for (let i = cierres.length - 14; i < cierres.length; i++) {
+    const maximo = maximos[i];
+    const minimo = minimos[i];
+    const cierreAnterior = cierres[i - 1];
+
+    const trueRange = Math.max(
+      maximo - minimo,
+      Math.abs(maximo - cierreAnterior),
+      Math.abs(minimo - cierreAnterior)
+    );
+
+    sumaTR += trueRange;
+  }
+
+  atr14 = sumaTR / 14;
+}
 
       price =
         yahooData?.chart?.result?.[0]?.meta?.regularMarketPrice ??
@@ -330,7 +351,8 @@ macdSignal,
 macdHistograma,
  bollingerMedia,
 bollingerSuperior,
-bollingerInferior       
+bollingerInferior,
+atr14
 },
 
       {
