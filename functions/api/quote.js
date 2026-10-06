@@ -29,6 +29,7 @@ export async function onRequestGet(context) {
 let bollingerSuperior = null;
 let bollingerInferior = null;
     let atr14 = null;
+    let adx14 = null;
 
     let volumenActual = null;
     let volumenMedio20 = null;
@@ -246,6 +247,39 @@ if (maximos.length >= 15 && minimos.length >= 15 && cierres.length >= 15) {
 
   atr14 = sumaTR / 14;
 }
+// ADX de 14 sesiones
+if (maximos.length >= 15 && minimos.length >= 15 && cierres.length >= 15) {
+  let sumaTR = 0;
+  let sumaDMPlus = 0;
+  let sumaDMMinus = 0;
+
+  for (let i = cierres.length - 14; i < cierres.length; i++) {
+    const subida = maximos[i] - maximos[i - 1];
+    const bajada = minimos[i - 1] - minimos[i];
+
+    const dmPlus = subida > bajada && subida > 0 ? subida : 0;
+    const dmMinus = bajada > subida && bajada > 0 ? bajada : 0;
+
+    const tr = Math.max(
+      maximos[i] - minimos[i],
+      Math.abs(maximos[i] - cierres[i - 1]),
+      Math.abs(minimos[i] - cierres[i - 1])
+    );
+
+    sumaTR += tr;
+    sumaDMPlus += dmPlus;
+    sumaDMMinus += dmMinus;
+  }
+
+  if (sumaTR > 0) {
+    const diPlus = (sumaDMPlus / sumaTR) * 100;
+    const diMinus = (sumaDMMinus / sumaTR) * 100;
+
+    if (diPlus + diMinus > 0) {
+      adx14 = (Math.abs(diPlus - diMinus) / (diPlus + diMinus)) * 100;
+    }
+  }
+}
 
       price =
         yahooData?.chart?.result?.[0]?.meta?.regularMarketPrice ??
@@ -352,7 +386,8 @@ macdHistograma,
  bollingerMedia,
 bollingerSuperior,
 bollingerInferior,
-atr14
+atr14,
+adx14       
 },
 
       {
