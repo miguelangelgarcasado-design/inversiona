@@ -32,7 +32,7 @@ let bollingerInferior = null;
     let adx14 = null;
     let estocasticoK = null;
     let estocasticoD = null;
-
+    let roc14 = null;
 
     let volumenActual = null;
     let volumenMedio20 = null;
@@ -304,7 +304,16 @@ if (maximos.length >= 16 && minimos.length >= 16 && cierres.length >= 16) {
       valoresK.reduce((suma, valor) => suma + valor, 0) / valoresK.length;
   }
 }
-54
+     // ROC de 14 sesiones
+if (cierres.length >= 15) {
+  const cierreActual = cierres[cierres.length - 1];
+  const cierreHace14 = cierres[cierres.length - 15];
+
+  if (cierreHace14 !== 0) {
+    roc14 = ((cierreActual - cierreHace14) / cierreHace14) * 100;
+  }
+}
+ 
       price =
         yahooData?.chart?.result?.[0]?.meta?.regularMarketPrice ??
         yahooData?.chart?.result?.[0]?.meta?.previousClose ??
@@ -413,8 +422,8 @@ bollingerInferior,
 atr14,
 adx14,
 estocasticoK,
-estocasticoD
-       
+estocasticoD,
+roc14       
 },
 
       {
