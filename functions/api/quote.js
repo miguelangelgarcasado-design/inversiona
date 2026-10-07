@@ -33,6 +33,7 @@ let bollingerInferior = null;
     let estocasticoK = null;
     let estocasticoD = null;
     let roc14 = null;
+    let cci20 = null;
 
     let volumenActual = null;
     let volumenMedio20 = null;
@@ -313,7 +314,29 @@ if (cierres.length >= 15) {
     roc14 = ((cierreActual - cierreHace14) / cierreHace14) * 100;
   }
 }
- 
+ // CCI de 20 sesiones
+if (maximos.length >= 20 && minimos.length >= 20 && cierres.length >= 20) {
+  const preciosTipicos = [];
+
+  for (let i = cierres.length - 20; i < cierres.length; i++) {
+    preciosTipicos.push((maximos[i] + minimos[i] + cierres[i]) / 3);
+  }
+
+  const mediaTipica =
+    preciosTipicos.reduce((suma, valor) => suma + valor, 0) / 20;
+
+  const desviacionMedia =
+    preciosTipicos.reduce(
+      (suma, valor) => suma + Math.abs(valor - mediaTipica),
+      0
+    ) / 20;
+
+  if (desviacionMedia !== 0) {
+    const precioTipicoActual = preciosTipicos[preciosTipicos.length - 1];
+    cci20 = (precioTipicoActual - mediaTipica) / (0.015 * desviacionMedia);
+  }
+}
+
       price =
         yahooData?.chart?.result?.[0]?.meta?.regularMarketPrice ??
         yahooData?.chart?.result?.[0]?.meta?.previousClose ??
@@ -423,7 +446,8 @@ atr14,
 adx14,
 estocasticoK,
 estocasticoD,
-roc14       
+roc14,
+cci20
 },
 
       {
