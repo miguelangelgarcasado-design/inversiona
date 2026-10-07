@@ -34,7 +34,8 @@ let bollingerInferior = null;
     let estocasticoD = null;
     let roc14 = null;
     let cci20 = null;
-
+    let williamsR14 = null;
+    
     let volumenActual = null;
     let volumenMedio20 = null;
 
@@ -336,7 +337,16 @@ if (maximos.length >= 20 && minimos.length >= 20 && cierres.length >= 20) {
     cci20 = (precioTipicoActual - mediaTipica) / (0.015 * desviacionMedia);
   }
 }
+// Williams %R de 14 sesiones
+if (maximos.length >= 14 && minimos.length >= 14 && cierres.length >= 14) {
+  const max14 = Math.max(...maximos.slice(-14));
+  const min14 = Math.min(...minimos.slice(-14));
+  const cierreActual = cierres[cierres.length - 1];
 
+  if (max14 !== min14) {
+    williamsR14 = ((max14 - cierreActual) / (max14 - min14)) * -100;
+  }
+}
       price =
         yahooData?.chart?.result?.[0]?.meta?.regularMarketPrice ??
         yahooData?.chart?.result?.[0]?.meta?.previousClose ??
@@ -447,7 +457,8 @@ adx14,
 estocasticoK,
 estocasticoD,
 roc14,
-cci20
+cci20,
+williamsR14        
 },
 
       {
