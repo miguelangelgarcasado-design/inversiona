@@ -376,6 +376,19 @@ async function obtenerPrecio(ticker) {
 
   return precio;
 }
+ async function obtenerAnalisis(ticker) {
+  const res = await fetch(
+    "/api/quote?symbol=" + encodeURIComponent(ticker),
+    { cache: "no-store" }
+  );
+
+  if (!res.ok) {
+    throw new Error("Error al obtener análisis");
+  }
+
+  return await res.json();
+}
+ 
 
 async function cargarDatos() {
   const lista = document.getElementById("listaActivos");
