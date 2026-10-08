@@ -425,6 +425,13 @@ async function cargarDatos() {
      const alertasAntes = alertas.length;
      const regla = reglas[activo.ticker]; 
       const precioNumero = await obtenerPrecio(activo.ticker);
+      let analisis = null;
+try {
+  analisis = await obtenerAnalisis(activo.ticker);
+} catch (error) {
+  console.warn("Análisis no disponible", activo.ticker);
+}
+
       const unidades = activo.titulos ?? activo.cantidad;
 
       const invertido = unidades * activo.compra;
@@ -568,6 +575,15 @@ if (regla) {
             (${signo}${formatoNumero(porcentaje)}%)
           </span>
         </div>
+       <div style="margin-top:12px; padding:10px; background:#172b4d; border-radius:8px;">
+  <strong>📊 Análisis técnico</strong>
+  <div>Tendencia: ${analisis?.tendencia ?? "N/D"}</div>
+  <div>RSI (14): ${analisis?.rsi14 != null ? formatoNumero(analisis.rsi14) : "N/D"}</div>
+  <div>MACD: ${analisis?.macd != null ? formatoNumero(analisis.macd) : "N/D"}</div>
+  <div>Soporte: ${analisis?.soporte != null ? formatoNumero(analisis.soporte) : "N/D"}</div>
+  <div>Resistencia: ${analisis?.resistencia != null ? formatoNumero(analisis.resistencia) : "N/D"}</div>
+</div>
+ 
       `;
 
 
