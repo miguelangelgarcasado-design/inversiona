@@ -499,7 +499,8 @@ estocasticoK,
 estocasticoD,
 roc14,
 cci20,
-williamsR14        
+williamsR14,
+mfi14,
 },
 
       {
