@@ -35,6 +35,7 @@ let bollingerInferior = null;
     let roc14 = null;
     let cci20 = null;
     let williamsR14 = null;
+    let mfi14 = null;
     
     let volumenActual = null;
     let volumenMedio20 = null;
@@ -106,16 +107,32 @@ let bollingerInferior = null;
 // Datos históricos para análisis técnico
 const resultado = yahooData?.chart?.result?.[0];
 
- cierres = (resultado?.indicators?.quote?.[0]?.close || [])
-  .filter(valor => Number.isFinite(valor));
-  maximos = (resultado?.indicators?.quote?.[0]?.high || [])
-  .filter(valor => Number.isFinite(valor));
+ const datos = resultado?.indicators?.quote?.[0] || {};
+const datosValidos = [];
 
-minimos = (resultado?.indicators?.quote?.[0]?.low || [])
-  .filter(valor => Number.isFinite(valor));
+const total = resultado?.timestamp?.length || 0;
 
-volumenes = (resultado?.indicators?.quote?.[0]?.volume || [])
-  .filter(valor => Number.isFinite(valor));
+for (let i = 0; i < total; i++) {
+  const cierre = datos.close?.[i];
+  const maximo = datos.high?.[i];
+  const minimo = datos.low?.[i];
+  const volumen = datos.volume?.[i];
+
+  if (
+    Number.isFinite(cierre) &&
+    Number.isFinite(maximo) &&
+    Number.isFinite(minimo) &&
+    Number.isFinite(volumen)
+  ) {
+    datosValidos.push({ cierre, maximo, minimo, volumen });
+  }
+}
+
+cierres = datosValidos.map(d => d.cierre);
+maximos = datosValidos.map(d => d.maximo);
+minimos = datosValidos.map(d => d.minimo);
+volumenes = datosValidos.map(d => d.volumen);
+
     
 
 const media = (datos, periodos) => {
@@ -347,6 +364,30 @@ if (maximos.length >= 14 && minimos.length >= 14 && cierres.length >= 14) {
     williamsR14 = ((max14 - cierreActual) / (max14 - min14)) * -100;
   }
 }
+     // MFI de 14 sesiones
+if (
+  maximos.length >= 15 &&
+  minimos.length >= 15 &&
+  cierres.length >= 15 &&
+  volumenes.length >= 15
+) {
+  let flujoPositivo = 0;
+  let flujoNegativo = 0;
+
+  for (let i = cierres.length - 14; i < cierres.length; i++) {
+    const tipicoActual = (maximos[i] + minimos[i] + cierres[i]) / 3;
+    const tipicoAnterior = (maximos[i - 1] + minimos[i - 1] + cierres[i - 1]) / 3;
+    const flujo = tipicoActual * volumenes[i];
+
+    if (tipicoActual > tipicoAnterior) flujoPositivo += flujo;
+    if (tipicoActual < tipicoAnterior) flujoNegativo += flujo;
+  }
+
+  if (flujoPositivo + flujoNegativo > 0) {
+    mfi14 = 100 * flujoPositivo / (flujoPositivo + flujoNegativo);
+     }
+  } 
+   
       price =
         yahooData?.chart?.result?.[0]?.meta?.regularMarketPrice ??
         yahooData?.chart?.result?.[0]?.meta?.previousClose ??
