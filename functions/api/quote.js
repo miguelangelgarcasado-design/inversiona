@@ -401,6 +401,16 @@ if (
         null;
 
       source = "Yahoo-v3";
+      if (media20 !== null && media50 !== null && Number.isFinite(price)) {
+  if (price > media20 && media20 > media50) {
+    tendencia = "ALCISTA";
+  } else if (price < media20 && price < media50) {
+    tendencia = "BAJISTA";
+  } else {
+    tendencia = "MIXTA";
+  }
+}
+
 
       // SUI y monday.com llegan de Yahoo en USD.
       // Los convertimos a EUR porque en la cartera se muestran en euros.
