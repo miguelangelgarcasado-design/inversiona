@@ -582,6 +582,8 @@ if (regla) {
   <div>MACD: ${analisis?.macd != null ? formatoNumero(analisis.macd) : "N/D"}</div>
   <div>Soporte: ${analisis?.soporte != null ? formatoNumero(analisis.soporte) : "N/D"}</div>
   <div>Resistencia: ${analisis?.resistencia != null ? formatoNumero(analisis.resistencia) : "N/D"}</div>
+  <div style="margin-top:8px;color:#7dd3fc;">${analisis?.tendencia === "BAJISTA" && analisis?.rsi14 < 30 ? "⚠️ Sobreventa en tendencia bajista: vigilar posible rebote, sin compra confirmada" : analisis?.tendencia === "ALCISTA" && analisis?.macd > 0 ? "📈 Tendencia alcista con MACD positivo" : "🔎 Mantener en vigilancia: señal no confirmada"}</div>
+
 </div>
  
       `;
