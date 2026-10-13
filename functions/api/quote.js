@@ -145,15 +145,18 @@ const media = (datos, periodos) => {
  media20 = media(cierres, 20);
  media50 = media(cierres, 50);
   // Tendencia según medias móviles
-if (media20 !== null && media50 !== null) {
-  if (media20 > media50) {
+if (media20 !== null && media50 !== null &&
+    Number.isFinite(price)) {
+
+  if (price > media20 && media20 > media50) {
     tendencia = "ALCISTA";
-  } else if (media20 < media50) {
+  } else if (price < media20 && price < media50) {
     tendencia = "BAJISTA";
   } else {
-    tendencia = "NEUTRAL";
+    tendencia = "MIXTA";
   }
-}   
+}
+
  // La tendencia principal se calcula con las medias móviles.
       // La confirmación técnica se evaluará después,
       // cuando RSI y MACD estén calculados.
