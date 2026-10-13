@@ -630,7 +630,68 @@ ${(() => {
   return "🟡 VIGILAR — Señales técnicas sin confirmación suficiente";
 })()}
 </div>
+<div style="margin-top:12px;padding:12px;border-radius:10px;background:#172b4d;">
+${(() => {
+  const a = analisis;
+  if (!a) return "⚪ Puntuación no disponible";
 
+  let puntos = 0;
+  let maximo = 0;
+
+  if (["ALCISTA", "BAJISTA", "MIXTA"].includes(a.tendencia)) {
+    maximo += 25;
+    if (a.tendencia === "ALCISTA") puntos += 25;
+    if (a.tendencia === "MIXTA") puntos += 12;
+  }
+
+  if (a.rsi14 != null && Number.isFinite(Number(a.rsi14))) {
+    maximo += 20;
+    const r = Number(a.rsi14);
+    if (r >= 45 && r <= 65) puntos += 20;
+    else if (r >= 35 && r < 45) puntos += 12;
+    else if (r > 65 && r <= 70) puntos += 12;
+    else if (r >= 30 && r < 35) puntos += 6;
+  }
+
+  if (a.macd != null && a.macdSignal != null) {
+    const m = Number(a.macd);
+    const s = Number(a.macdSignal);
+    if (Number.isFinite(m) && Number.isFinite(s)) {
+      maximo += 25;
+      if (m > 0 && m > s) puntos += 25;
+      else if (m > s) puntos += 15;
+      else if (m > 0) puntos += 10;
+    }
+  }
+
+  if (a.adx14 != null && Number.isFinite(Number(a.adx14))) {
+    maximo += 15;
+    const adx = Number(a.adx14);
+    if (adx >= 25 && a.tendencia === "ALCISTA") puntos += 15;
+    else if (adx >= 20 && a.tendencia === "ALCISTA") puntos += 8;
+    else if (adx < 20) puntos += 4;
+  }
+
+  if (a.volumenActual != null && a.volumenMedio20 > 0) {
+    maximo += 15;
+    const ratio = Number(a.volumenActual) / Number(a.volumenMedio20);
+    if (Number.isFinite(ratio)) {
+      if (ratio >= 1.2 && a.tendencia === "ALCISTA") puntos += 15;
+      else if (ratio >= 1 && a.tendencia === "ALCISTA") puntos += 10;
+      else if (ratio >= 0.8) puntos += 5;
+    }
+  }
+
+  if (maximo < 70) return "⚪ Puntuación: datos insuficientes";
+
+  const nota = Math.round(puntos / maximo * 100);
+  const color = nota >= 70 ? "🟢" : nota >= 40 ? "🟡" : "🔴";
+
+  return color + " PUNTUACIÓN TÉCNICA: " + nota +
+    "/100 — " + (nota >= 70 ? "Fortaleza técnica" :
+    nota >= 40 ? "Señales mixtas" : "Debilidad técnica");
+})()}
+</div>
 </div>
  
       `;
