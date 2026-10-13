@@ -154,6 +154,10 @@ if (media20 !== null && media50 !== null) {
     tendencia = "NEUTRAL";
   }
 }   
+ // La tendencia principal se calcula con las medias móviles.
+      // La confirmación técnica se evaluará después,
+      // cuando RSI y MACD estén calculados.
+      let confirmacionTecnica = "PENDIENTE";
 
 // Soporte y resistencia de los últimos 20 días
 if (minimos.length >= 20 && maximos.length >= 20) {
@@ -214,22 +218,22 @@ if (cierres.length >= 35) {
     return valor;
   };
 
-  const macdValores = [];
+ const macdValores = [];
 
-  for (let i = 25; i < cierres.length; i++) {
-    const datosHastaHoy = cierres.slice(0, i + 1);
-    const ema12 = ema(datosHastaHoy, 12);
-    const ema26 = ema(datosHastaHoy, 26);
+for (let i = 25; i < cierres.length; i++) {
+  const datosHastaHoy = cierres.slice(0, i + 1);
+  const ema12 = ema(datosHastaHoy, 12);
+  const ema26 = ema(datosHastaHoy, 26);
 
-    macdValores.push(ema12 - ema26);
-  }
+  macdValores.push(ema12 - ema26);
+}
 
+if (macdValores.length >= 9) {
   macd = macdValores[macdValores.length - 1];
+  macdSignal = ema(macdValores, 9);
+  macdHistograma = macd - macdSignal;
+}
 
-  if (macdValores.length >= 9) {
-    macdSignal = ema(macdValores.slice(-9), 9);
-    macdHistograma = macd - macdSignal;
-  }
 }
 // Bandas de Bollinger (20, 2)
 if (cierres.length >= 20) {
