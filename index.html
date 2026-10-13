@@ -584,28 +584,53 @@ if (regla) {
   <div>Resistencia: ${analisis?.resistencia != null ? formatoNumero(analisis.resistencia) : "N/D"}</div>
   <div style="margin-top:8px;color:#7dd3fc;">${analisis?.tendencia === "BAJISTA" && analisis?.rsi14 < 30 ? "⚠️ Sobreventa en tendencia bajista: vigilar posible rebote, sin compra confirmada" : analisis?.tendencia === "ALCISTA" && analisis?.macd > 0 ? "📈 Tendencia alcista con MACD positivo" : "🔎 Mantener en vigilancia: señal no confirmada"}</div>
 
-<div style="margin-top:12px;padding:10px;border-radius:8px;background:#102a43;">
-  ${(() => {
-    const rsi = analisis?.rsi14;
-    const macd = analisis?.macd;
-    const tendencia = analisis?.tendencia;
+<div style="margin-top:12px;padding:12px;border-radius:10px;background:#102a43;">
+${(() => {
+  const rsi = Number(analisis?.rsi14);
+  const macd = Number(analisis?.macd);
+  const senal = Number(analisis?.macdSignal);
+  const adx = Number(analisis?.adx14);
+  const volumen = Number(analisis?.volumenActual);
+  const volumenMedio = Number(analisis?.volumenMedio20);
+  const tendencia = analisis?.tendencia;
 
-    if (!Number.isFinite(rsi) || !Number.isFinite(macd) ||
-        !["ALCISTA", "BAJISTA", "MIXTA"].includes(tendencia)) {
-      return "⚪ SEMÁFORO: DATOS INSUFICIENTES";
-    }
+  if (
+    analisis?.rsi14 == null ||
+    analisis?.macd == null ||
+    !["ALCISTA", "BAJISTA", "MIXTA"].includes(tendencia)
+  ) {
+    return "⚪ DATOS INSUFICIENTES";
+  }
 
-    if (tendencia === "BAJISTA" && macd < 0) {
-      return "🔴 RIESGO ELEVADO — Tendencia bajista y MACD negativo";
-    }
+  const volumenAlto =
+    volumenMedio > 0 && volumen > volumenMedio * 1.2;
 
-    if (tendencia === "ALCISTA" && macd > 0 && rsi >= 40 && rsi <= 70) {
-      return "🟢 SEÑALES FAVORABLES — Tendencia y MACD positivos";
-    }
+  const fuerza = Number.isFinite(adx) && adx >= 25;
+  const macdFavorable =
+    Number.isFinite(senal) && macd > senal;
 
-    return "🟡 VIGILAR — Esperar confirmación técnica";
-  })()}
+  if (tendencia === "BAJISTA" && macd < 0) {
+    return "🔴 RIESGO ELEVADO — Tendencia bajista y MACD negativo" +
+      (rsi < 30 ? ". Sobreventa: posible rebote sin confirmar." : "");
+  }
+
+  if (
+    tendencia === "ALCISTA" &&
+    rsi >= 40 && rsi <= 70 &&
+    macd > 0 && macdFavorable &&
+    fuerza && volumenAlto
+  ) {
+    return "🟢 SEÑALES FAVORABLES — Tendencia, impulso, fuerza y volumen alineados";
+  }
+
+  if (rsi < 30) {
+    return "🟡 SOBREVENTA — Vigilar posible rebote; esperar confirmación";
+  }
+
+  return "🟡 VIGILAR — Señales técnicas sin confirmación suficiente";
+})()}
 </div>
+
 </div>
  
       `;
