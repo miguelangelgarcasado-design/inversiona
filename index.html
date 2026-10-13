@@ -692,6 +692,55 @@ ${(() => {
     nota >= 40 ? "Señales mixtas" : "Debilidad técnica");
 })()}
 </div>
+<div style="margin-top:12px;padding:12px;background:#102a43;border-radius:10px;">
+  <strong>🔎 ¿Qué influye en la puntuación?</strong>
+  ${(() => {
+    const a = analisis;
+    if (!a) return "Datos no disponibles";
+
+    const detalles = [];
+
+    if (a.tendencia === "BAJISTA") {
+      detalles.push("🔴 Tendencia bajista: precio y medias móviles desfavorables.");
+    } else if (a.tendencia === "ALCISTA") {
+      detalles.push("🟢 Tendencia alcista: medias móviles favorables.");
+    } else {
+      detalles.push("🟡 Tendencia mixta o sin confirmar.");
+    }
+
+    if (a.rsi14 != null) {
+      const r = Number(a.rsi14);
+      if (r < 30) detalles.push("🟡 RSI en sobreventa: posible rebote, todavía sin confirmar.");
+      else if (r > 70) detalles.push("🟠 RSI en sobrecompra: vigilar correcciones.");
+      else detalles.push("🔵 RSI en zona intermedia.");
+    }
+
+    if (a.macd != null && a.macdSignal != null) {
+      const m = Number(a.macd);
+      const s = Number(a.macdSignal);
+      detalles.push(m > s
+        ? "🟢 MACD por encima de su señal: mejora del impulso."
+        : "🔴 MACD por debajo de su señal: impulso débil.");
+    }
+
+    if (a.adx14 != null) {
+      const adx = Number(a.adx14);
+      detalles.push(adx >= 25
+        ? "📊 ADX elevado: tendencia con fuerza, no necesariamente alcista."
+        : "📊 ADX bajo: tendencia poco definida.");
+    }
+
+    if (a.volumenActual != null && a.volumenMedio20 > 0) {
+      const ratio = a.volumenActual / a.volumenMedio20;
+      detalles.push(ratio >= 1.2
+        ? "📈 Volumen superior a la media."
+        : "📉 Volumen sin incremento significativo.");
+    }
+
+    return detalles.join("<br>");
+  })()}
+</div>
+
 </div>
  
       `;
