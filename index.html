@@ -584,6 +584,28 @@ if (regla) {
   <div>Resistencia: ${analisis?.resistencia != null ? formatoNumero(analisis.resistencia) : "N/D"}</div>
   <div style="margin-top:8px;color:#7dd3fc;">${analisis?.tendencia === "BAJISTA" && analisis?.rsi14 < 30 ? "⚠️ Sobreventa en tendencia bajista: vigilar posible rebote, sin compra confirmada" : analisis?.tendencia === "ALCISTA" && analisis?.macd > 0 ? "📈 Tendencia alcista con MACD positivo" : "🔎 Mantener en vigilancia: señal no confirmada"}</div>
 
+<div style="margin-top:12px;padding:10px;border-radius:8px;background:#102a43;">
+  ${(() => {
+    const rsi = analisis?.rsi14;
+    const macd = analisis?.macd;
+    const tendencia = analisis?.tendencia;
+
+    if (!Number.isFinite(rsi) || !Number.isFinite(macd) ||
+        !["ALCISTA", "BAJISTA", "MIXTA"].includes(tendencia)) {
+      return "⚪ SEMÁFORO: DATOS INSUFICIENTES";
+    }
+
+    if (tendencia === "BAJISTA" && macd < 0) {
+      return "🔴 RIESGO ELEVADO — Tendencia bajista y MACD negativo";
+    }
+
+    if (tendencia === "ALCISTA" && macd > 0 && rsi >= 40 && rsi <= 70) {
+      return "🟢 SEÑALES FAVORABLES — Tendencia y MACD positivos";
+    }
+
+    return "🟡 VIGILAR — Esperar confirmación técnica";
+  })()}
+</div>
 </div>
  
       `;
