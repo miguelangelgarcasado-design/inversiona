@@ -742,7 +742,49 @@ ${(() => {
 </div>
 
 </div>
- 
+ <div style="margin-top:12px;padding:12px;border-radius:10px;background:#102a43;">
+<strong>🎯 Detector de recuperación</strong>
+<div style="margin-top:8px;">
+${(() => {
+  const a = analisis;
+  if (!a || a.rsi14 == null || a.macd == null ||
+      a.macdSignal == null) {
+    return "⚪ Datos insuficientes";
+  }
+
+  const rsi = Number(a.rsi14);
+  const macd = Number(a.macd);
+  const senal = Number(a.macdSignal);
+  const tendencia = a.tendencia;
+  const volumen = Number(a.volumenActual);
+  const media = Number(a.volumenMedio20);
+
+  if (![rsi, macd, senal].every(Number.isFinite)) {
+    return "⚪ Datos insuficientes";
+  }
+
+  const volumenAlto = media > 0 && volumen >= media * 1.2;
+  const impulsoMejora = macd > senal;
+
+  if (tendencia === "ALCISTA" &&
+      rsi >= 40 && rsi <= 70 &&
+      impulsoMejora && volumenAlto) {
+    return "🟢 SEÑAL TÉCNICA FAVORABLE: recuperación con confirmaciones";
+  }
+
+  if (rsi < 30 && tendencia === "BAJISTA") {
+    return "🔴 SOBREVENTA EN TENDENCIA BAJISTA: esperar confirmación";
+  }
+
+  if (impulsoMejora && rsi >= 30 && rsi < 50) {
+    return "🟡 RECUPERACIÓN INCIPIENTE: vigilar próximas sesiones";
+  }
+
+  return "🟠 SIN CONFIRMACIÓN DE RECUPERACIÓN";
+})()}
+</div>
+</div>
+
       `;
 
 
