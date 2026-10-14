@@ -1,5 +1,6 @@
 export async function onRequestGet(context) {
   try {
+    let yahooData = null;
     const url = new URL(context.request.url);
     const symbol = url.searchParams.get("symbol");
 
@@ -102,7 +103,7 @@ let bollingerInferior = null;
         );
       }
 
-      const yahooData = await yahooRes.json();
+     yahooData = await yahooRes.json();
 
 // Datos históricos para análisis técnico
 const resultado = yahooData?.chart?.result?.[0];
