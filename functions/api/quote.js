@@ -201,12 +201,13 @@ if (cierres.length >= 15) {
   const mediaPerdidas = perdidas / 14;
 
   if (mediaPerdidas === 0) {
-    rsi14 = 100;
-  } else {
-    const rs = mediaGanancias / mediaPerdidas;
-    rsi14 = 100 - (100 / (1 + rs));
-  }
+  rsi14 = mediaGanancias === 0 ? 50 : 100;
+} else {
+  const rs = mediaGanancias / mediaPerdidas;
+  rsi14 = 100 - (100 / (1 + rs));
 }
+
+
  
 // MACD (12, 26, 9)
 if (cierres.length >= 35) {
@@ -276,39 +277,41 @@ if (maximos.length >= 15 && minimos.length >= 15 && cierres.length >= 15) {
 
   atr14 = sumaTR / 14;
 }
-// ADX de 14 sesiones
-if (maximos.length >= 15 && minimos.length >= 15 && cierres.length >= 15) {
-  let sumaTR = 0;
-  let sumaDMPlus = 0;
-  let sumaDMMinus = 0;
-
-  for (let i = cierres.length - 14; i < cierres.length; i++) {
-    const subida = maximos[i] - maximos[i - 1];
-    const bajada = minimos[i - 1] - minimos[i];
-
-    const dmPlus = subida > bajada && subida > 0 ? subida : 0;
-    const dmMinus = bajada > subida && bajada > 0 ? bajada : 0;
-
-    const tr = Math.max(
+// ADX de 14 sesiones (Wilder)
+if (cierres.length >= 29 && maximos.length >= 29 && minimos.length >= 29) {
+  const tr = [], dmP = [], dmM = [];
+  for (let i = 1; i < cierres.length; i++) {
+    const up = maximos[i] - maximos[i - 1];
+    const down = minimos[i - 1] - minimos[i];
+    dmP.push(up > down && up > 0 ? up : 0);
+    dmM.push(down > up && down > 0 ? down : 0);
+    tr.push(Math.max(
       maximos[i] - minimos[i],
       Math.abs(maximos[i] - cierres[i - 1]),
       Math.abs(minimos[i] - cierres[i - 1])
-    );
-
-    sumaTR += tr;
-    sumaDMPlus += dmPlus;
-    sumaDMMinus += dmMinus;
+    ));
   }
-
-  if (sumaTR > 0) {
-    const diPlus = (sumaDMPlus / sumaTR) * 100;
-    const diMinus = (sumaDMMinus / sumaTR) * 100;
-
-    if (diPlus + diMinus > 0) {
-      adx14 = (Math.abs(diPlus - diMinus) / (diPlus + diMinus)) * 100;
+  const n = 14;
+  let atr = tr.slice(0, n).reduce((a,b) => a+b, 0);
+  let plus = dmP.slice(0, n).reduce((a,b) => a+b, 0);
+  let minus = dmM.slice(0, n).reduce((a,b) => a+b, 0);
+  const dx = [];
+  for (let i = n - 1; i < tr.length; i++) {
+    if (i >= n) {
+      atr = atr - atr/n + tr[i];
+      plus = plus - plus/n + dmP[i];
+      minus = minus - minus/n + dmM[i];
     }
+    const p = atr > 0 ? 100 * plus/atr : 0;
+    const m = atr > 0 ? 100 * minus/atr : 0;
+    dx.push(p+m > 0 ? 100*Math.abs(p-m)/(p+m) : 0);
+  }
+  adx14 = dx.slice(0,n).reduce((a,b) => a+b,0)/n;
+  for (let i = n; i < dx.length; i++) {
+    adx14 = (adx14*(n-1)+dx[i])/n;
   }
 }
+
       // Estocástico (14, 3, 3)
 if (maximos.length >= 16 && minimos.length >= 16 && cierres.length >= 16) {
   const valoresK = [];
