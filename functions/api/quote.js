@@ -449,7 +449,7 @@ if (
             source = "Yahoo-v4-EUR";
           }
         }
-      }
+    
     } else {
       // Resto de acciones estadounidenses: Finnhub
       const apiKey = context.env.FINNHUB_API_KEY;
