@@ -146,7 +146,7 @@ const media = (datos, periodos) => {
  media50 = media(cierres, 50);
   // Tendencia según medias móviles
 if (media20 !== null && media50 !== null &&
-  Number.isFinite(cierres[cierres.length - 1])
+  Number.isFinite(cierres[cierres.length - 1]))
 
  if (cierres[cierres.length - 1] > media20 && media20 > media50) {
 
