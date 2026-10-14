@@ -185,27 +185,35 @@ if (cierres.length >= 15) {
   let ganancias = 0;
   let perdidas = 0;
 
-  const inicio = cierres.length - 15;
-
-  for (let i = inicio + 1; i < cierres.length; i++) {
+  // Medias iniciales de 14 sesiones
+  for (let i = 1; i <= 14; i++) {
     const cambio = cierres[i] - cierres[i - 1];
-
-    if (cambio > 0) {
-      ganancias += cambio;
-    } else {
-      perdidas += Math.abs(cambio);
-    }
+    ganancias += Math.max(cambio, 0);
+    perdidas += Math.max(-cambio, 0);
   }
 
-  const mediaGanancias = ganancias / 14;
-  const mediaPerdidas = perdidas / 14;
+  let mediaGanancias = ganancias / 14;
+  let mediaPerdidas = perdidas / 14;
+
+  // Suavizado de Wilder
+  for (let i = 15; i < cierres.length; i++) {
+    const cambio = cierres[i] - cierres[i - 1];
+
+    mediaGanancias =
+      (mediaGanancias * 13 + Math.max(cambio, 0)) / 14;
+
+    mediaPerdidas =
+      (mediaPerdidas * 13 + Math.max(-cambio, 0)) / 14;
+  }
 
   if (mediaPerdidas === 0) {
-  rsi14 = mediaGanancias === 0 ? 50 : 100;
-} else {
-  const rs = mediaGanancias / mediaPerdidas;
-  rsi14 = 100 - (100 / (1 + rs));
+    rsi14 = mediaGanancias === 0 ? 50 : 100;
+  } else {
+    const rs = mediaGanancias / mediaPerdidas;
+    rsi14 = 100 - 100 / (1 + rs);
+  }
 }
+
 
 
  
