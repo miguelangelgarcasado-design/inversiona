@@ -487,8 +487,7 @@ if (
       price = finnhubData?.c || null;
       source = "Finnhub";
     }
-    }
- 
+     
     if (price === null || price === undefined || Number(price) <= 0) {
       return Response.json(
         {
