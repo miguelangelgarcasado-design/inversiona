@@ -76,11 +76,9 @@ let bollingerInferior = null;
       symbol === "PGS.DE" ||
       symbol === "TPGO.DE" ||
       symbol.endsWith(".MC") ||
-     symbol.endsWith(".MC") ||
-symbol.endsWith(".MI") ||
+   symbol.endsWith(".MI") ||
 symbol.endsWith(".DE") ||
 symbol.endsWith(".PA") ||
-symbol.endsWith(".MI");
 
     if (useYahoo) {
      const yahooUrl =
