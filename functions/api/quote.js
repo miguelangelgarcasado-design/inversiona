@@ -76,10 +76,14 @@ let bollingerInferior = null;
       symbol === "PGS.DE" ||
       symbol === "TPGO.DE" ||
       symbol.endsWith(".MC") ||
-      symbol.endsWith(".MI");
+     symbol.endsWith(".MC") ||
+symbol.endsWith(".MI") ||
+symbol.endsWith(".DE") ||
+symbol.endsWith(".PA") ||
+
 
     if (useYahoo) {
-   const yahooUrl =
+     const yahooUrl =
   `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?interval=1d&range=6mo`;
 
       const yahooRes = await fetch(yahooUrl, {
