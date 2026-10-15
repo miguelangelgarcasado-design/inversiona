@@ -79,7 +79,7 @@ let bollingerInferior = null;
      symbol.endsWith(".MC") ||
 symbol.endsWith(".MI") ||
 symbol.endsWith(".DE") ||
-symbol.endsWith(".PA") ||
+symbol.endsWith(".PA");
 
 
     if (useYahoo) {
