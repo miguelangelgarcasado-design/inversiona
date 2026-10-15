@@ -442,7 +442,7 @@ if (
 
         if (cambioRes.ok) {
           const cambioData = await cambioRes.json();
-
+         
           const eurUsd =
             cambioData?.chart?.result?.[0]?.meta?.regularMarketPrice ??
             cambioData?.chart?.result?.[0]?.meta?.previousClose;
@@ -452,8 +452,8 @@ if (
             source = "Yahoo-v4-EUR";
           }
         }
-    
-    } else {
+      
+      }  else {
       // Resto de acciones estadounidenses: Finnhub
       const apiKey = context.env.FINNHUB_API_KEY;
 
