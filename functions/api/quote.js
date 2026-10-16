@@ -453,7 +453,7 @@ if (
           }
         }
       
-      }  else {
+     } else if (!useYahoo && symbol !== "LDO.MI") {
       // Resto de acciones estadounidenses: Finnhub
       const apiKey = context.env.FINNHUB_API_KEY;
 
