@@ -80,7 +80,7 @@ let bollingerInferior = null;
 symbol.endsWith(".DE") ||
 symbol.endsWith(".PA");
 
-   if (useYahoo || symbol === "LDO.MI") {
+ if (useYahoo || symbol === "LDO.MI") {
      const yahooUrl =
   `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?interval=1d&range=6mo`;
 
