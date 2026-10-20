@@ -461,6 +461,17 @@ if (regla) {
     let recomendacion = regla.accion || "";
 
     recomendacion = recomendacion.replace(/^MANTENER;\s*/i, "");
+  if (activo.moneda === "$" || activo.cotizaUSD) {
+  recomendacion = recomendacion.replace(
+    /(\d+(?:[.,]\d+)?)\s*\$/g,
+    (texto, cantidad) => {
+      const dolares = Number(cantidad.replace(",", "."));
+      return formatoNumero(dolares / eurUsd) + " €";
+    }
+  );
+}
+
+
 
     // 1. RIESGO ALTO: caída igual o superior al 35 %
     if (porcentaje <= -35) {
