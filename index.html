@@ -564,13 +564,8 @@ if (regla) {
         posicionesPerdedoras++;
       }
 
-      let invertidoEUR = invertido;
-      let actualEUR = valorActual;
-
-      if (activo.moneda === "$") {
-        invertidoEUR = invertido / eurUsd;
-        actualEUR = valorActual / eurUsd;
-      }
+     const invertidoEUR = invertido;
+const actualEUR = valorActual;
 
       totalInvertidoEUR += invertidoEUR;
       totalActualEUR += actualEUR;
