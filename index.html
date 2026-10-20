@@ -531,9 +531,15 @@ if (regla) {
   colorAlerta + " " + activo.nombre +
   " — " + estado + " (" + porcentajeTexto + ")" +
   "\n➡️ " + recomendacion +
-  "\n💰 Precio: " + formatoNumero(precioNumero) + " " + activo.moneda +
-"\n🛒 Compra: " + formatoNumero(activo.compra) + " " + activo.moneda +
-"\n🎯 Objetivo: " + formatoNumero(regla.venta) + " " + activo.moneda
+  "\n💰 Precio: " + formatoNumero(precioEUR) + " €" +
+"\n🛒 Compra: " + formatoNumero(compraEUR) + " €" +
+"\n🎯 Objetivo: " + formatoNumero(
+  activo.moneda === "$" || activo.cotizaUSD
+    ? regla.venta / eurUsd
+    : regla.venta
+) + " €"
+
+
 
 );
 
