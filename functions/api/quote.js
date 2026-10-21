@@ -543,6 +543,7 @@ mfi14,
         }
       }
     );
+// Revision de cotizaciones e indicadores
 
   } catch (error) {
     return Response.json(
