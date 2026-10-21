@@ -585,17 +585,17 @@ const actualEUR = valorActual;
         <span class="muted"> (${activo.ticker})</span><br>
 
         <span class="precio">
-          ${formatoNumero(precioNumero)} ${activo.moneda}
+          ${formatoNumero(precioEUR)} €
         </span>
 
         <div style="margin-top:8px;">
           Cantidad: ${unidades.toLocaleString("es-ES")}<br>
-          Precio compra: ${formatoNumero(activo.compra)} ${activo.moneda}<br>
-          Invertido: ${formatoNumero(invertido)} ${activo.moneda}<br>
-          Valor actual: ${formatoNumero(valorActual)} ${activo.moneda}<br>
+          Precio compra: ${formatoNumero(compraEUR)} €<br>
+         Invertido: ${formatoNumero(invertido)} €<br>
+        Valor actual: ${formatoNumero(valorActual)} €<br>
 
           <span style="color:${color};font-weight:bold;">
-            PyG: ${signo}${formatoNumero(beneficio)} ${activo.moneda}
+          PyG: ${signo}${formatoNumero(beneficio)} €
             (${signo}${formatoNumero(porcentaje)}%)
           </span>
         </div>
