@@ -542,7 +542,7 @@ mfi14,
           "Cache-Control": "no-store"
         }
       }
-    );
+    );}
 // Revision de cotizaciones e indicadores
 
   } catch (error) {
