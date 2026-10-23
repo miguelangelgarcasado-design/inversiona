@@ -480,9 +480,14 @@ if (regla) {
 
         // Conservamos la recomendación específica de cada activo.
         // No marcamos una gran caída automáticamente como compra.
-        if (!recomendacion) {
-            recomendacion = "REVISAR; NO AMPLIAR AHORA";
-        }
+        if (
+  analisis?.tendencia === "BAJISTA" &&
+ analisis?.rsi14 != null && Number(analisis.rsi14) < 30
+) {
+  recomendacion = "ESPERAR CONFIRMACION DE REBOTE; NO AMPLIAR AHORA";
+} else if (!recomendacion) {
+  recomendacion = "REVISAR; NO AMPLIAR AHORA";
+}
 
     // 2. OBJETIVO DE VENTA ALCANZADO
     } else if (precioNumero >= regla.venta) {
