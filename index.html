@@ -550,6 +550,36 @@ if (
   estado = "RIESGO ALTO";
   recomendacion = "ESPERAR CONFIRMACION DE RECUPERACION; NO AMPLIAR AHORA";
 }
+if (
+  estado === "ZONA DE COMPRA" ||
+  estado === "OPORTUNIDAD DE COMPRA"
+) {
+  const a = analisis;
+
+  const compraConfirmada =
+    a?.tendencia === "ALCISTA" &&
+    a.rsi14 != null &&
+    Number(a.rsi14) >= 40 &&
+    Number(a.rsi14) <= 70 &&
+    a.macd != null &&
+    a.macdSignal != null &&
+    Number(a.macd) > Number(a.macdSignal) &&
+    a.adx14 != null &&
+    Number(a.adx14) >= 25 &&
+    a.volumenActual != null &&
+    a.volumenMedio20 != null &&
+    Number(a.volumenMedio20) > 0 &&
+    Number(a.volumenActual) >=
+      Number(a.volumenMedio20) * 1.2;
+
+  if (!compraConfirmada) {
+    colorAlerta = "🟡";
+    estado = "VIGILAR";
+    recomendacion =
+      "COMPRA NO CONFIRMADA; ESPERAR MEJORA TECNICA";
+  }
+}
+
 
 
    alertas.push(
