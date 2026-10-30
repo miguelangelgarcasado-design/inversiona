@@ -544,10 +544,11 @@ if (regla) {
 
 if (
   analisis?.tendencia === "BAJISTA" &&
-  analisis?.rsi14 != null &&
-  Number(analisis.rsi14) < 30
+  Number(analisis?.macd) < Number(analisis?.macdSignal)
 ) {
-  recomendacion = "ESPERAR CONFIRMACION DE REBOTE; NO AMPLIAR AHORA";
+  colorAlerta = "🔴";
+  estado = "RIESGO ALTO";
+  recomendacion = "ESPERAR CONFIRMACION DE RECUPERACION; NO AMPLIAR AHORA";
 }
 
 
