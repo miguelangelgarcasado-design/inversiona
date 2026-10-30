@@ -944,7 +944,14 @@ if (!yaTieneAlerta) {
 };
 
 alertas.forEach(alerta => {
-  if (alerta.includes("ZONA DE COMPRA")) {
+if (
+  alerta.startsWith("🟢 ") &&
+  (
+    alerta.includes(" — ZONA DE COMPRA ") ||
+    alerta.includes(" — OPORTUNIDAD DE COMPRA ")
+  )
+) {
+
     gruposAlertas.compra.push(alerta);
   } else if (
     alerta.includes("RIESGO ALTO") ||
