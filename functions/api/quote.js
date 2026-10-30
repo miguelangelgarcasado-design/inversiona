@@ -20,6 +20,7 @@ export async function onRequestGet(context) {
     let media20 = null;
     let media50 = null;
     let rsi14 = null;
+    let rsi14Anterior = null;
     let tendencia = "NEUTRAL";
     let soporte = null;
     let resistencia = null;
@@ -203,6 +204,15 @@ if (cierres.length >= 15) {
 
   // Suavizado de Wilder
   for (let i = 15; i < cierres.length; i++) {
+   if (i === cierres.length - 1) {
+  if (mediaPerdidas === 0) {
+    rsi14Anterior = mediaGanancias === 0 ? 50 : 100;
+  } else {
+    const rsAnterior = mediaGanancias / mediaPerdidas;
+    rsi14Anterior = 100 - 100 / (1 + rsAnterior);
+  }
+}
+ 
     const cambio = cierres[i] - cierres[i - 1];
 
     mediaGanancias =
@@ -516,6 +526,7 @@ if (
   media20,
   media50,
   rsi14,
+  rsi14Anterior,     
   tendencia,
   soporte,
   resistencia,
