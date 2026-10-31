@@ -650,6 +650,38 @@ const actualEUR = valorActual;
   <div>MACD: ${analisis?.macd != null ? formatoNumero(analisis.macd) : "N/D"}</div>
   <div>Soporte: ${analisis?.soporte != null ? formatoNumero(analisis.soporte) : "N/D"}</div>
   <div>Resistencia: ${analisis?.resistencia != null ? formatoNumero(analisis.resistencia) : "N/D"}</div>
+ ${(() => {
+  const soporte = analisis?.soporte == null
+    ? null
+    : Number(analisis.soporte);
+
+  const precio = Number(precioNumero);
+
+  if (
+    soporte === null ||
+    !Number.isFinite(soporte) ||
+    soporte <= 0 ||
+    !Number.isFinite(precio) ||
+    precio <= 0
+  ) {
+    return "";
+  }
+
+  if (precio < soporte) {
+    const distancia = ((soporte - precio) / soporte) * 100;
+
+    return `<div style="margin-top:10px;color:#ff9b9b;font-weight:bold;">
+      🔴 PRECIO BAJO SOPORTE — ${distancia.toFixed(2)}% por debajo.
+      Vigilar posible continuación bajista.
+    </div>`;
+  }
+
+  return `<div style="margin-top:10px;color:#86efac;">
+    🔵 Precio por encima del soporte de referencia.
+  </div>`;
+})()}
+
+
   <div style="margin-top:8px;color:#7dd3fc;">${analisis?.tendencia === "BAJISTA" && analisis?.rsi14 < 30 ? "⚠️ Sobreventa en tendencia bajista: vigilar posible rebote, sin compra confirmada" : analisis?.tendencia === "ALCISTA" && analisis?.macd > 0 ? "📈 Tendencia alcista con MACD positivo" : "🔎 Mantener en vigilancia: señal no confirmada"}</div>
 
 <div style="margin-top:12px;padding:12px;border-radius:10px;background:#102a43;">
