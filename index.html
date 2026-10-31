@@ -863,6 +863,52 @@ if (
   return "🟠 SIN CONFIRMACIÓN DE RECUPERACIÓN";
 })()}
 </div>
+<div style="margin-top:12px;padding:12px;background:#172b4d;border-radius:10px;line-height:1.8;">
+  <strong>🔎 Seguimiento de recuperación</strong>
+  ${(() => {
+    const a = analisis;
+    if (!a) return "Datos no disponibles";
+
+    const rsi = a.rsi14 == null ? null : Number(a.rsi14);
+    const anterior = a.rsi14Anterior == null ? null : Number(a.rsi14Anterior);
+    const macd = a.macd == null ? null : Number(a.macd);
+    const senal = a.macdSignal == null ? null : Number(a.macdSignal);
+    const volumen = a.volumenActual == null ? null : Number(a.volumenActual);
+    const media = a.volumenMedio20 == null ? null : Number(a.volumenMedio20);
+
+    const valido = v => v !== null && Number.isFinite(v);
+    const fmt = v => valido(v) ? v.toFixed(2) : "N/D";
+
+    const cruce = valido(anterior) && valido(rsi) &&
+      anterior < 30 && rsi >= 30;
+
+    const mensajes = [
+      "📊 RSI anterior: " + fmt(anterior) + " | Actual: " + fmt(rsi),
+      !valido(anterior) || !valido(rsi)
+        ? "⚪ Evolución RSI: datos insuficientes"
+        : cruce
+          ? "🟡 Cruce alcista del RSI por encima de 30"
+          : rsi > anterior
+            ? "🟢 RSI mejorando, sin nuevo cruce de 30"
+            : rsi < anterior
+              ? "🔴 RSI descendiendo"
+              : "🟡 RSI estable",
+      !valido(macd) || !valido(senal)
+        ? "⚪ MACD: datos insuficientes"
+        : macd > senal
+          ? "🟢 MACD por encima de su señal"
+          : "🔴 MACD sin confirmación alcista",
+      !valido(volumen) || !valido(media) || media <= 0
+        ? "⚪ Volumen: datos insuficientes"
+        : volumen >= media * 1.2
+          ? "🟢 Volumen al menos un 20% sobre la media"
+          : "🟡 Volumen sin incremento significativo"
+    ];
+
+    return mensajes.join("<br>");
+  })()}
+</div>
+
 </div>
 
       `;
