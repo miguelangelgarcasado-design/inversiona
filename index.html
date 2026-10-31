@@ -1063,17 +1063,21 @@ if (!yaTieneAlerta) {
 };
 
 alertas.forEach(alerta => {
-if (
+ 
+  if (
   alerta.startsWith("🟢 ") &&
+  !alerta.includes("MANTENER") &&
+  !alerta.includes("ESPERAR") &&
+  !alerta.includes("NO AMPLIAR") &&
+  !alerta.includes("COMPRA NO CONFIRMADA") &&
   (
-    alerta.includes(" — ZONA DE COMPRA ") ||
-    alerta.includes(" — OPORTUNIDAD DE COMPRA ")
+    alerta.includes(" - ZONA DE COMPRA ") ||
+    alerta.includes(" - OPORTUNIDAD DE COMPRA ")
   )
 ) {
-
-    gruposAlertas.compra.push(alerta);
-  } else if (
-    alerta.includes("RIESGO ALTO") ||
+  gruposAlertas.compra.push(alerta);
+   } else if (
+     alerta.includes("RIESGO ALTO") ||
     alerta.includes("NO AMPLIAR") ||
     alerta.includes("NO PROMEDIAR")
   ) {
