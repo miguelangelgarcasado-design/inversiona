@@ -17,12 +17,17 @@ export async function onRequestGet(context) {
     let maximos = [];
     let minimos = [];
     let volumenes = [];
+    let ultimaFechaVela = null;
     let media20 = null;
     let media50 = null;
     let rsi14 = null;
     let rsi14Anterior = null;
     let tendencia = "NEUTRAL";
     let soporte = null;
+    let soporteAnterior = null;
+    let rupturaProvisional = false;
+let rupturaConfirmada = false;
+let recuperacionSoporte = false;
     let resistencia = null;
     let macd = null;
     let macdSignal = null;
@@ -115,7 +120,7 @@ const resultado = yahooData?.chart?.result?.[0];
 
  const datos = resultado?.indicators?.quote?.[0] || {};
 const datosValidos = [];
-
+const fechasValidas = [];
 const total = resultado?.timestamp?.length || 0;
 
 for (let i = 0; i < total; i++) {
@@ -131,6 +136,7 @@ for (let i = 0; i < total; i++) {
     Number.isFinite(volumen)
   ) {
     datosValidos.push({ cierre, maximo, minimo, volumen });
+    fechasValidas.push(resultado.timestamp[i]);
   }
 }
 
@@ -138,7 +144,7 @@ cierres = datosValidos.map(d => d.cierre);
 maximos = datosValidos.map(d => d.maximo);
 minimos = datosValidos.map(d => d.minimo);
 volumenes = datosValidos.map(d => d.volumen);
-
+ultimaFechaVela = fechasValidas.at(-1) ?? null;
     
 
 const media = (datos, periodos) => {
@@ -170,8 +176,9 @@ if (media20 !== null && media50 !== null &&
       let confirmacionTecnica = "PENDIENTE";
 
 // Soporte y resistencia de los últimos 20 días
-if (minimos.length >= 20 && maximos.length >= 20) {
+if (minimos.length >= 21 && maximos.length >= 20) {
   soporte = Math.min(...minimos.slice(-20));
+  soporteAnterior = Math.min(...minimos.slice(-21, -1));
   resistencia = Math.max(...maximos.slice(-20));
 }
 
@@ -523,12 +530,14 @@ if (
   price: Number(price),
   source,
   velas: cierres.length,
+   ultimaFechaVela,     
   media20,
   media50,
   rsi14,
   rsi14Anterior,     
   tendencia,
   soporte,
+  soporteAnterior,     
   resistencia,
   volumenActual,
 volumenMedio20,
