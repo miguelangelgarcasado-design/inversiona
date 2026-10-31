@@ -150,7 +150,19 @@ maximos = datosValidos.map(d => d.maximo);
 minimos = datosValidos.map(d => d.minimo);
 volumenes = datosValidos.map(d => d.volumen);
 ultimaFechaVela = fechasValidas.at(-1) ?? null;
-   
+  ultimaVelaCerrada =
+  ultimaFechaVela != null &&
+  horarioMercado != null &&
+  Number.isFinite(horarioMercado.start) &&
+  Number.isFinite(horarioMercado.end) &&
+  (
+    ultimaFechaVela < horarioMercado.start ||
+    (
+      ultimaFechaVela === horarioMercado.start &&
+      Date.now() / 1000 >= horarioMercado.end
+    )
+  );
+ 
 ultimoCierre = cierres.at(-1) ?? null;
 cierrePrevio = cierres.at(-2) ?? null;
  
@@ -540,6 +552,7 @@ if (
   velas: cierres.length,
    ultimaFechaVela,  
   horarioMercado,
+  ultimaVelaCerrada,
    ultimoCierre,
 cierrePrevio,
   media20,
