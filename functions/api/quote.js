@@ -145,7 +145,8 @@ maximos = datosValidos.map(d => d.maximo);
 minimos = datosValidos.map(d => d.minimo);
 volumenes = datosValidos.map(d => d.volumen);
 ultimaFechaVela = fechasValidas.at(-1) ?? null;
-    
+ const ultimoCierre = cierres.at(-1) ?? null;
+const cierrePrevio = cierres.at(-2) ?? null;   
 
 const media = (datos, periodos) => {
   if (datos.length < periodos) return null;
@@ -530,7 +531,9 @@ if (
   price: Number(price),
   source,
   velas: cierres.length,
-   ultimaFechaVela,     
+   ultimaFechaVela,  
+   ultimoCierre,
+cierrePrevio,
   media20,
   media50,
   rsi14,
