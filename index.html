@@ -1099,12 +1099,31 @@ if (detector) {
   const riesgos = gruposAlertas.riesgo.length;
   const vigilancia = gruposAlertas.mantener.length;
   const beneficios = gruposAlertas.beneficio.length;
+    const resumirAlertas = (lista, maximo = 3) =>
+    lista.slice(0, maximo).map(alerta => {
+      const texto = alerta.split("\n");
+      return texto.slice(0, 2).join(" — ");
+    }).join("<hr style='border:0;border-top:1px solid #344968;margin:10px 0;'>");
+
+  const detalleRiesgos = resumirAlertas(gruposAlertas.riesgo);
+  const detalleCompras = resumirAlertas(gruposAlertas.compra);
+  const detalleVigilancia = resumirAlertas(gruposAlertas.mantener);
+
 
   detector.innerHTML = `
     <p>🟢 Oportunidades de compra detectadas: ${compras}</p>
     <p>🔴 Alertas de riesgo: ${riesgos}</p>
     <p>🟡 Mantener / vigilar: ${vigilancia}</p>
     <p>🎯 Objetivos y beneficios: ${beneficios}</p>
+      <div style="margin-top:16px;padding:12px;background:#102a43;border-radius:10px;">
+      <strong>📋 Acciones que requieren atención</strong>
+
+      ${riesgos > 0 ? `<p>🔴 Riesgos principales:<br>${detalleRiesgos}</p>` : ""}
+
+      ${compras > 0 ? `<p>🟢 Oportunidades detectadas:<br>${detalleCompras}</p>` : ""}
+
+      ${vigilancia > 0 ? `<p>🟡 En vigilancia:<br>${detalleVigilancia}</p>` : ""}
+    </div>
     <small style="color:#a4bbd8;">
       Resumen de las alertas calculadas. Las compras requieren confirmación técnica.
     </small>
