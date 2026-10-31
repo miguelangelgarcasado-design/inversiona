@@ -610,12 +610,27 @@ if (
   }
 }
 
+const senalesSoporte = [];
+
+if (analisis?.rupturaConfirmada === true) {
+  senalesSoporte.push("🔴 Ruptura de soporte confirmada");
+} else if (analisis?.rupturaProvisional === true) {
+  senalesSoporte.push("🟠 Posible ruptura de soporte, pendiente de cierre");
+} else if (analisis?.recuperacionSoporte === true) {
+  senalesSoporte.push("🟢 Recuperación del nivel de soporte");
+}
+
+const detalleSoporte = senalesSoporte.length
+  ? "\n📊 " + senalesSoporte.join(" | ")
+  : "";
 
 
    alertas.push(
   colorAlerta + " " + activo.nombre +
   " — " + estado + " (" + porcentajeTexto + ")" +
   "\n➡️ " + recomendacion +
+  detalleSoporte +
+  
   "\n💰 Precio: " + formatoNumero(precioEUR) + " €" +
 "\n🛒 Compra: " + formatoNumero(compraEUR) + " €" +
 "\n🎯 Objetivo: " + formatoNumero(
