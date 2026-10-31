@@ -624,12 +624,22 @@ const detalleSoporte = senalesSoporte.length
   ? "\n📊 " + senalesSoporte.join(" | ")
   : "";
 
+const detalleIndicadores = analisis
+  ? "\n📈 Tendencia: " + (analisis.tendencia || "SIN DATOS") +
+    (analisis.rsi14 != null
+      ? " | RSI: " + Number(analisis.rsi14).toFixed(1)
+      : "") +
+    (analisis.macd != null
+      ? " | MACD: " + Number(analisis.macd).toFixed(2)
+      : "")
+  : "";
 
    alertas.push(
   colorAlerta + " " + activo.nombre +
   " — " + estado + " (" + porcentajeTexto + ")" +
   "\n➡️ " + recomendacion +
   detalleSoporte +
+  detalleIndicadores +
   
   "\n💰 Precio: " + formatoNumero(precioEUR) + " €" +
 "\n🛒 Compra: " + formatoNumero(compraEUR) + " €" +
