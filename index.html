@@ -1136,6 +1136,11 @@ const senalTecnica = texto
     linea.includes("Recuperación del nivel de soporte")
   )
   .join(" | ");
+    const indicadores = texto.find(linea =>
+  linea.includes("Tendencia:") &&
+  linea.includes("RSI:")
+) || "";
+
     return `
       <div style="background:#192e4d;padding:12px;
                   border-radius:10px;margin-top:10px;
@@ -1144,6 +1149,13 @@ const senalTecnica = texto
         <div style="font-size:14px;color:#b8d1ee;margin-top:5px;">
           ${recomendacion}
         </div>
+        ${indicadores ? `
+  <div style="font-size:13px;color:#93c5fd;margin-top:8px;">
+    ${indicadores}
+  </div>
+` : ""}
+
+
         ${senalTecnica ? `
   <div style="font-size:13px;color:#9edac8;margin-top:8px;">
     ${senalTecnica}
