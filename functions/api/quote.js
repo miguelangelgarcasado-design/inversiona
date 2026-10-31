@@ -20,6 +20,8 @@ let cierrePrevio = null;
     let minimos = [];
     let volumenes = [];
     let ultimaFechaVela = null;
+    let horarioMercado = null;
+    let ultimaVelaCerrada = false;
     let media20 = null;
     let media50 = null;
     let rsi14 = null;
@@ -119,6 +121,7 @@ symbol.endsWith(".PA");
 
 // Datos históricos para análisis técnico
 const resultado = yahooData?.chart?.result?.[0];
+ horarioMercado = resultado?.meta?.currentTradingPeriod?.regular ?? null;  
 
  const datos = resultado?.indicators?.quote?.[0] || {};
 const datosValidos = [];
@@ -147,6 +150,7 @@ maximos = datosValidos.map(d => d.maximo);
 minimos = datosValidos.map(d => d.minimo);
 volumenes = datosValidos.map(d => d.volumen);
 ultimaFechaVela = fechasValidas.at(-1) ?? null;
+   
 ultimoCierre = cierres.at(-1) ?? null;
 cierrePrevio = cierres.at(-2) ?? null;
  
@@ -535,6 +539,7 @@ if (
   source,
   velas: cierres.length,
    ultimaFechaVela,  
+  horarioMercado,
    ultimoCierre,
 cierrePrevio,
   media20,
