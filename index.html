@@ -633,6 +633,39 @@ const detalleIndicadores = analisis
       ? " | MACD: " + Number(analisis.macd).toFixed(2)
       : "")
   : "";
+let interpretacionTecnica = "";
+
+if (analisis) {
+  const rsi = Number(analisis.rsi14);
+  const macd = Number(analisis.macd);
+  const senalMacd = Number(analisis.macdSignal);
+
+  if (analisis.rsi14 != null && Number.isFinite(rsi)) {
+    if (rsi < 30) {
+      interpretacionTecnica =
+        "🟡 Sobreventa: vigilar posible rebote, sin compra confirmada";
+    } else if (rsi > 70) {
+      interpretacionTecnica =
+        "🟠 Sobrecompra: vigilar posible corrección";
+    }
+  }
+
+  if (
+    analisis.tendencia === "BAJISTA" &&
+    analisis.macd != null &&
+    analisis.macdSignal != null &&
+    Number.isFinite(macd) &&
+    Number.isFinite(senalMacd) &&
+    macd < senalMacd
+  ) {
+    interpretacionTecnica +=
+      "\n🔴 Tendencia bajista con impulso negativo";
+  }
+}
+
+const detalleInterpretacion = interpretacionTecnica
+  ? "\n🧠 " + interpretacionTecnica
+  : "";
 
    alertas.push(
   colorAlerta + " " + activo.nombre +
@@ -640,6 +673,7 @@ const detalleIndicadores = analisis
   "\n➡️ " + recomendacion +
   detalleSoporte +
   detalleIndicadores +
+  detalleInterpretacion +
   
   "\n💰 Precio: " + formatoNumero(precioEUR) + " €" +
 "\n🛒 Compra: " + formatoNumero(compraEUR) + " €" +
