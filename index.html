@@ -821,6 +821,10 @@ ${(() => {
   }
 
   const rsi = Number(a.rsi14);
+  const rsiAnterior = a.rsi14Anterior == null
+  ? null
+  : Number(a.rsi14Anterior);
+
   const macd = Number(a.macd);
   const senal = Number(a.macdSignal);
   const tendencia = a.tendencia;
@@ -833,6 +837,14 @@ ${(() => {
 
   const volumenAlto = media > 0 && volumen >= media * 1.2;
   const impulsoMejora = macd > senal;
+if (
+  rsiAnterior !== null &&
+  Number.isFinite(rsiAnterior) &&
+  rsiAnterior < 30 &&
+  rsi >= 30
+) {
+  return "🟡 SALIDA DE SOBREVENTA: RSI cruza al alza el nivel 30; vigilar confirmación";
+}
 
   if (tendencia === "ALCISTA" &&
       rsi >= 40 && rsi <= 70 &&
