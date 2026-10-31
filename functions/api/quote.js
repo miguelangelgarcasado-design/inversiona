@@ -14,6 +14,8 @@ export async function onRequestGet(context) {
     let price = null;
     let source = "v2";
     let cierres = [];
+    let ultimoCierre = null;
+let cierrePrevio = null;
     let maximos = [];
     let minimos = [];
     let volumenes = [];
@@ -145,8 +147,8 @@ maximos = datosValidos.map(d => d.maximo);
 minimos = datosValidos.map(d => d.minimo);
 volumenes = datosValidos.map(d => d.volumen);
 ultimaFechaVela = fechasValidas.at(-1) ?? null;
-const ultimoCierre = cierres.at(-1) ?? null;
-const cierrePrevio = cierres.at(-2) ?? null;
+ultimoCierre = cierres.at(-1) ?? null;
+cierrePrevio = cierres.at(-2) ?? null;
  
 
 const media = (datos, periodos) => {
