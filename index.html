@@ -98,11 +98,12 @@
 
   <div style="background:#192e4d;padding:16px;border-radius:12px;margin-top:14px;">
     <strong>🎯 Detector de oportunidades</strong>
-    <p>🟡 Sobreventa: vigilar recuperación</p>
-    <p>📈 Rebote inicial: pendiente de confirmar</p>
-    <p>🟢 Compra confirmada: señales alineadas</p>
-    <p>🔴 Riesgo elevado: revisar exposición</p>
-    <small style="color:#a4bbd8;">Diseño inicial: ejemplos, no señales actuales.</small>
+   <div id="detectorOportunidades">
+  <p style="color:#a4bbd8;">
+    🔄 Analizando las señales reales de tu cartera...
+  </p>
+</div>
+
   </div>
 </div>
 
@@ -1091,7 +1092,24 @@ alertas.forEach(alerta => {
     gruposAlertas.mantener.push(alerta);
   }
 });
+const detector = document.getElementById("detectorOportunidades");
 
+if (detector) {
+  const compras = gruposAlertas.compra.length;
+  const riesgos = gruposAlertas.riesgo.length;
+  const vigilancia = gruposAlertas.mantener.length;
+  const beneficios = gruposAlertas.beneficio.length;
+
+  detector.innerHTML = `
+    <p>🟢 Oportunidades de compra detectadas: ${compras}</p>
+    <p>🔴 Alertas de riesgo: ${riesgos}</p>
+    <p>🟡 Mantener / vigilar: ${vigilancia}</p>
+    <p>🎯 Objetivos y beneficios: ${beneficios}</p>
+    <small style="color:#a4bbd8;">
+      Resumen de las alertas calculadas. Las compras requieren confirmación técnica.
+    </small>
+  `;
+}
 function crearGrupo(titulo, lista) {
   if (lista.length === 0) return "";
 
