@@ -201,6 +201,26 @@ if (minimos.length >= 21 && maximos.length >= 20) {
   soporteAnterior = Math.min(...minimos.slice(-21, -1));
   resistencia = Math.max(...maximos.slice(-20));
 }
+if (
+  Number.isFinite(ultimoCierre) &&
+  Number.isFinite(cierrePrevio) &&
+  Number.isFinite(soporteAnterior) &&
+  soporteAnterior > 0
+) {
+  rupturaProvisional =
+    !ultimaVelaCerrada &&
+    ultimoCierre < soporteAnterior;
+
+  rupturaConfirmada =
+    ultimaVelaCerrada &&
+    cierrePrevio >= soporteAnterior &&
+    ultimoCierre < soporteAnterior;
+
+  recuperacionSoporte =
+    ultimaVelaCerrada &&
+    cierrePrevio < soporteAnterior &&
+    ultimoCierre >= soporteAnterior;
+}
 
     
      // RSI de 14 sesiones
@@ -561,7 +581,10 @@ cierrePrevio,
   rsi14Anterior,     
   tendencia,
   soporte,
-  soporteAnterior,     
+  soporteAnterior,   
+  rupturaProvisional,
+rupturaConfirmada,
+recuperacionSoporte,      
   resistencia,
   volumenActual,
 volumenMedio20,
