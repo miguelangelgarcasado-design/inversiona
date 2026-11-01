@@ -1274,7 +1274,56 @@ if (datosRiesgoCompletos) {
   } else if (macd < 0) {
     puntuacionRiesgo += 1;
   }
+  // Indicadores avanzados de riesgo
+  const lineaAvanzada = texto.find(linea =>
+    linea.includes("ADX:") &&
+    linea.includes("ATR%:")
+  ) || "";
 
+  const lineaVolumen = texto.find(linea =>
+    linea.includes("Volumen:")
+  ) || "";
+
+  const adxExtraido =
+    lineaAvanzada.match(/ADX:\s*(\d+(?:\.\d+)?)/);
+
+  const atrExtraido =
+    lineaAvanzada.match(/ATR%:\s*(\d+(?:\.\d+)?)/);
+
+  const volumenExtraido =
+    lineaVolumen.match(/Volumen:\s*(\d+(?:\.\d+)?)x/);
+
+  const adxRiesgo = adxExtraido
+    ? Number(adxExtraido[1]) : null;
+
+  const atrRiesgo = atrExtraido
+    ? Number(atrExtraido[1]) : null;
+
+  const volumenRiesgo = volumenExtraido
+    ? Number(volumenExtraido[1]) : null;
+
+  // Una tendencia bajista fuerte incrementa el riesgo
+  if (tendenciaBajista && adxRiesgo !== null && adxRiesgo >= 25) {
+    puntuacionRiesgo += 1;
+  }
+
+  // Volatilidad relativa
+  if (atrRiesgo !== null) {
+    if (atrRiesgo >= 8) {
+      puntuacionRiesgo += 2;
+    } else if (atrRiesgo >= 4) {
+      puntuacionRiesgo += 1;
+    }
+  }
+
+  // Volumen elevado durante una tendencia bajista
+  if (
+    tendenciaBajista &&
+    volumenRiesgo !== null &&
+    volumenRiesgo >= 1.2
+  ) {
+    puntuacionRiesgo += 1;
+  }
   puntuacionRiesgo = Math.max(
     1,
     Math.min(10, puntuacionRiesgo)
