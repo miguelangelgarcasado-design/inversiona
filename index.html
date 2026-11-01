@@ -1181,7 +1181,47 @@ const senalTecnica = texto
     linea.includes("impulso negativo")
   )
   .join(" | ");
+const lineaIndicadores = indicadores || "";
 
+const tendenciaBajista = lineaIndicadores.includes("BAJISTA");
+const tendenciaMixta = lineaIndicadores.includes("MIXTA");
+
+const rsiEncontrado = lineaIndicadores.match(/RSI:\s*(-?\d+(?:\.\d+)?)/);
+const rsi = rsiEncontrado ? Number(rsiEncontrado[1]) : null;
+
+const macdEncontrado = lineaIndicadores.match(/MACD:\s*(-?\d+(?:\.\d+)?)/);
+const macd = macdEncontrado ? Number(macdEncontrado[1]) : null;
+
+const datosRiesgoCompletos =
+  (tendenciaBajista || tendenciaMixta ||
+   lineaIndicadores.includes("ALCISTA")) &&
+  rsi !== null &&
+  macd !== null;
+
+let puntuacionRiesgo = null;
+
+if (datosRiesgoCompletos) {
+  puntuacionRiesgo = 3;
+
+  if (tendenciaBajista) puntuacionRiesgo += 3;
+  else if (tendenciaMixta) puntuacionRiesgo += 1;
+
+  if (rsi < 30) puntuacionRiesgo += 2;
+  else if (rsi < 40) puntuacionRiesgo += 1;
+  else if (rsi > 70) puntuacionRiesgo += 1;
+
+  if (macd < 0) puntuacionRiesgo += 2;
+
+  puntuacionRiesgo = Math.min(10, puntuacionRiesgo);
+}
+
+const nivelRiesgo = puntuacionRiesgo === null
+  ? "SIN DATOS"
+  : puntuacionRiesgo >= 7
+    ? "ELEVADO"
+    : puntuacionRiesgo >= 4
+      ? "MODERADO"
+      : "BAJO";
 
     return `
       <div style="background:#192e4d;padding:12px;
@@ -1200,6 +1240,26 @@ const senalTecnica = texto
 ${interpretacion ? `
   <div style="font-size:13px;color:#facc15;margin-top:8px;">
     ${interpretacion}
+  </div>
+` : ""}
+${puntuacionRiesgo !== null ? `
+  <div style="margin-top:10px;padding:10px;
+    background:#102a43;border-radius:8px;">
+    <strong>
+      Riesgo técnico: ${nivelRiesgo}
+      (${puntuacionRiesgo}/10)
+    </strong>
+    <div style="height:8px;background:#344968;
+      border-radius:6px;margin-top:8px;overflow:hidden;">
+      <div style="height:100%;
+        width:${puntuacionRiesgo * 10}%;
+        background:${puntuacionRiesgo >= 7
+          ? '#ef4444'
+          : puntuacionRiesgo >= 4
+            ? '#facc15'
+            : '#22c55e'};">
+      </div>
+    </div>
   </div>
 ` : ""}
 
