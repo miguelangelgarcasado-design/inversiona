@@ -467,6 +467,31 @@ try {
 } catch (error) {
   console.warn("Análisis no disponible", activo.ticker);
 }
+const adx = Number(analisis?.adx14);
+const atr = Number(analisis?.atr14);
+const volumenActual = Number(analisis?.volumenActual);
+const volumenMedio = Number(analisis?.volumenMedio20);
+
+const adxValido =
+  analisis?.adx14 != null && Number.isFinite(adx);
+
+const atrValido =
+  analisis?.atr14 != null && Number.isFinite(atr);
+
+const volumenValido =
+  analisis?.volumenActual != null &&
+  analisis?.volumenMedio20 != null &&
+  Number.isFinite(volumenActual) &&
+  Number.isFinite(volumenMedio) &&
+  volumenMedio > 0;
+
+const fuerzaTendencia = adxValido
+  ? adx >= 25 ? "FUERTE" : "DÉBIL"
+  : "SIN DATOS";
+
+const relacionVolumen = volumenValido
+  ? volumenActual / volumenMedio
+  : null;
 
       const unidades = activo.titulos ?? activo.cantidad;
 const precioEUR = activo.cotizaUSD || activo.moneda === "$"
@@ -633,6 +658,18 @@ const detalleIndicadores = analisis
       ? " | MACD: " + Number(analisis.macd).toFixed(2)
       : "")
   : "";
+  const detalleAvanzado = analisis
+  ? "\n📊 ADX: " +
+      (adxValido ? adx.toFixed(1) : "SIN DATOS") +
+    " | ATR: " +
+      (atrValido ? atr.toFixed(2) : "SIN DATOS") +
+    " | Fuerza: " + fuerzaTendencia +
+    "\n📦 Volumen: " +
+      (relacionVolumen !== null
+        ? relacionVolumen.toFixed(2) + "x la media"
+        : "SIN DATOS")
+  : "";
+
 let interpretacionTecnica = "";
 
 if (analisis) {
@@ -673,6 +710,7 @@ const detalleInterpretacion = interpretacionTecnica
   "\n➡️ " + recomendacion +
   detalleSoporte +
   detalleIndicadores +
+  detalleAvanzado +  
   detalleInterpretacion +
   
   "\n💰 Precio: " + formatoNumero(precioEUR) + " €" +
