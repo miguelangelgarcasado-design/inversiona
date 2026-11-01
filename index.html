@@ -1201,18 +1201,35 @@ const datosRiesgoCompletos =
 let puntuacionRiesgo = null;
 
 if (datosRiesgoCompletos) {
-  puntuacionRiesgo = 3;
+  puntuacionRiesgo = 2;
 
-  if (tendenciaBajista) puntuacionRiesgo += 3;
-  else if (tendenciaMixta) puntuacionRiesgo += 1;
+  // Dirección de la tendencia
+  if (tendenciaBajista) {
+    puntuacionRiesgo += 3;
+  } else if (tendenciaMixta) {
+    puntuacionRiesgo += 1;
+  }
 
-  if (rsi < 30) puntuacionRiesgo += 2;
-  else if (rsi < 40) puntuacionRiesgo += 1;
-  else if (rsi > 70) puntuacionRiesgo += 1;
+  // RSI: sobreventa no significa caída segura
+  if (rsi < 30) {
+    puntuacionRiesgo += 1;
+  } else if (rsi < 40) {
+    puntuacionRiesgo += 1;
+  } else if (rsi > 70) {
+    puntuacionRiesgo += 1;
+  }
 
-  if (macd < 0) puntuacionRiesgo += 2;
+  // Impulso del MACD frente a su señal
+  if (interpretacion.includes("impulso negativo")) {
+    puntuacionRiesgo += 2;
+  } else if (macd < 0) {
+    puntuacionRiesgo += 1;
+  }
 
-  puntuacionRiesgo = Math.min(10, puntuacionRiesgo);
+  puntuacionRiesgo = Math.max(
+    1,
+    Math.min(10, puntuacionRiesgo)
+  );
 }
 
 const nivelRiesgo = puntuacionRiesgo === null
