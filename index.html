@@ -658,17 +658,28 @@ const detalleIndicadores = analisis
       ? " | MACD: " + Number(analisis.macd).toFixed(2)
       : "")
   : "";
+  const atrPorcentaje =
+  atrValido &&
+  Number.isFinite(precioNumero) &&
+  precioNumero > 0
+    ? (atr / precioNumero) * 100
+    : null;
   const detalleAvanzado = analisis
   ? "\n📊 ADX: " +
       (adxValido ? adx.toFixed(1) : "SIN DATOS") +
     " | ATR: " +
       (atrValido ? atr.toFixed(2) : "SIN DATOS") +
-    " | Fuerza: " + fuerzaTendencia +
+    " | ATR%: " +
+  (atrPorcentaje !== null
+    ? atrPorcentaje.toFixed(1) + "%"
+    : "SIN DATOS") +
+    " | Fuerza: " + fuerzaTendencia +    
     "\n📦 Volumen: " +
       (relacionVolumen !== null
         ? relacionVolumen.toFixed(2) + "x la media"
         : "SIN DATOS")
   : "";
+
 
 let interpretacionTecnica = "";
 
