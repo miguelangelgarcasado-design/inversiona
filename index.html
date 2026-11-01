@@ -1248,7 +1248,7 @@ const datosRiesgoCompletos =
   macd !== null;
 
 let puntuacionRiesgo = null;
-
+let motivosRiesgo = [];
 if (datosRiesgoCompletos) {
   puntuacionRiesgo = 2;
 
@@ -1324,6 +1324,47 @@ if (datosRiesgoCompletos) {
   ) {
     puntuacionRiesgo += 1;
   }
+    // Explicación de los factores de riesgo
+  if (tendenciaBajista) {
+    motivosRiesgo.push("🔴 Tendencia bajista");
+  } else if (tendenciaMixta) {
+    motivosRiesgo.push("🟡 Tendencia mixta");
+  }
+
+  if (rsi < 30) {
+    motivosRiesgo.push("🟡 RSI en sobreventa");
+  } else if (rsi > 70) {
+    motivosRiesgo.push("🟠 RSI en sobrecompra");
+  }
+
+  if (interpretacion.includes("impulso negativo")) {
+    motivosRiesgo.push("🔴 Impulso bajista del MACD");
+  } else if (macd < 0) {
+    motivosRiesgo.push("🟡 MACD negativo");
+  }
+
+  if (
+    tendenciaBajista &&
+    adxRiesgo !== null &&
+    adxRiesgo >= 25
+  ) {
+    motivosRiesgo.push("🔴 Tendencia bajista fuerte (ADX)");
+  }
+
+  if (atrRiesgo !== null && atrRiesgo >= 8) {
+    motivosRiesgo.push("🔴 Volatilidad muy elevada");
+  } else if (atrRiesgo !== null && atrRiesgo >= 4) {
+    motivosRiesgo.push("🟠 Volatilidad elevada");
+  }
+
+  if (
+    tendenciaBajista &&
+    volumenRiesgo !== null &&
+    volumenRiesgo >= 1.2
+  ) {
+    motivosRiesgo.push("🟠 Volumen elevado en tendencia bajista");
+  }
+
   puntuacionRiesgo = Math.max(
     1,
     Math.min(10, puntuacionRiesgo)
@@ -1374,7 +1415,19 @@ ${puntuacionRiesgo !== null ? `
             ? '#facc15'
             : '#22c55e'};">
       </div>
-    </div>
+       </div>
+       ${motivosRiesgo.length > 0 ? `
+  <div style="margin-top:12px;font-size:13px;
+              color:#cbd5e1;line-height:1.7;">
+    <strong>Factores de riesgo:</strong>
+    ${motivosRiesgo.map(motivo => `
+      <div style="margin-top:4px;">
+        ${motivo}
+      </div>
+    `).join("")}
+  </div>
+` : ""}
+   
   </div>
 ` : ""}
 
@@ -1386,9 +1439,7 @@ ${puntuacionRiesgo !== null ? `
 
       </div>
     `;
-  }).join("");
-
-
+   
   const detalleRiesgos = resumirAlertas(gruposAlertas.riesgo);
   const detalleCompras = resumirAlertas(gruposAlertas.compra);
   const detalleVigilancia = resumirAlertas(gruposAlertas.mantener);
