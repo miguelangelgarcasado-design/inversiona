@@ -1174,6 +1174,14 @@ const senalTecnica = texto
   linea.includes("Tendencia:") &&
   linea.includes("RSI:")
 ) || "";
+    const interpretacion = texto
+  .filter(linea =>
+    linea.includes("Sobreventa:") ||
+    linea.includes("Sobrecompra:") ||
+    linea.includes("impulso negativo")
+  )
+  .join(" | ");
+
 
     return `
       <div style="background:#192e4d;padding:12px;
@@ -1189,6 +1197,11 @@ const senalTecnica = texto
   </div>
 ` : ""}
 
+${interpretacion ? `
+  <div style="font-size:13px;color:#facc15;margin-top:8px;">
+    ${interpretacion}
+  </div>
+` : ""}
 
         ${senalTecnica ? `
   <div style="font-size:13px;color:#9edac8;margin-top:8px;">
