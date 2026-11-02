@@ -1207,7 +1207,7 @@ if (detector) {
   const riesgos = gruposAlertas.riesgo.length;
   const vigilancia = gruposAlertas.mantener.length;
   const beneficios = gruposAlertas.beneficio.length;
-   const resumirAlertas = (lista, maximo = 3) =>
+   Riesgo tecnico (lista, maximo = 3) =>
   lista.slice(0, maximo).map(alerta => {
     const texto = alerta.split("\n");
     const titulo = texto[0] || "";
@@ -1429,6 +1429,7 @@ ${puntuacionRiesgo !== null ? `
 
       </div>
     `;
+    }).join("");
    
   const detalleRiesgos = resumirAlertas(gruposAlertas.riesgo);
   const detalleCompras = resumirAlertas(gruposAlertas.compra);
