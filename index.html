@@ -393,44 +393,54 @@ function formatoNumero(numero, decimales = 2) {
 }
 
 
+// Una sola consulta por activo durante la carga de la cartera.
+// La hora mostrada es la de consulta, NO la de la última operación bursátil.
+const consultasCotizacion = new Map();
+async function obtenerDatosCotizacion(ticker) {
+  if (!consultasCotizacion.has(ticker)) {
+    const peticion = (async () => {
+      const res = await fetch(
+        "/api/quote?symbol=" + encodeURIComponent(ticker),
+        { cache: "no-store" }
+      );
+      if (!res.ok) throw new Error("Error HTTP " + res.status);
+      const data = await res.json();
+      const precio = Number(data.price);
+      if (!Number.isFinite(precio) || precio <= 0) {
+        throw new Error("Precio no disponible para " + ticker);
+      }
+      return { ...data, price: precio };
+    })();
+    consultasCotizacion.set(ticker, peticion);
+  }
+  return consultasCotizacion.get(ticker);
+}
 async function obtenerPrecio(ticker) {
-  const res = await fetch(
-    "/api/quote?symbol=" + encodeURIComponent(ticker),
-    { cache: "no-store" }
-  );
-
-  if (!res.ok) {
-    throw new Error("Error HTTP " + res.status);
-  }
-
-  const data = await res.json();
-  const precio = Number(data.price);
-
-  if (!Number.isFinite(precio) || precio <= 0) {
-    throw new Error("Precio no disponible");
-  }
-
-  return precio;
+  return (await obtenerDatosCotizacion(ticker)).price;
 }
- async function obtenerAnalisis(ticker) {
-  const res = await fetch(
-    "/api/quote?symbol=" + encodeURIComponent(ticker),
-    { cache: "no-store" }
-  );
-
-  if (!res.ok) {
-    throw new Error("Error al obtener análisis");
-  }
-
-  return await res.json();
+async function obtenerAnalisis(ticker) {
+  return await obtenerDatosCotizacion(ticker);
 }
- 
 
 async function cargarDatos() {
   const lista = document.getElementById("listaActivos");
   const alertasDinamicas = document.getElementById("alertasDinamicas");
 
   lista.innerHTML = "";
+  consultasCotizacion.clear();
+  const inicioConsulta = new Date();
+  let estadoConsulta = document.getElementById("estadoConsultaCotizaciones");
+  if (!estadoConsulta) {
+    estadoConsulta = document.createElement("p");
+    estadoConsulta.id = "estadoConsultaCotizaciones";
+    estadoConsulta.className = "muted";
+    estadoConsulta.style.fontSize = "13px";
+    estadoConsulta.style.marginTop = "10px";
+    const panel = document.getElementById("panelPrincipal");
+    if (panel) panel.appendChild(estadoConsulta);
+  }
+  if (estadoConsulta) estadoConsulta.textContent =
+    "Consultando precios… (no necesariamente en tiempo real)";
 
   let eurUsd = 1;
 
@@ -1152,6 +1162,13 @@ if (!yaTieneAlerta) {
     totalPyGEUR >= 0
       ? "#86efac"
       : "#fca5a5";
+
+  if (estadoConsulta) {
+    estadoConsulta.textContent =
+      "Consulta realizada: " + inicioConsulta.toLocaleString("es-ES", {
+        dateStyle: "short", timeStyle: "short"
+      }) + " · Datos sujetos al retraso del proveedor; no es hora de cotización.";
+  }
 
   resumenPosiciones.innerHTML =
     "🟢 Ganadoras: " +
