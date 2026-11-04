@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InversiónIA</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a5cff">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(180deg, #08102a, #0b1220);
+      color: white;
+    }
+
+    header {
+      background: #0a5cff;
+      padding: 18px;
+      text-align: center;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .wrap {
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .card {
+      background: #0f1b3a;
+      border-radius: 14px;
+      padding: 20px;
+      margin: 16px 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,.25);
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #7fb3ff;
+    }
+
+    .precio {
+      color: #7dd3fc;
+      font-size: 20px;
+    }
+
+    .positivo {
+      color: #86efac;
+      font-weight: bold;
+    }
+
+    .negativo {
+      color: #fca5a5;
+      font-weight: bold;
+    }
+
+    .activo {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      line-height: 1.5;
+    }
+
+    .muted {
+      opacity: .7;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>InversiónIA</header>
+
+<div class="wrap">
+  <div style="background:#0d1932;color:white;padding:20px;border-radius:18px;margin-bottom:20px;">
+  <h2 style="margin:0;color:#ffffff;">InversiónIA 2026</h2>
+  <p style="color:#a4bbd8;margin-top:6px;">Centro de análisis y oportunidades</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px;">
+    <div style="background:#192e4d;padding:15px;border-radius:12px;">
+      <div>Análisis técnico</div>
+      <div style="font-size:30px;font-weight:bold;">6</div>
+      <small style="color:#6de0bc;">Indicadores principales</small>
+    </div>
+
+    <div style="background:#192e4d;padding:15px;border-radius:12px;">
+      <div>Horizontes</div>
+      <div style="font-size:30px;font-weight:bold;">3</div>
+      <small style="color:#6de0bc;">Diario · Semanal · Mensual</small>
+    </div>
+  </div>
+
+  <div style="background:#192e4d;padding:16px;border-radius:12px;margin-top:14px;">
+    <strong>🎯 Detector de oportunidades</strong>
+   <div id="detectorOportunidades">
+  <p style="color:#a4bbd8;">
+    🔄 Analizando las señales reales de tu cartera...
+  </p>
+</div>
+
+  </div>
+</div>
+
+
+
+  <div class="card">
+    <h2>📰 Noticias del mercado</h2>
+    <div id="noticiasDinamicas">
+      <span class="muted">Cargando noticias...</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Alertas</h2>
+    <div id="alertasDinamicas">
+      <span class="muted">Cargando alertas...</span>
+    </div>
+  </div>
+
+  <div id="panelPrincipal" class="card" style="border:1px solid #0a5cff;">
+    <h2>💼 Mi cartera</h2>
+
+    <div id="valorCartera"
+         style="font-size:30px;font-weight:bold;">
+      Calculando...
+    </div>
+
+    <div id="invertidoCartera"
+         style="font-size:18px;margin-top:8px;">
+      Total invertido: Calculando...
+    </div>
+
+    <div id="gananciaCartera"
+         style="font-size:20px;margin-top:8px;">
+    </div>
+
+    <div id="resumenPosiciones"
+         style="font-size:18px;margin-top:10px;">
+      🟢 Ganadoras: Calculando...
+      &nbsp;&nbsp;&nbsp;
+      🔴 Perdedoras: Calculando...
+    </div>
+  </div>
+
+  <div id="carteraTiempoReal" class="card">
+    <h2>📊 Cartera en tiempo real</h2>
+    <div id="listaActivos">
+      <span class="muted">Cargando cotizaciones...</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+ const reglas = {
+  "LDO.MI": {
+    compra: 42,
+    venta: 60,
+    nombre: "Leonardo",
+    accion: "MANTENER; VIGILAR OBJETIVO 60 €"
+  },
+
+  "IREN": {
+    compra: 33.50,
+    venta: 78,
+    nombre: "IREN",
+    accion: "MANTENER; AMPLIAR CERCA DE 33,50 $"
+  },
+
+  "OHLA.MC": {
+    compra: 0.30,
+    venta: 0.50,
+    nombre: "OHL",
+    accion: "MANTENER; VIGILAR OBJETIVO 0,50 €"
+  },
+
+  "ADX.MC": {
+    compra: 1.50,
+    venta: 2.50,
+    nombre: "Audax Renovables",
+    accion: "REVISAR; NO AMPLIAR AUTOMÁTICAMENTE"
+  },
+
+  "NAMM": {
+    compra: 1.00,
+    venta: 1.40,
+    nombre: "Namib Minerals",
+    accion: "MANTENER; VIGILAR 1,40 $"
+  },
+
+  "RKLB": {
+    compra: 70,
+    venta: 120,
+    nombre: "Rocket Lab",
+    accion: "MANTENER; NO AMPLIAR AHORA"
+  },
+
+  "ASTS": {
+    compra: 62,
+    venta: 106,
+    nombre: "AST SpaceMobile",
+    accion: "MANTENER; NO PROMEDIAR A LA BAJA AHORA"
+  },
+
+  "EDR.MC": {
+    compra: 3.50,
+    venta: 9,
+    nombre: "eDreams",
+    accion: "VIGILAR; VALORAR BENEFICIOS PARCIALES"
+  },
+
+  "AMP.MC": {
+    compra: 3.25,
+    venta: 5,
+    nombre: "Amper",
+    accion: "VIGILAR OBJETIVO 5 €"
+  },
+
+  "AAPL": {
+    compra: 250,
+    venta: 330,
+    nombre: "Apple",
+    accion: "MANTENER; VIGILAR OBJETIVO 330 $"
+  },
+
+  "PATH": {
+    compra: 10,
+    venta: 20,
+    nombre: "UiPath",
+    accion: "MANTENER; VIGILAR 20 $"
+  },
+
+  "UAA": {
+    compra: 4.50,
+    venta: 8,
+    nombre: "Under Armour",
+    accion: "MANTENER; VIGILAR 8 $"
+  },
+
+  "MBLY": {
+    compra: 7,
+    venta: 15,
+    nombre: "Mobileye",
+    accion: "MANTENER; VIGILAR 15 $"
+  },
+
+  "HIMS": {
+    compra: 25,
+    venta: 45,
+    nombre: "Hims & Hers",
+    accion: "MANTENER; VIGILAR OBJETIVO 45 $"
+  },
+
+  "TSLA": {
+    compra: 300,
+    venta: 450,
+    nombre: "Tesla",
+    accion: "MANTENER; VIGILAR OBJETIVO 450 $"
+  },
+
+  "SWKS": {
+    compra: 55,
+    venta: 90,
+    nombre: "Skyworks Solutions",
+    accion: "VIGILAR; VALORAR BENEFICIOS"
+  },
+
+  "RXRX": {
+    compra: 2.50,
+    venta: 6,
+    nombre: "Recursion Pharmaceuticals",
+    accion: "VIGILAR; VALORAR BENEFICIOS PARCIALES"
+  },
+
+  "RCAT": {
+    compra: 6,
+    venta: 12,
+    nombre: "Red Cat Holdings",
+    accion: "MANTENER; VIGILAR 12 $"
+  },
+
+  "GRF-P.MC": {
+    compra: 7,
+    venta: 12,
+    nombre: "Grifols Clase B",
+    accion: "VIGILAR ZONA DE COMPRA"
+  },
+
+  "CLNX.MC": {
+    compra: 27,
+    venta: 40,
+    nombre: "Cellnex",
+    accion: "VIGILAR ZONA DE COMPRA"
+  },
+
+  "MNDY": {
+    compra: 70,
+    venta: 100,
+    nombre: "monday.com",
+    accion: "MANTENER; VIGILAR 100 €"
+  },
+
+  "MNTS": {
+    compra: 3.50,
+    venta: 5.00,
+    nombre: "Momentus",
+    accion: "MANTENER; VIGILAR 5 $"
+  },
+
+  "PGS.DE": {
+    compra: 0.90,
+    venta: 1.40,
+    nombre: "Platform Group",
+    accion: "VIGILAR ZONA 0,90 €"
+  },
+
+  "BTC": {
+    compra: 70000,
+    venta: 100000,
+    nombre: "Bitcoin",
+    accion: "MANTENER; VIGILAR 100.000 €"
+  },
+
+  "SOL": {
+    compra: 100,
+    venta: 180,
+    nombre: "Solana",
+    accion: "MANTENER; VIGILAR 180 €"
+  },
+
+  "SUI": {
+    compra: 0.80,
+    venta: 2.00,
+    nombre: "SUI",
+    accion: "REVISAR; NO AMPLIAR AUTOMÁTICAMENTE"
+  },
+
+  "PEPE": {
+    compra: 0.000004,
+    venta: 0.000015,
+    nombre: "PEPE",
+    accion: "REVISAR; ALTA VOLATILIDAD"
+  }
+};
+
+const activos = [
+  { nombre: "Leonardo", ticker: "LDO.MI", titulos: 23.607176, compra: 42.46, moneda: "€" },
+ { nombre: "IREN", ticker: "IREN", titulos: 220, compra: 36.228, moneda: "€", cotizaUSD: true },
+   { nombre: "OHL", ticker: "OHLA.MC", titulos: 10485, compra: 0.3377, moneda: "€" },
+  { nombre: "Audax Renovables", ticker: "ADX.MC", titulos: 802, compra: 1.8740, moneda: "€" },
+  { nombre: "Namib Minerals", ticker: "NAMM", titulos: 535, compra: 1.40, moneda: "$" },
+  { nombre: "Rocket Lab", ticker: "RKLB", titulos: 9, compra: 119.57, moneda: "$" },
+  { nombre: "AST SpaceMobile", ticker: "ASTS", titulos: 9, compra: 106.00, moneda: "$" },
+  { nombre: "eDreams", ticker: "EDR.MC", titulos: 601, compra: 3.33, moneda: "€" },
+ { nombre: "Platform Group", ticker: "PGS.DE", titulos: 1536, compra: 0.984, moneda: "€" },
+  { nombre: "Momentus", ticker: "MNTS", titulos: 397, compra: 3.90, moneda: "$" },
+{ nombre: "Amper", ticker: "AMP.MC", titulos: 492, compra: 3.247, moneda: "€" },
+   { nombre: "Apple", ticker: "AAPL", titulos: 26, compra: 185.81, moneda: "$" },
+  { nombre: "UiPath", ticker: "PATH", titulos: 160, compra: 12.50, moneda: "$" },
+  { nombre: "Under Armour", ticker: "UAA", titulos: 384, compra: 5.01, moneda: "$" },
+  { nombre: "Mobileye", ticker: "MBLY", titulos: 213, compra: 7.50, moneda: "$" },
+  { nombre: "Hims & Hers", ticker: "HIMS", titulos: 60, compra: 25.00, moneda: "$" },
+  { nombre: "Tesla", ticker: "TSLA", titulos: 4, compra: 327.79, moneda: "$" },
+  { nombre: "Skyworks Solutions", ticker: "SWKS", titulos: 17, compra: 55.00, moneda: "$" },
+  { nombre: "Recursion Pharmaceuticals", ticker: "RXRX", titulos: 344, compra: 2.90, moneda: "$" },
+  { nombre: "Red Cat Holdings", ticker: "RCAT", titulos: 125, compra: 8.00, moneda: "$" },
+  { nombre: "Grifols Clase B", ticker: "GRF-P.MC", titulos: 128, compra: 7.80, moneda: "€" },
+  { nombre: "Cellnex", ticker: "CLNX.MC", titulos: 30, compra: 32.50, moneda: "€" },
+  { nombre: "monday.com", ticker: "MNDY", titulos: 28, compra: 71.80, moneda: "€" },
+  { nombre: "Bitcoin", ticker: "BTC", cantidad: 0.01230506, compra: 73953, moneda: "€", tipo: "crypto" },
+  { nombre: "Solana", ticker: "SOL", cantidad: 1.824239351, compra: 137.04, moneda: "€", tipo: "crypto" },
+  { nombre: "SUI", ticker: "SUI", cantidad: 49.559011098, compra: 4.04, moneda: "€", tipo: "crypto" },
+  { nombre: "PEPE", ticker: "PEPE", cantidad: 13433984.02858376, compra: 0.00001489, moneda: "€", tipo: "crypto" },
+  { nombre: "XRP", ticker: "XRP", cantidad: 25.332092, compra: 2.37, moneda: "€", tipo: "crypto" },
+];
+
+function formatoNumero(numero, decimales = 2) {
+  if (Math.abs(Number(numero)) > 0 &&
+      Math.abs(Number(numero)) < 0.01) {
+    decimales = 8;
+  }
+
+  return Number(numero).toLocaleString("es-ES", {
+    minimumFractionDigits: decimales,
+    maximumFractionDigits: decimales
+  });
+}
+
+
+// Una sola consulta por activo durante la carga de la cartera.
+// La hora mostrada es la de consulta, NO la de la última operación bursátil.
+const consultasCotizacion = new Map();
+async function obtenerDatosCotizacion(ticker) {
+  if (!consultasCotizacion.has(ticker)) {
+    const peticion = (async () => {
+      const res = await fetch(
+        "/api/quote?symbol=" + encodeURIComponent(ticker),
+        { cache: "no-store" }
+      );
+      if (!res.ok) throw new Error("Error HTTP " + res.status);
+      const data = await res.json();
+      const precio = Number(data.price);
+      if (!Number.isFinite(precio) || precio <= 0) {
+        throw new Error("Precio no disponible para " + ticker);
+      }
+      return { ...data, price: precio };
+    })();
+    consultasCotizacion.set(ticker, peticion);
+  }
+  return consultasCotizacion.get(ticker);
+}
+async function obtenerPrecio(ticker) {
+  return (await obtenerDatosCotizacion(ticker)).price;
+}
+async function obtenerAnalisis(ticker) {
+  return await obtenerDatosCotizacion(ticker);
+}
+
+// Coste en EUR: el cambio actual sirve para valorar, no para reconstruir compras.
+// Si no se conoce el cargo real del bróker, se fija una referencia PROVISIONAL
+// en este navegador para evitar que el invertido cambie en cada consulta.
+const CLAVE_COSTES = "inversionia_costes_eur_provisionales_v1";
+function leerCostesGuardados() {
+  try {
+    const datos = JSON.parse(localStorage.getItem(CLAVE_COSTES) || "{}");
+    return datos && typeof datos === "object" ? datos : {};
+  } catch (_) { return {}; }
+}
+function guardarCostes(datos) {
+  try { localStorage.setItem(CLAVE_COSTES, JSON.stringify(datos)); }
+  catch (error) { console.warn("No se pudo guardar el coste provisional", error); }
+}
+function calcularCosteEnEUR(activo, unidades, eurUsd, costes) {
+  // Permite introducir en el futuro el coste total REAL en euros del bróker.
+  if (Number.isFinite(activo.costeTotalEUR) && activo.costeTotalEUR >= 0) {
+    return { total: activo.costeTotalEUR, provisional: false };
+  }
+  if (activo.moneda !== "$") {
+    return { total: unidades * activo.compra, provisional: false };
+  }
+  const clave = activo.ticker;
+  const guardado = costes[clave];
+  if (guardado && guardado.unidades === unidades &&
+      guardado.compraUSD === activo.compra &&
+      Number.isFinite(guardado.totalEUR) && guardado.totalEUR >= 0) {
+    return { total: guardado.totalEUR, provisional: true };
+  }
+  if (!Number.isFinite(eurUsd) || eurUsd <= 0) {
+    throw new Error("No se puede convertir el coste en USD sin EUR/USD válido");
+  }
+  const total = unidades * activo.compra / eurUsd;
+  costes[clave] = { unidades, compraUSD: activo.compra, totalEUR: total };
+  guardarCostes(costes);
+  return { total, provisional: true };
+}
+
+async function cargarDatos() {
+  const lista = document.getElementById("listaActivos");
+  const alertasDinamicas = document.getElementById("alertasDinamicas");
+
+  lista.innerHTML = "";
+  consultasCotizacion.clear();
+  const inicioConsulta = new Date();
+  let estadoConsulta = document.getElementById("estadoConsultaCotizaciones");
+  if (!estadoConsulta) {
+    estadoConsulta = document.createElement("p");
+    estadoConsulta.id = "estadoConsultaCotizaciones";
+    estadoConsulta.className = "muted";
+    estadoConsulta.style.fontSize = "13px";
+    estadoConsulta.style.marginTop = "10px";
+    const panel = document.getElementById("panelPrincipal");
+    if (panel) panel.appendChild(estadoConsulta);
+  }
+  if (estadoConsulta) estadoConsulta.textContent =
+    "Consultando precios… (no necesariamente en tiempo real)";
+
+  let eurUsd = NaN;
+  const costesGuardados = leerCostesGuardados();
+  let costesProvisionales = 0;
+
+  try {
+    eurUsd = await obtenerPrecio("EURUSD");
+
+    if (!Number.isFinite(eurUsd) || eurUsd <= 0) {
+      eurUsd = NaN;
+    }
+  } catch (error) {
+    console.error("No se pudo obtener EUR/USD", error);
+    eurUsd = NaN;
+  }
+
+  let totalInvertidoEUR = 0;
+  let totalActualEUR = 0;
+  let posicionesGanadoras = 0;
+  let posicionesPerdedoras = 0;
+  let posicionesCalculadas = 0;
+
+  const alertas = [];
+
+  for (const activo of activos) {
+    const div = document.createElement("div");
+    div.className = "activo";
+
+    try {
+     const alertasAntes = alertas.length;
+     const regla = reglas[activo.ticker]; 
+      const precioNumero = await obtenerPrecio(activo.ticker);
+      let analisis = null;
+try {
+  analisis = await obtenerAnalisis(activo.ticker);
+} catch (error) {
+  console.warn("Análisis no disponible", activo.ticker);
+}
+const adx = Number(analisis?.adx14);
+const atr = Number(analisis?.atr14);
+const volumenActual = Number(analisis?.volumenActual);
+const volumenMedio = Number(analisis?.volumenMedio20);
+
+const adxValido =
+  analisis?.adx14 != null && Number.isFinite(adx);
+
+const atrValido =
+  analisis?.atr14 != null && Number.isFinite(atr);
+
+const volumenValido =
+  analisis?.volumenActual != null &&
+  analisis?.volumenMedio20 != null &&
+  Number.isFinite(volumenActual) &&
+  Number.isFinite(volumenMedio) &&
+  volumenMedio > 0;
+
+const fuerzaTendencia = adxValido
+  ? adx >= 25 ? "FUERTE" : "DÉBIL"
+  : "SIN DATOS";
+
+const relacionVolumen = volumenValido
+  ? volumenActual / volumenMedio
+  : null;
+
+      const unidades = activo.titulos ?? activo.cantidad;
+const necesitaCambio = activo.cotizaUSD || activo.moneda === "$";
+if (necesitaCambio && (!Number.isFinite(eurUsd) || eurUsd <= 0)) {
+  throw new Error("EUR/USD no disponible; se evita usar una conversión falsa");
+}
+const precioEUR = necesitaCambio ? precioNumero / eurUsd : precioNumero;
+const coste = calcularCosteEnEUR(activo, unidades, eurUsd, costesGuardados);
+const invertido = coste.total;
+const compraEUR = invertido / unidades;
+if (coste.provisional) costesProvisionales++;
+
+     const valorActual = unidades * precioEUR;
+      const beneficio = valorActual - invertido;
+      const porcentaje = invertido !== 0
+        ? (beneficio / invertido) * 100
+        : 0;
+if (regla) {
+    const porcentajeTexto =
+        (porcentaje >= 0 ? "+" : "") + formatoNumero(porcentaje) + "%";
+
+    let colorAlerta = "🟡";
+    let estado = "MANTENER";
+    let recomendacion = regla.accion || "";
+
+    recomendacion = recomendacion.replace(/^MANTENER;\s*/i, "");
+  if (activo.moneda === "$" || activo.cotizaUSD) {
+  recomendacion = recomendacion.replace(
+    /(\d+(?:[.,]\d+)?)\s*\$/g,
+    (texto, cantidad) => {
+      const dolares = Number(cantidad.replace(",", "."));
+      return formatoNumero(dolares / eurUsd) + " €";
+    }
+  );
+}
+
+
+
+    // 1. RIESGO ALTO: caída igual o superior al 35 %
+    if (porcentaje <= -35) {
+        colorAlerta = "🔴";
+        estado = "RIESGO ALTO";
+
+        // Conservamos la recomendación específica de cada activo.
+        // No marcamos una gran caída automáticamente como compra.
+        if (
+  analisis?.tendencia === "BAJISTA" &&
+ analisis?.rsi14 != null && Number(analisis.rsi14) < 30
+) {
+  recomendacion = "ESPERAR CONFIRMACION DE REBOTE; NO AMPLIAR AHORA";
+} else if (!recomendacion) {
+  recomendacion = "REVISAR; NO AMPLIAR AHORA";
+}
+
+    // 2. OBJETIVO DE VENTA ALCANZADO
+    } else if (precioNumero >= regla.venta) {
+        colorAlerta = "🔴";
+        estado = "OBJETIVO ALCANZADO";
+        recomendacion = "VALORAR VENTA / RECOGER BENEFICIOS";
+
+    // 3. BENEFICIO IMPORTANTE
+    } else if (porcentaje >= 30) {
+        colorAlerta = "🟠";
+        estado = "BENEFICIO IMPORTANTE";
+
+        if (!recomendacion) {
+            recomendacion = "VIGILAR / VALORAR BENEFICIOS PARCIALES";
+        }
+
+    // 4. DECISIÓN DE COMPRA / ESPERA
+} else if (precioNumero <= regla.compra) {
+
+    const distanciaCompra =
+        ((regla.compra - precioNumero) / regla.compra) * 100;
+
+    if (porcentaje <= -35) {
+        colorAlerta = "🔴";
+        estado = "NO COMPRAR TODAVÍA";
+        recomendacion = "CAÍDA MUY FUERTE; ESPERAR ESTABILIZACIÓN";
+
+    } else if (porcentaje <= -20) {
+        colorAlerta = "🟡";
+        estado = "VIGILAR";
+        recomendacion = "CERCA DE COMPRA; ESPERAR CONFIRMACIÓN";
+
+    } else if (distanciaCompra >= 5) {
+        colorAlerta = "🟢";
+        estado = "OPORTUNIDAD DE COMPRA";
+        recomendacion = "PRECIO POR DEBAJO DE LA ZONA DE COMPRA";
+
+    } else {
+        colorAlerta = "🟢";
+        estado = "ZONA DE COMPRA";
+        recomendacion = "VALORAR COMPRA / AMPLIAR";
+    }
+
+
+// 5. SITUACIÓN NORMAL
+} else {
+    colorAlerta = "🟡";
+    estado = "MANTENER";
+
+    if (!recomendacion) {
+        recomendacion = "MANTENER / VIGILAR";
+    }
+}
+
+if (
+  analisis?.tendencia === "BAJISTA" &&
+  Number(analisis?.macd) < Number(analisis?.macdSignal)
+) {
+  colorAlerta = "🔴";
+  estado = "RIESGO ALTO";
+  recomendacion = "ESPERAR CONFIRMACION DE RECUPERACION; NO AMPLIAR AHORA";
+}
+if (
+  estado === "ZONA DE COMPRA" ||
+  estado === "OPORTUNIDAD DE COMPRA"
+) {
+  const a = analisis;
+
+  const compraConfirmada =
+    a?.tendencia === "ALCISTA" &&
+    a.rsi14 != null &&
+    Number(a.rsi14) >= 40 &&
+    Number(a.rsi14) <= 70 &&
+    a.macd != null &&
+    a.macdSignal != null &&
+    Number(a.macd) > Number(a.macdSignal) &&
+    a.adx14 != null &&
+    Number(a.adx14) >= 25 &&
+    a.volumenActual != null &&
+    a.volumenMedio20 != null &&
+    Number(a.volumenMedio20) > 0 &&
+    Number(a.volumenActual) >=
+      Number(a.volumenMedio20) * 1.2;
+
+  if (!compraConfirmada) {
+    colorAlerta = "🟡";
+    estado = "VIGILAR";
+    recomendacion =
+      "COMPRA NO CONFIRMADA; ESPERAR MEJORA TECNICA";
+  }
+}
+
+const senalesSoporte = [];
+
+if (analisis?.rupturaConfirmada === true) {
+  senalesSoporte.push("🔴 Ruptura de soporte confirmada");
+} else if (analisis?.rupturaProvisional === true) {
+  senalesSoporte.push("🟠 Posible ruptura de soporte, pendiente de cierre");
+} else if (analisis?.recuperacionSoporte === true) {
+  senalesSoporte.push("🟢 Recuperación del nivel de soporte");
+}
+
+const detalleSoporte = senalesSoporte.length
+  ? "\n📊 " + senalesSoporte.join(" | ")
+  : "";
+
+const detalleIndicadores = analisis
+  ? "\n📈 Tendencia: " + (analisis.tendencia || "SIN DATOS") +
+    (analisis.rsi14 != null
+      ? " | RSI: " + Number(analisis.rsi14).toFixed(1)
+      : "") +
+    (analisis.macd != null
+      ? " | MACD: " + Number(analisis.macd).toFixed(2)
+      : "")
+  : "";
+  const atrPorcentaje =
+  atrValido &&
+  Number.isFinite(precioNumero) &&
+  precioNumero > 0
+    ? (atr / precioNumero) * 100
+    : null;
+  const detalleAvanzado = analisis
+  ? "\n📊 ADX: " +
+      (adxValido ? adx.toFixed(1) : "SIN DATOS") +
+    " | ATR: " +
+      (atrValido ? atr.toFixed(2) : "SIN DATOS") +
+    " | ATR%: " +
+  (atrPorcentaje !== null
+    ? atrPorcentaje.toFixed(1) + "%"
+    : "SIN DATOS") +
+    " | Fuerza: " + fuerzaTendencia +    
+    "\n📦 Volumen: " +
+      (relacionVolumen !== null
+        ? relacionVolumen.toFixed(2) + "x la media"
+        : "SIN DATOS")
+  : "";
+
+
+let interpretacionTecnica = "";
+
+if (analisis) {
+  const rsi = Number(analisis.rsi14);
+  const macd = Number(analisis.macd);
+  const senalMacd = Number(analisis.macdSignal);
+
+  if (analisis.rsi14 != null && Number.isFinite(rsi)) {
+    if (rsi < 30) {
+      interpretacionTecnica =
+        "🟡 Sobreventa: vigilar posible rebote, sin compra confirmada";
+    } else if (rsi > 70) {
+      interpretacionTecnica =
+        "🟠 Sobrecompra: vigilar posible corrección";
+    }
+  }
+
+  if (
+    analisis.tendencia === "BAJISTA" &&
+    analisis.macd != null &&
+    analisis.macdSignal != null &&
+    Number.isFinite(macd) &&
+    Number.isFinite(senalMacd) &&
+    macd < senalMacd
+  ) {
+    interpretacionTecnica +=
+      "\n🔴 Tendencia bajista con impulso negativo";
+  }
+}
+
+const detalleInterpretacion = interpretacionTecnica
+  ? "\n🧠 " + interpretacionTecnica
+  : "";
+
+   alertas.push(
+  colorAlerta + " " + activo.nombre +
+  " — " + estado + " (" + porcentajeTexto + ")" +
+  "\n➡️ " + recomendacion +
+  detalleSoporte +
+  detalleIndicadores +
+  detalleAvanzado +  
+  detalleInterpretacion +
+  
+  "\n💰 Precio: " + formatoNumero(precioEUR) + " €" +
+"\n🛒 Compra: " + formatoNumero(compraEUR) + " €" +
+"\n🎯 Objetivo: " + formatoNumero(
+  activo.moneda === "$" || activo.cotizaUSD
+    ? regla.venta / eurUsd
+    : regla.venta
+) + " €"
+
+
+
+);
+
+}
+
+      posicionesCalculadas++;
+
+      if (beneficio >= 0) {
+        posicionesGanadoras++;
+      } else {
+        posicionesPerdedoras++;
+      }
+
+     const invertidoEUR = invertido;
+const actualEUR = valorActual;
+
+      totalInvertidoEUR += invertidoEUR;
+      totalActualEUR += actualEUR;
+
+     
+
+     
+
+      const color =
+        beneficio >= 0 ? "#86efac" : "#fca5a5";
+
+      const signo =
+        beneficio >= 0 ? "+" : "";
+
+      div.innerHTML = `
+        <strong>${activo.nombre}</strong>
+        <span class="muted"> (${activo.ticker})</span><br>
+
+        <span class="precio">
+          ${formatoNumero(precioEUR)} €
+        </span>
+
+        <div style="margin-top:8px;">
+          Cantidad: ${unidades.toLocaleString("es-ES")}<br>
+          Precio compra: ${formatoNumero(compraEUR)} €${coste.provisional ? " (referencia provisional)" : ""}<br>
+         Invertido: ${formatoNumero(invertido)} €<br>
+        Valor actual: ${formatoNumero(valorActual)} €<br>
+
+          <span style="color:${color};font-weight:bold;">
+          PyG: ${signo}${formatoNumero(beneficio)} €
+            (${signo}${formatoNumero(porcentaje)}%)
+          </span>
+        </div>
+       <div style="margin-top:12px; padding:10px; background:#172b4d; border-radius:8px;">
+  <strong>📊 Análisis técnico</strong>
+  <div>Tendencia: ${analisis?.tendencia ?? "N/D"}</div>
+  <div>RSI (14): ${analisis?.rsi14 != null ? formatoNumero(analisis.rsi14) : "N/D"}</div>
+  <div>MACD: ${analisis?.macd != null ? formatoNumero(analisis.macd) : "N/D"}</div>
+  <div>Soporte: ${analisis?.soporte != null && Number.isFinite(Number(analisis.soporte)) ? formatoNumero(necesitaCambio ? Number(analisis.soporte) / eurUsd : Number(analisis.soporte)) + " €" : "N/D"}</div>
+  <div>Resistencia: ${analisis?.resistencia != null && Number.isFinite(Number(analisis.resistencia)) ? formatoNumero(necesitaCambio ? Number(analisis.resistencia) / eurUsd : Number(analisis.resistencia)) + " €" : "N/D"}</div>
+ ${(() => {
+  const soporte = analisis?.soporte == null
+    ? null
+    : Number(analisis.soporte);
+
+  const precio = Number(precioNumero);
+
+  if (
+    soporte === null ||
+    !Number.isFinite(soporte) ||
+    soporte <= 0 ||
+    !Number.isFinite(precio) ||
+    precio <= 0
+  ) {
+    return "";
+  }
+
+  if (precio < soporte) {
+    const distancia = ((soporte - precio) / soporte) * 100;
+
+    return `<div style="margin-top:10px;color:#ff9b9b;font-weight:bold;">
+      🔴 PRECIO BAJO SOPORTE — ${distancia.toFixed(2)}% por debajo.
+      Vigilar posible continuación bajista.
+    </div>`;
+  }
+
+  if (precio === soporte) {
+    return `<div style="margin-top:10px;color:#facc15;">
+      🟡 Precio en el soporte de referencia; esperar confirmación.
+    </div>`;
+  }
+  return `<div style="margin-top:10px;color:#86efac;">
+    🔵 Precio por encima del soporte de referencia (comparación en moneda de mercado).
+  </div>`;
+})()}
+
+
+  <div style="margin-top:8px;color:#7dd3fc;">${analisis?.tendencia === "BAJISTA" && analisis?.rsi14 < 30 ? "⚠️ Sobreventa en tendencia bajista: vigilar posible rebote, sin compra confirmada" : analisis?.tendencia === "ALCISTA" && analisis?.macd > 0 ? "📈 Tendencia alcista con MACD positivo" : "🔎 Mantener en vigilancia: señal no confirmada"}</div>
+
+<div style="margin-top:12px;padding:12px;border-radius:10px;background:#102a43;">
+${(() => {
+  const rsi = Number(analisis?.rsi14);
+  const macd = Number(analisis?.macd);
+  const senal = Number(analisis?.macdSignal);
+  const adx = Number(analisis?.adx14);
+  const volumen = Number(analisis?.volumenActual);
+  const volumenMedio = Number(analisis?.volumenMedio20);
+  const tendencia = analisis?.tendencia;
+
+  if (
+    analisis?.rsi14 == null ||
+    analisis?.macd == null ||
+    !["ALCISTA", "BAJISTA", "MIXTA"].includes(tendencia)
+  ) {
+    return "⚪ DATOS INSUFICIENTES";
+  }
+
+  const volumenAlto =
+    volumenMedio > 0 && volumen > volumenMedio * 1.2;
+
+  const fuerza = Number.isFinite(adx) && adx >= 25;
+  const macdFavorable =
+    Number.isFinite(senal) && macd > senal;
+
+  if (tendencia === "BAJISTA" && macd < 0) {
+    return "🔴 RIESGO ELEVADO — Tendencia bajista y MACD negativo" +
+      (rsi < 30 ? ". Sobreventa: posible rebote sin confirmar." : "");
+  }
+
+  if (
+    tendencia === "ALCISTA" &&
+    rsi >= 40 && rsi <= 70 &&
+    macd > 0 && macdFavorable &&
+    fuerza && volumenAlto
+  ) {
+    return "🟢 SEÑALES FAVORABLES — Tendencia, impulso, fuerza y volumen alineados";
+  }
+
+  if (rsi < 30) {
+    return "🟡 SOBREVENTA — Vigilar posible rebote; esperar confirmación";
+  }
+
+  return "🟡 VIGILAR — Señales técnicas sin confirmación suficiente";
+})()}
+</div>
+<div style="margin-top:12px;padding:12px;border-radius:10px;background:#172b4d;">
+${(() => {
+  const a = analisis;
+  if (!a) return "⚪ Puntuación no disponible";
+
+  let puntos = 0;
+  let maximo = 0;
+
+  if (["ALCISTA", "BAJISTA", "MIXTA"].includes(a.tendencia)) {
+    maximo += 25;
+    if (a.tendencia === "ALCISTA") puntos += 25;
+    if (a.tendencia === "MIXTA") puntos += 12;
+  }
+
+  if (a.rsi14 != null && Number.isFinite(Number(a.rsi14))) {
+    maximo += 20;
+    const r = Number(a.rsi14);
+    if (r >= 45 && r <= 65) puntos += 20;
+    else if (r >= 35 && r < 45) puntos += 12;
+    else if (r > 65 && r <= 70) puntos += 12;
+    else if (r >= 30 && r < 35) puntos += 6;
+  }
+
+  if (a.macd != null && a.macdSignal != null) {
+    const m = Number(a.macd);
+    const s = Number(a.macdSignal);
+    if (Number.isFinite(m) && Number.isFinite(s)) {
+      maximo += 25;
+      if (m > 0 && m > s) puntos += 25;
+      else if (m > s) puntos += 15;
+      else if (m > 0) puntos += 10;
+    }
+  }
+
+  if (a.adx14 != null && Number.isFinite(Number(a.adx14))) {
+    maximo += 15;
+    const adx = Number(a.adx14);
+    if (adx >= 25 && a.tendencia === "ALCISTA") puntos += 15;
+    else if (adx >= 20 && a.tendencia === "ALCISTA") puntos += 8;
+    else if (adx < 20) puntos += 4;
+  }
+
+  if (a.volumenActual != null && a.volumenMedio20 > 0) {
+    maximo += 15;
+    const ratio = Number(a.volumenActual) / Number(a.volumenMedio20);
+    if (Number.isFinite(ratio)) {
+      if (ratio >= 1.2 && a.tendencia === "ALCISTA") puntos += 15;
+      else if (ratio >= 1 && a.tendencia === "ALCISTA") puntos += 10;
+      else if (ratio >= 0.8) puntos += 5;
+    }
+  }
+
+  if (maximo < 70) return "⚪ Puntuación: datos insuficientes";
+
+  const nota = Math.round(puntos / maximo * 100);
+  const color = nota >= 70 ? "🟢" : nota >= 40 ? "🟡" : "🔴";
+
+  return color + " PUNTUACIÓN TÉCNICA: " + nota +
+    "/100 — " + (nota >= 70 ? "Fortaleza técnica" :
+    nota >= 40 ? "Señales mixtas" : "Debilidad técnica");
+})()}
+</div>
+<div style="margin-top:12px;padding:12px;background:#102a43;border-radius:10px;">
+  <strong>🔎 ¿Qué influye en la puntuación?</strong>
+  ${(() => {
+    const a = analisis;
+    if (!a) return "Datos no disponibles";
+
+    const detalles = [];
+
+    if (a.tendencia === "BAJISTA") {
+      detalles.push("🔴 Tendencia bajista: precio y medias móviles desfavorables.");
+    } else if (a.tendencia === "ALCISTA") {
+      detalles.push("🟢 Tendencia alcista: medias móviles favorables.");
+    } else {
+      detalles.push("🟡 Tendencia mixta o sin confirmar.");
+    }
+
+    if (a.rsi14 != null) {
+      const r = Number(a.rsi14);
+      if (r < 30) detalles.push("🟡 RSI en sobreventa: posible rebote, todavía sin confirmar.");
+      else if (r > 70) detalles.push("🟠 RSI en sobrecompra: vigilar correcciones.");
+      else detalles.push("🔵 RSI en zona intermedia.");
+    }
+
+    if (a.macd != null && a.macdSignal != null) {
+      const m = Number(a.macd);
+      const s = Number(a.macdSignal);
+      detalles.push(m > s
+        ? "🟢 MACD por encima de su señal: mejora del impulso."
+        : "🔴 MACD por debajo de su señal: impulso débil.");
+    }
+
+    if (a.adx14 != null) {
+      const adx = Number(a.adx14);
+      detalles.push(adx >= 25
+        ? "📊 ADX elevado: tendencia con fuerza, no necesariamente alcista."
+        : "📊 ADX bajo: tendencia poco definida.");
+    }
+
+    if (a.volumenActual != null && a.volumenMedio20 > 0) {
+      const ratio = a.volumenActual / a.volumenMedio20;
+      detalles.push(ratio >= 1.2
+        ? "📈 Volumen superior a la media."
+        : "📉 Volumen sin incremento significativo.");
+    }
+
+    return detalles.join("<br>");
+  })()}
+</div>
+
+</div>
+ <div style="margin-top:12px;padding:12px;border-radius:10px;background:#102a43;">
+<strong>🎯 Detector de recuperación</strong>
+<div style="margin-top:8px;">
+${(() => {
+  const a = analisis;
+  if (!a || a.rsi14 == null || a.macd == null ||
+      a.macdSignal == null) {
+    return "⚪ Datos insuficientes";
+  }
+
+  const rsi = Number(a.rsi14);
+  const rsiAnterior = a.rsi14Anterior == null
+  ? null
+  : Number(a.rsi14Anterior);
+
+  const macd = Number(a.macd);
+  const senal = Number(a.macdSignal);
+  const tendencia = a.tendencia;
+  const volumen = Number(a.volumenActual);
+  const media = Number(a.volumenMedio20);
+
+  if (![rsi, macd, senal].every(Number.isFinite)) {
+    return "⚪ Datos insuficientes";
+  }
+
+  const volumenAlto = media > 0 && volumen >= media * 1.2;
+  const impulsoMejora = macd > senal;
+if (
+  rsiAnterior !== null &&
+  Number.isFinite(rsiAnterior) &&
+  rsiAnterior < 30 &&
+  rsi >= 30
+) {
+  return "🟡 SALIDA DE SOBREVENTA: RSI cruza al alza el nivel 30; vigilar confirmación";
+}
+
+  const rsiSubiendo = rsiAnterior !== null &&
+    Number.isFinite(rsiAnterior) && rsi > rsiAnterior;
+  const soporteNivel = a.soporte == null ? NaN : Number(a.soporte);
+  const soporteSostenido = Number.isFinite(soporteNivel) && soporteNivel > 0 &&
+    Number(precioNumero) >= soporteNivel;
+  if (tendencia === "ALCISTA" &&
+      rsi >= 40 && rsi <= 70 && rsiSubiendo &&
+      impulsoMejora && volumenAlto && soporteSostenido) {
+    return "🟢 SEÑAL TÉCNICA FAVORABLE: RSI, MACD, volumen y soporte alineados";
+  }
+
+  if (rsi < 30 && tendencia === "BAJISTA") {
+    return "🔴 SOBREVENTA EN TENDENCIA BAJISTA: esperar confirmación";
+  }
+
+  // Un MACD superior a su señal NO confirma por sí solo una recuperación.
+  // Es necesario que el RSI esté subiendo y que el precio respete el soporte.
+  const rsiMejora = rsiAnterior !== null &&
+    Number.isFinite(rsiAnterior) && rsi > rsiAnterior;
+  const soporte = a.soporte == null ? null : Number(a.soporte);
+  const soporteRespeta = soporte !== null && Number.isFinite(soporte) &&
+    soporte > 0 && Number(precioNumero) >= soporte;
+  if (impulsoMejora && rsiMejora && rsi >= 30 && rsi < 60 &&
+      tendencia !== "BAJISTA" && soporteRespeta) {
+    return volumenAlto
+      ? "🟡 RECUPERACIÓN INCIPIENTE: RSI al alza, MACD favorable y volumen elevado; aún sin confirmación completa"
+      : "🟡 MEJORA PARCIAL: RSI al alza y MACD favorable; falta confirmar con volumen";
+  }
+  if (rsiAnterior !== null && Number.isFinite(rsiAnterior) &&
+      rsi < rsiAnterior) {
+    return "🟠 SIN RECUPERACIÓN CONFIRMADA: RSI descendiendo; mantener vigilancia";
+  }
+  if (!soporteRespeta) {
+    return "🟠 SIN RECUPERACIÓN CONFIRMADA: soporte no respetado o sin datos";
+  }
+  return "🟠 SIN CONFIRMACIÓN DE RECUPERACIÓN";
+})()}
+</div>
+<div style="margin-top:12px;padding:12px;background:#172b4d;border-radius:10px;line-height:1.8;">
+  <strong>🔎 Seguimiento de recuperación</strong>
+  ${(() => {
+    const a = analisis;
+    if (!a) return "Datos no disponibles";
+
+    const rsi = a.rsi14 == null ? null : Number(a.rsi14);
+    const anterior = a.rsi14Anterior == null ? null : Number(a.rsi14Anterior);
+    const macd = a.macd == null ? null : Number(a.macd);
+    const senal = a.macdSignal == null ? null : Number(a.macdSignal);
+    const volumen = a.volumenActual == null ? null : Number(a.volumenActual);
+    const media = a.volumenMedio20 == null ? null : Number(a.volumenMedio20);
+
+    const valido = v => v !== null && Number.isFinite(v);
+    const fmt = v => valido(v) ? v.toFixed(2) : "N/D";
+
+    const cruce = valido(anterior) && valido(rsi) &&
+      anterior < 30 && rsi >= 30;
+
+    const mensajes = [
+      "📊 RSI anterior: " + fmt(anterior) + " | Actual: " + fmt(rsi),
+      !valido(anterior) || !valido(rsi)
+        ? "⚪ Evolución RSI: datos insuficientes"
+        : cruce
+          ? "🟡 Cruce alcista del RSI por encima de 30"
+          : rsi > anterior
+            ? "🟢 RSI mejorando, sin nuevo cruce de 30"
+            : rsi < anterior
+              ? "🔴 RSI descendiendo"
+              : "🟡 RSI estable",
+      !valido(macd) || !valido(senal)
+        ? "⚪ MACD: datos insuficientes"
+        : macd > senal
+          ? "🟢 MACD por encima de su señal"
+          : "🔴 MACD sin confirmación alcista",
+      !valido(volumen) || !valido(media) || media <= 0
+        ? "⚪ Volumen: datos insuficientes"
+        : volumen >= media * 1.2
+          ? "🟢 Volumen al menos un 20% sobre la media"
+          : "🟡 Volumen sin incremento significativo"
+    ];
+
+    return mensajes.join("<br>");
+  })()}
+</div>
+
+</div>
+
+      `;
+
+
+// Si ninguna regla anterior ha generado alerta para este activo,
+// mostramos MANTENER para que todos tengan una indicación.
+const nombreAlerta = activo.nombre || activo.ticker;
+const yaTieneAlerta = alertas.length > alertasAntes;
+
+if (!yaTieneAlerta) {
+  alertas.push(
+    "🟡 " + nombreAlerta + ": MANTENER - " +
+    formatoNumero(precioNumero) + " " + activo.moneda
+  );
+}
+
+    } catch (error) {
+      console.error("Error en " + activo.ticker, error);
+
+      div.innerHTML = `
+        <strong>${activo.nombre}</strong>
+        <span class="muted"> (${activo.ticker})</span><br>
+        <span class="negativo">Sin datos</span>
+      `;
+    }
+
+    lista.appendChild(div);
+  }
+
+  const totalPyGEUR =
+    totalActualEUR - totalInvertidoEUR;
+
+  const porcentajeTotal =
+    totalInvertidoEUR !== 0
+      ? (totalPyGEUR / totalInvertidoEUR) * 100
+      : 0;
+
+  const valorCartera =
+    document.getElementById("valorCartera");
+
+  const invertidoCartera =
+    document.getElementById("invertidoCartera");
+
+  const gananciaCartera =
+    document.getElementById("gananciaCartera");
+
+  const resumenPosiciones =
+    document.getElementById("resumenPosiciones");
+
+  valorCartera.textContent =
+    formatoNumero(totalActualEUR) + " €";
+
+  invertidoCartera.textContent =
+    "Total invertido: " +
+    formatoNumero(totalInvertidoEUR) +
+    " €" + (costesProvisionales ? " (incluye costes provisionales)" : "");
+
+  const signoTotal =
+    totalPyGEUR >= 0 ? "+" : "";
+
+  gananciaCartera.textContent =
+    signoTotal +
+    formatoNumero(totalPyGEUR) +
+    " € (" +
+    signoTotal +
+    formatoNumero(porcentajeTotal) +
+    "%)";
+
+  gananciaCartera.style.color =
+    totalPyGEUR >= 0
+      ? "#86efac"
+      : "#fca5a5";
+
+  if (estadoConsulta) {
+    estadoConsulta.textContent =
+      "Consulta realizada: " + inicioConsulta.toLocaleString("es-ES", {
+        dateStyle: "short", timeStyle: "short"
+      }) + " · Datos sujetos al retraso del proveedor; no es hora de cotización." +
+      (costesProvisionales ? " · " + costesProvisionales + " costes en USD fijados provisionalmente en este navegador; para una PyG real, introducir el importe en EUR pagado al bróker (incluidas comisiones)." : "");
+  }
+
+  resumenPosiciones.innerHTML =
+    "🟢 Ganadoras: " +
+    posicionesGanadoras +
+    "&nbsp;&nbsp;&nbsp; 🔴 Perdedoras: " +
+    posicionesPerdedoras +
+    "<br><span class='muted'>Posiciones calculadas: " +
+    posicionesCalculadas +
+    " de " +
+    activos.length +
+    "</span>";
+
+ const gruposAlertas = {
+  compra: [],
+  riesgo: [],
+  beneficio: [],
+  mantener: []
+};
+
+alertas.forEach(alerta => {
+ 
+  if (
+  alerta.startsWith("🟢 ") &&
+  !alerta.includes("MANTENER") &&
+  !alerta.includes("ESPERAR") &&
+  !alerta.includes("NO AMPLIAR") &&
+  !alerta.includes("COMPRA NO CONFIRMADA") &&
+  (
+    alerta.includes(" - ZONA DE COMPRA ") ||
+    alerta.includes(" - OPORTUNIDAD DE COMPRA ")
+  )
+) {
+  gruposAlertas.compra.push(alerta);
+   } else if (
+     alerta.includes("RIESGO ALTO") ||
+    alerta.includes("NO AMPLIAR") ||
+    alerta.includes("NO PROMEDIAR")
+  ) {
+    gruposAlertas.riesgo.push(alerta);
+  } else if (
+    alerta.includes("OBJETIVO ALCANZADO") ||
+    alerta.includes("BENEFICIO IMPORTANTE")
+  ) {
+    gruposAlertas.beneficio.push(alerta);
+  } else {
+    gruposAlertas.mantener.push(alerta);
+  }
+});
+const detector = document.getElementById("detectorOportunidades");
+
+if (detector) {
+  const compras = gruposAlertas.compra.length;
+  const riesgos = gruposAlertas.riesgo.length;
+  const vigilancia = gruposAlertas.mantener.length;
+  const beneficios = gruposAlertas.beneficio.length;
+   const resumirAlertas = (lista, maximo = 3) =>
+  lista.slice(0, maximo).map(alerta => {
+    const texto = alerta.split("\n");
+    const titulo = texto[0] || "";
+    const recomendacion = texto[1] || "";
+const senalTecnica = texto
+  .filter(linea =>
+    linea.includes("Ruptura de soporte") ||
+    linea.includes("Posible ruptura de soporte") ||
+    linea.includes("Recuperación del nivel de soporte")
+  )
+  .join(" | ");
+    const indicadores = texto.find(linea =>
+  linea.includes("Tendencia:") &&
+  linea.includes("RSI:")
+) || "";
+    const interpretacion = texto
+  .filter(linea =>
+    linea.includes("Sobreventa:") ||
+    linea.includes("Sobrecompra:") ||
+    linea.includes("impulso negativo")
+  )
+  .join(" | ");
+const lineaIndicadores = indicadores || "";
+
+const tendenciaBajista = lineaIndicadores.includes("BAJISTA");
+const tendenciaMixta = lineaIndicadores.includes("MIXTA");
+
+const rsiEncontrado = lineaIndicadores.match(/RSI:\s*(-?\d+(?:\.\d+)?)/);
+const rsi = rsiEncontrado ? Number(rsiEncontrado[1]) : null;
+
+const macdEncontrado = lineaIndicadores.match(/MACD:\s*(-?\d+(?:\.\d+)?)/);
+const macd = macdEncontrado ? Number(macdEncontrado[1]) : null;
+
+const datosRiesgoCompletos =
+  (tendenciaBajista || tendenciaMixta ||
+   lineaIndicadores.includes("ALCISTA")) &&
+  rsi !== null &&
+  macd !== null;
+
+let puntuacionRiesgo = null;
+let motivosRiesgo = [];
+if (datosRiesgoCompletos) {
+  puntuacionRiesgo = 2;
+
+  // Dirección de la tendencia
+  if (tendenciaBajista) {
+    puntuacionRiesgo += 3;
+  } else if (tendenciaMixta) {
+    puntuacionRiesgo += 1;
+  }
+
+  // RSI: sobreventa no significa caída segura
+  if (rsi < 30) {
+    puntuacionRiesgo += 1;
+  } else if (rsi < 40) {
+    puntuacionRiesgo += 1;
+  } else if (rsi > 70) {
+    puntuacionRiesgo += 1;
+  }
+
+  // Impulso del MACD frente a su señal
+  if (interpretacion.includes("impulso negativo")) {
+    puntuacionRiesgo += 2;
+  } else if (macd < 0) {
+    puntuacionRiesgo += 1;
+  }
+  // Indicadores avanzados de riesgo
+  const lineaAvanzada = texto.find(linea =>
+    linea.includes("ADX:") &&
+    linea.includes("ATR%:")
+  ) || "";
+
+  const lineaVolumen = texto.find(linea =>
+    linea.includes("Volumen:")
+  ) || "";
+
+  const adxExtraido =
+    lineaAvanzada.match(/ADX:\s*(\d+(?:\.\d+)?)/);
+
+  const atrExtraido =
+    lineaAvanzada.match(/ATR%:\s*(\d+(?:\.\d+)?)/);
+
+  const volumenExtraido =
+    lineaVolumen.match(/Volumen:\s*(\d+(?:\.\d+)?)x/);
+
+  const adxRiesgo = adxExtraido
+    ? Number(adxExtraido[1]) : null;
+
+  const atrRiesgo = atrExtraido
+    ? Number(atrExtraido[1]) : null;
+
+  const volumenRiesgo = volumenExtraido
+    ? Number(volumenExtraido[1]) : null;
+
+  // Una tendencia bajista fuerte incrementa el riesgo
+  if (tendenciaBajista && adxRiesgo !== null && adxRiesgo >= 25) {
+    puntuacionRiesgo += 1;
+  }
+
+  // Volatilidad relativa
+  if (atrRiesgo !== null) {
+    if (atrRiesgo >= 8) {
+      puntuacionRiesgo += 2;
+    } else if (atrRiesgo >= 4) {
+      puntuacionRiesgo += 1;
+    }
+  }
+
+  // Volumen elevado durante una tendencia bajista
+  if (
+    tendenciaBajista &&
+    volumenRiesgo !== null &&
+    volumenRiesgo >= 1.2
+  ) {
+    puntuacionRiesgo += 1;
+  }
+    // Explicación de los factores de riesgo
+  if (tendenciaBajista) {
+    motivosRiesgo.push("🔴 Tendencia bajista");
+  } else if (tendenciaMixta) {
+    motivosRiesgo.push("🟡 Tendencia mixta");
+  }
+
+  if (rsi < 30) {
+    motivosRiesgo.push("🟡 RSI en sobreventa");
+  } else if (rsi > 70) {
+    motivosRiesgo.push("🟠 RSI en sobrecompra");
+  }
+
+  if (interpretacion.includes("impulso negativo")) {
+    motivosRiesgo.push("🔴 Impulso bajista del MACD");
+  } else if (macd < 0) {
+    motivosRiesgo.push("🟡 MACD negativo");
+  }
+
+  if (
+    tendenciaBajista &&
+    adxRiesgo !== null &&
+    adxRiesgo >= 25
+  ) {
+    motivosRiesgo.push("🔴 Tendencia bajista fuerte (ADX)");
+  }
+
+  if (atrRiesgo !== null && atrRiesgo >= 8) {
+    motivosRiesgo.push("🔴 Volatilidad muy elevada");
+  } else if (atrRiesgo !== null && atrRiesgo >= 4) {
+    motivosRiesgo.push("🟠 Volatilidad elevada");
+  }
+
+  if (
+    tendenciaBajista &&
+    volumenRiesgo !== null &&
+    volumenRiesgo >= 1.2
+  ) {
+    motivosRiesgo.push("🟠 Volumen elevado en tendencia bajista");
+  }
+
+  puntuacionRiesgo = Math.max(
+    1,
+    Math.min(10, puntuacionRiesgo)
+  );
+}
+
+const nivelRiesgo = puntuacionRiesgo === null
+  ? "SIN DATOS"
+  : puntuacionRiesgo >= 7
+    ? "ELEVADO"
+    : puntuacionRiesgo >= 4
+      ? "MODERADO"
+      : "BAJO";
+
+    return `
+      <div style="background:#192e4d;padding:12px;
+                  border-radius:10px;margin-top:10px;
+                  line-height:1.5;overflow-wrap:anywhere;">
+        <strong>${titulo}</strong>
+        <div style="font-size:14px;color:#b8d1ee;margin-top:5px;">
+          ${recomendacion}
+        </div>
+        ${indicadores ? `
+  <div style="font-size:13px;color:#93c5fd;margin-top:8px;">
+    ${indicadores}
+  </div>
+` : ""}
+
+${interpretacion ? `
+  <div style="font-size:13px;color:#facc15;margin-top:8px;">
+    ${interpretacion}
+  </div>
+` : ""}
+${puntuacionRiesgo !== null ? `
+  <div style="margin-top:10px;padding:10px;
+    background:#102a43;border-radius:8px;">
+    <strong>
+      Riesgo técnico: ${nivelRiesgo}
+      (${puntuacionRiesgo}/10)
+    </strong>
+    <div style="height:8px;background:#344968;
+      border-radius:6px;margin-top:8px;overflow:hidden;">
+      <div style="height:100%;
+        width:${puntuacionRiesgo * 10}%;
+        background:${puntuacionRiesgo >= 7
+          ? '#ef4444'
+          : puntuacionRiesgo >= 4
+            ? '#facc15'
+            : '#22c55e'};">
+      </div>
+       </div>
+      
+   
+  </div>
+` : ""}
+
+        ${senalTecnica ? `
+  <div style="font-size:13px;color:#9edac8;margin-top:8px;">
+    ${senalTecnica}
+  </div>
+` : ""}
+
+      </div>
+    `;
+    }).join("");
+   
+  const detalleRiesgos = resumirAlertas(gruposAlertas.riesgo);
+  const detalleCompras = resumirAlertas(gruposAlertas.compra);
+  const detalleVigilancia = resumirAlertas(gruposAlertas.mantener);
+
+
+  detector.innerHTML = `
+    <p>🟢 Oportunidades de compra detectadas: ${compras}</p>
+    <p>🔴 Alertas de riesgo: ${riesgos}</p>
+    <p>🟡 Mantener / vigilar: ${vigilancia}</p>
+    <p>🎯 Objetivos y beneficios: ${beneficios}</p>
+      <div style="margin-top:16px;padding:12px;background:#102a43;border-radius:10px;">
+      <strong>📋 Acciones que requieren atención</strong>
+
+      ${riesgos > 0 ? `<p>🔴 Riesgos principales:<br>${detalleRiesgos}</p>` : ""}
+
+      ${compras > 0 ? `<p>🟢 Oportunidades detectadas:<br>${detalleCompras}</p>` : ""}
+
+      ${vigilancia > 0 ? `<p>🟡 En vigilancia:<br>${detalleVigilancia}</p>` : ""}
+    </div>
+    <small style="color:#a4bbd8;">
+      Resumen de las alertas calculadas. Las compras requieren confirmación técnica.
+    </small>
+  `;
+}
+function crearGrupo(titulo, lista) {
+  if (lista.length === 0) return "";
+
+  return (
+    '<div style="margin-top:18px;">' +
+      '<strong style="font-size:20px;">' + titulo + '</strong>' +
+      '<div style="margin-top:12px;display:grid;gap:12px;">' +
+        lista.map(alerta =>
+          '<div style="background:rgba(255,255,255,0.05);' +
+          'border:1px solid rgba(255,255,255,0.10);' +
+          'border-radius:12px;padding:14px;line-height:1.55;">' +
+          alerta.replace(/\n/g, "<br>") +
+          '</div>'
+        ).join("") +
+      '</div>' +
+    '</div>'
+  );
+}
+
+if (alertas.length > 0) {
+  alertasDinamicas.innerHTML =
+    crearGrupo("🟢 Oportunidades de compra", gruposAlertas.compra) +
+    crearGrupo("🔴 Riesgo / revisar", gruposAlertas.riesgo) +
+    crearGrupo("🟠 Beneficios / objetivos", gruposAlertas.beneficio) +
+    crearGrupo("🟡 Mantener / vigilar", gruposAlertas.mantener);
+} else {
+  alertasDinamicas.innerHTML =
+    '<span class="muted">✅ Sin movimientos destacados ahora mismo.</span>';
+}
+
+
+}
+
+async function cargarNoticias() {
+  const contenedor =
+    document.getElementById("noticiasDinamicas");
+
+  try {
+    const res = await fetch(
+      "/api/news",
+      { cache: "no-store" }
+    );
+
+    if (!res.ok) {
+      throw new Error("Error HTTP " + res.status);
+    }
+
+    const data = await res.json();
+
+    if (
+      !data.ok ||
+      !Array.isArray(data.noticias) ||
+      data.noticias.length === 0
+    ) {
+      contenedor.innerHTML =
+        "<p>No hay noticias disponibles ahora.</p>";
+      return;
+    }
+
+    contenedor.innerHTML =
+      data.noticias.map(n => `
+        <div style="margin-bottom:18px;">
+        <a href="${n.url || '#'}" target="_blank" rel="noopener noreferrer" style="color:white;text-decoration:none;"><strong>${n.titular || ""}</strong></a><br>
+        <span class="muted">${n.fuente || ""}${n.fecha && new Date(n.fecha).getFullYear() > 2000 ? " · " + new Date(n.fecha).toLocaleDateString("es-ES") : ""}</span>
+        </div>
+      `).join("");
+
+  } catch (error) {
+    console.error("Error cargando noticias", error);
+
+    contenedor.innerHTML =
+      "<p>No se pudieron cargar las noticias.</p>";
+  }
+}
+
+cargarNoticias();
+window.addEventListener("DOMContentLoaded", cargarDatos);
+</script>
+
+<div class="wrap">
+  <div class="card">
+    <h2>📈 Gráfico profesional</h2>
+
+    <div
+      class="tradingview-widget-container"
+      style="height:520px;width:100%;"
+    >
+      <div
+        class="tradingview-widget-container__widget"
+        style="height:100%;width:100%;"
+      ></div>
+
+      <script
+        type="text/javascript"
+        src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
+        async
+      >
+      {
+        "autosize": true,
+        "symbol": "NASDAQ:AAPL",
+        "interval": "D",
+        "timezone": "Europe/Madrid",
+        "theme": "dark",
+        "style": "1",
+        "locale": "es",
+        "allow_symbol_change": true,
+        "calendar": false,
+        "support_host": "https://www.tradingview.com"
+      }
+      </script>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
