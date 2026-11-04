@@ -393,6 +393,21 @@ function formatoNumero(numero, decimales = 2) {
 }
 
 
+// Información de la vela diaria que entrega la API; NO es el momento de la última operación.
+function textoFechaVela(analisis) {
+  const valor = analisis?.ultimaFechaVela;
+  if (valor == null || !Number.isFinite(Number(valor)) || Number(valor) <= 0) {
+    return "Fecha de la última vela: no disponible";
+  }
+  const fecha = new Date(Number(valor) * 1000);
+  if (Number.isNaN(fecha.getTime())) return "Fecha de la última vela: no disponible";
+  const dia = fecha.toLocaleDateString("es-ES", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" });
+  const cierre = analisis.ultimaVelaCerrada === true
+    ? "· vela marcada como cerrada por el proveedor"
+    : "· cierre de vela NO confirmado";
+  return "Última vela diaria: " + dia + " " + cierre;
+}
+
 // Una sola consulta por activo durante la carga de la cartera.
 // La hora mostrada es la de consulta, NO la de la última operación bursátil.
 const consultasCotizacion = new Map();
@@ -886,6 +901,7 @@ const actualEUR = valorActual;
         </div>
        <div style="margin-top:12px; padding:10px; background:#172b4d; border-radius:8px;">
   <strong>📊 Análisis técnico</strong>
+  <div class="muted" style="font-size:12px;margin:6px 0 9px;">${textoFechaVela(analisis)}. Los indicadores se calculan con velas diarias; no indican la hora exacta de la última negociación.</div>
   <div>Tendencia: ${analisis?.tendencia ?? "N/D"}</div>
   <div>RSI (14): ${analisis?.rsi14 != null ? formatoNumero(analisis.rsi14) : "N/D"}</div>
   <div>MACD: ${analisis?.macd != null ? formatoNumero(analisis.macd) : "N/D"}</div>
