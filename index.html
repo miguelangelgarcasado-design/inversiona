@@ -149,7 +149,7 @@
   </div>
 
   <div id="carteraTiempoReal" class="card">
-    <h2>📊 Cartera en tiempo real</h2>
+    <h2>📊 Cartera — última consulta disponible</h2>
     <div id="listaActivos">
       <span class="muted">Cargando cotizaciones...</span>
     </div>
@@ -425,6 +425,49 @@ async function obtenerAnalisis(ticker) {
 // Coste en EUR: el cambio actual sirve para valorar, no para reconstruir compras.
 // Si no se conoce el cargo real del bróker, se fija una referencia PROVISIONAL
 // en este navegador para evitar que el invertido cambie en cada consulta.
+const CLAVE_COSTES_REALES = "inversionia_costes_reales_eur_v1";
+function leerCostesReales() {
+  try {
+    const datos = JSON.parse(localStorage.getItem(CLAVE_COSTES_REALES) || "{}");
+    return datos && typeof datos === "object" ? datos : {};
+  } catch (_) { return {}; }
+}
+function guardarCosteReal(activo, unidades, importe) {
+  const datos = leerCostesReales();
+  datos[activo.ticker] = {
+    totalEUR: importe, unidades: unidades,
+    compra: activo.compra, moneda: activo.moneda
+  };
+  localStorage.setItem(CLAVE_COSTES_REALES, JSON.stringify(datos));
+}
+function cambiarCosteReal(ticker) {
+  const activo = activos.find(a => a.ticker === ticker);
+  if (!activo) return;
+  const unidades = activo.titulos ?? activo.cantidad;
+  const importe = window.prompt(
+    "Coste TOTAL pagado al bróker por " + activo.nombre +
+    " (" + unidades.toLocaleString("es-ES") + " títulos), en euros e incluidas comisiones. " +
+    "Escribe el importe exacto (por ejemplo 891,35):"
+  );
+  if (importe === null) return;
+  const limpio = importe.trim().replace(/\s/g, "");
+  // Aceptar notación española e internacional; no confundir miles y decimales.
+  const normalizado = limpio.includes(",")
+    ? limpio.replace(/\./g, "").replace(",", ".")
+    : limpio;
+  const numero = Number(normalizado);
+  if (!Number.isFinite(numero) || numero <= 0) {
+    window.alert("Importe no válido. No se ha cambiado ningún coste.");
+    return;
+  }
+  try {
+    guardarCosteReal(activo, unidades, numero);
+    window.alert("Coste real guardado SOLO en este navegador. Se recalculará la cartera.");
+    cargarDatos();
+  } catch (_) {
+    window.alert("Este navegador no permite guardar datos. No se ha modificado el coste.");
+  }
+}
 const CLAVE_COSTES = "inversionia_costes_eur_provisionales_v1";
 function leerCostesGuardados() {
   try {
@@ -437,7 +480,14 @@ function guardarCostes(datos) {
   catch (error) { console.warn("No se pudo guardar el coste provisional", error); }
 }
 function calcularCosteEnEUR(activo, unidades, eurUsd, costes) {
-  // Permite introducir en el futuro el coste total REAL en euros del bróker.
+  // El coste real confirmado prevalece, pero se invalida si cambian las unidades.
+  const real = leerCostesReales()[activo.ticker];
+  if (real && real.unidades === unidades &&
+      real.compra === activo.compra && real.moneda === activo.moneda &&
+      Number.isFinite(real.totalEUR) && real.totalEUR > 0) {
+    return { total: real.totalEUR, provisional: false, realConfirmado: true };
+  }
+  // Coste incorporado directamente al código, si existe.
   if (Number.isFinite(activo.costeTotalEUR) && activo.costeTotalEUR >= 0) {
     return { total: activo.costeTotalEUR, provisional: false };
   }
@@ -824,8 +874,9 @@ const actualEUR = valorActual;
 
         <div style="margin-top:8px;">
           Cantidad: ${unidades.toLocaleString("es-ES")}<br>
-          Precio compra: ${formatoNumero(compraEUR)} €${coste.provisional ? " (referencia provisional)" : ""}<br>
+          Precio compra: ${formatoNumero(compraEUR)} €${coste.provisional ? " (referencia provisional)" : coste.realConfirmado ? " (coste real confirmado por ti)" : ""}<br>
          Invertido: ${formatoNumero(invertido)} €<br>
+         ${activo.moneda === "$" ? `<button type="button" class="editar-coste-real" style="margin:8px 0;padding:8px 12px;background:#28528c;color:white;border:1px solid #93c5fd;border-radius:8px;cursor:pointer;">✏️ Introducir coste total real en €</button><div class="muted" style="font-size:12px;">Se guarda únicamente en este navegador; no se sincroniza con Openbank ni con otros dispositivos.</div>` : ""}
         Valor actual: ${formatoNumero(valorActual)} €<br>
 
           <span style="color:${color};font-weight:bold;">
@@ -1184,6 +1235,8 @@ if (!yaTieneAlerta) {
       `;
     }
 
+    const botonCoste = div.querySelector(".editar-coste-real");
+    if (botonCoste) botonCoste.addEventListener("click", () => cambiarCosteReal(activo.ticker));
     lista.appendChild(div);
   }
 
