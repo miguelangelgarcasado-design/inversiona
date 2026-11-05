@@ -351,7 +351,7 @@
 
 const activos = [
   { nombre: "Leonardo", ticker: "LDO.MI", titulos: 23.607176, compra: 42.46, moneda: "€" },
- { nombre: "IREN", ticker: "IREN", titulos: 220, compra: 36.228, moneda: "€", cotizaUSD: true },
+ { nombre: "IREN", ticker: "IREN", titulos: 265, compra: 36.228, moneda: "€", cotizaUSD: true, irenCompraNuevaUSD: { titulos: 45, totalUSD: 991.11, fecha: "2026-11-04" } },
    { nombre: "OHL", ticker: "OHLA.MC", titulos: 10485, compra: 0.3377, moneda: "€" },
   { nombre: "Audax Renovables", ticker: "ADX.MC", titulos: 802, compra: 1.8740, moneda: "€" },
   { nombre: "Namib Minerals", ticker: "NAMM", titulos: 535, compra: 1.40, moneda: "$" },
@@ -406,6 +406,44 @@ function textoFechaVela(analisis) {
     ? "· vela marcada como cerrada por el proveedor"
     : "· cierre de vela NO confirmado";
   return "Última vela diaria: " + dia + " " + cierre;
+}
+
+// Fase 6: semáforo interpretativo sobre la última vela (sin órdenes automáticas).
+function evaluarSemaforoTecnico(a, precioMercado, cambio, convierte) {
+  if (!a) return {color:"⚪",titulo:"SIN DATOS",texto:"No hay indicadores suficientes.",niveles:"",fecha:""};
+  const num = v => v == null || v === "" ? null : (Number.isFinite(Number(v)) ? Number(v) : null);
+  const fechaSeg = num(a.ultimaFechaVela);
+  const fechaMs = fechaSeg == null ? null : fechaSeg * 1000;
+  const dias = fechaMs == null ? null : Math.floor((Date.now()-fechaMs)/86400000);
+  // Umbral conservador: tolera fines de semana y festivos aislados. No equivale a calendario bursátil.
+  const antigua = dias == null || dias > 4 || dias < -1;
+  const cerrada = a.ultimaVelaCerrada === true;
+  const rsi = num(a.rsi14), previo=num(a.rsi14Anterior);
+  const macd=num(a.macd), senal=num(a.macdSignal), adx=num(a.adx14);
+  const vol=num(a.volumenActual), media=num(a.volumenMedio20);
+  const soporte=num(a.soporte), resistencia=num(a.resistencia);
+  const suficientes = [rsi,macd,senal,adx,vol,media].every(v=>v!==null) && media>0 &&
+    ["ALCISTA","BAJISTA","MIXTA"].includes(a.tendencia);
+  let color="🟡", titulo="VIGILAR", texto="Indicadores sin alineación suficiente.";
+  if (!suficientes) {color="⚪";titulo="DATOS INSUFICIENTES";texto="Faltan indicadores para evaluar la señal.";}
+  else if (antigua || !cerrada) { color="⚪";titulo="SEÑAL NO VERIFICABLE";texto="Vela antigua, sin fecha o sin cierre confirmado: no usar esta lectura como señal actual.";}
+  else if (a.tendencia==="ALCISTA" && rsi>=40 && rsi<=70 && previo!==null && rsi>previo &&
+    macd>senal && macd>0 && adx>=25 && vol/media>=1.2 &&
+    soporte!==null && num(precioMercado)!==null && Number(precioMercado)>=soporte) {
+    color="🟢";titulo="CONDICIONES TÉCNICAS FAVORABLES";texto="Tendencia, RSI, MACD, ADX y volumen alineados en la vela cerrada; no es una orden de compra.";
+  } else if (a.tendencia==="BAJISTA" && adx>=25 && macd<=senal) {
+    color="🔴";titulo="RIESGO TÉCNICO ELEVADO";texto="Tendencia bajista fuerte con MACD sin confirmación alcista. No implica venta automática.";
+  }
+  const fx = convierte ? Number(cambio) : 1;
+  const validoFX = Number.isFinite(fx) && fx > 0;
+  const eur = x => x===null || !validoFX ? "N/D" : formatoNumero(x/fx) + " €";
+  const niveles = "Soporte orientativo: " + eur(soporte) +
+    " · Resistencia orientativa: " + eur(resistencia) +
+    ". Son referencias históricas, no precios de ejecución ni objetivos garantizados.";
+  const fecha = antigua ? "⚠️ Antigüedad de datos: " + (dias===null ? "sin fecha" : dias+" días naturales") +
+    ". El umbral de 4 días no sustituye el calendario bursátil." :
+    "Fecha de vela disponible; precio intradía y análisis diario pueden referirse a momentos distintos.";
+  return {color,titulo,texto,niveles,fecha};
 }
 
 // Una sola consulta por activo durante la carga de la cartera.
@@ -483,6 +521,42 @@ function cambiarCosteReal(ticker) {
     window.alert("Este navegador no permite guardar datos. No se ha modificado el coste.");
   }
 }
+// Compra adicional verificada: 45 acciones IREN, 04/11/2026, 990 USD + 1,11 USD comisión.
+// Los 220 títulos previos se conservan a 36,228 EUR de coste medio registrado.
+// El contravalor REAL de la nueva compra en EUR no consta en el justificante.
+const IREN_BASE_UNIDADES = 220;
+const IREN_BASE_COSTE_EUR = IREN_BASE_UNIDADES * 36.228;
+const IREN_NUEVA_UNIDADES = 45;
+const IREN_NUEVA_TOTAL_USD = 991.11;
+const CLAVE_IREN_NUEVA_EUR = "inversionia_iren_compra_2026_11_04_eur_v1";
+function leerImporteIRENNuevoEUR() {
+  try {
+    const dato = Number(localStorage.getItem(CLAVE_IREN_NUEVA_EUR));
+    return dato > 0 && Number.isFinite(dato) ? dato : null;
+  } catch (_) { return null; }
+}
+function introducirImporteIRENNuevoEUR() {
+  const anterior = leerImporteIRENNuevoEUR();
+  const texto = window.prompt(
+    "IREN: escribe el importe TOTAL cargado en euros por la NUEVA compra de 45 títulos del 04/11/2026 (incluidas comisiones). No introduzcas el coste de los 265 títulos. Si todavía no lo conoces, pulsa Cancelar.",
+    anterior == null ? "" : anterior.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  );
+  if (texto === null) return;
+  const limpio = texto.trim().replace(/\s/g, "");
+  const normalizado = limpio.includes(",") ? limpio.replace(/\./g, "").replace(",", ".") : limpio;
+  const importe = Number(normalizado);
+  if (!Number.isFinite(importe) || importe <= 0) {
+    window.alert("Importe no válido. Se mantiene el cálculo provisional.");
+    return;
+  }
+  try {
+    localStorage.setItem(CLAVE_IREN_NUEVA_EUR, String(importe));
+    window.alert("Registrado el coste en euros de la compra NUEVA de 45 acciones. Se mantienen las 220 anteriores.");
+    cargarDatos();
+  } catch (_) {
+    window.alert("No se ha podido guardar en este navegador.");
+  }
+}
 const CLAVE_COSTES = "inversionia_costes_eur_provisionales_v1";
 function leerCostesGuardados() {
   try {
@@ -501,6 +575,31 @@ function calcularCosteEnEUR(activo, unidades, eurUsd, costes) {
       real.compra === activo.compra && real.moneda === activo.moneda &&
       Number.isFinite(real.totalEUR) && real.totalEUR > 0) {
     return { total: real.totalEUR, provisional: false, realConfirmado: true };
+  }
+  // IREN: suma los 220 títulos anteriores y la compra NUEVA de 45.
+  // No valorar toda la posición al antiguo precio medio.
+  if (activo.ticker === "IREN" && activo.irenCompraNuevaUSD &&
+      unidades === IREN_BASE_UNIDADES + IREN_NUEVA_UNIDADES) {
+    const nuevoConfirmadoEUR = leerImporteIRENNuevoEUR();
+    if (nuevoConfirmadoEUR != null) {
+      return { total: IREN_BASE_COSTE_EUR + nuevoConfirmadoEUR,
+               provisional: false, realConfirmado: true };
+    }
+    const key = "IREN_COMPRA_2026_11_04";
+    const previo = costes[key];
+    if (previo && previo.unidades === IREN_NUEVA_UNIDADES &&
+        previo.totalUSD === IREN_NUEVA_TOTAL_USD &&
+        Number.isFinite(previo.totalEUR) && previo.totalEUR > 0) {
+      return { total: IREN_BASE_COSTE_EUR + previo.totalEUR, provisional: true };
+    }
+    if (!Number.isFinite(eurUsd) || eurUsd <= 0) {
+      throw new Error("No hay EUR/USD válido para la nueva compra de IREN");
+    }
+    const estimadoEUR = IREN_NUEVA_TOTAL_USD / eurUsd;
+    costes[key] = { unidades: IREN_NUEVA_UNIDADES, totalUSD: IREN_NUEVA_TOTAL_USD,
+                    totalEUR: estimadoEUR };
+    guardarCostes(costes);
+    return { total: IREN_BASE_COSTE_EUR + estimadoEUR, provisional: true };
   }
   // Coste incorporado directamente al código, si existe.
   if (Number.isFinite(activo.costeTotalEUR) && activo.costeTotalEUR >= 0) {
@@ -891,6 +990,7 @@ const actualEUR = valorActual;
           Cantidad: ${unidades.toLocaleString("es-ES")}<br>
           Precio compra: ${formatoNumero(compraEUR)} €${coste.provisional ? " (referencia provisional)" : coste.realConfirmado ? " (coste real confirmado por ti)" : ""}<br>
          Invertido: ${formatoNumero(invertido)} €<br>
+         ${activo.ticker === "IREN" ? `<div style="font-size:13px;color:#b8c9e1;margin:7px 0;">220 títulos previos + 45 comprados el 04/11/2026 a 22,00 USD (991,11 USD con comisión).</div><button type="button" class="editar-iren-coste" style="margin:8px 0;padding:8px 12px;background:#28528c;color:white;border:1px solid #93c5fd;border-radius:8px;cursor:pointer;">✏️ Introducir coste real en € de las 45 nuevas</button><div class="muted" style="font-size:12px;">Sin cargo bancario en EUR, el coste de las 45 nuevas es provisional y queda fijado solo en este navegador. No se sincroniza entre dispositivos.</div>` : ""}
          ${activo.moneda === "$" ? `<button type="button" class="editar-coste-real" style="margin:8px 0;padding:8px 12px;background:#28528c;color:white;border:1px solid #93c5fd;border-radius:8px;cursor:pointer;">✏️ Introducir coste total real en €</button><div class="muted" style="font-size:12px;">Se guarda únicamente en este navegador; no se sincroniza con Openbank ni con otros dispositivos.</div>` : ""}
         Valor actual: ${formatoNumero(valorActual)} €<br>
 
@@ -902,6 +1002,15 @@ const actualEUR = valorActual;
        <div style="margin-top:12px; padding:10px; background:#172b4d; border-radius:8px;">
   <strong>📊 Análisis técnico</strong>
   <div class="muted" style="font-size:12px;margin:6px 0 9px;">${textoFechaVela(analisis)}. Los indicadores se calculan con velas diarias; no indican la hora exacta de la última negociación.</div>
+  <div style="margin:10px 0;padding:12px;border:1px solid #54729a;border-radius:10px;background:#102a43;line-height:1.6;">
+    ${(() => {
+      const t = evaluarSemaforoTecnico(analisis, precioNumero, eurUsd, necesitaCambio);
+      return `<strong>🚦 Semáforo técnico: ${t.color} ${t.titulo}</strong>
+      <div>${t.texto}</div>
+      <div class="muted" style="font-size:12px;">${t.fecha}</div>
+      <div style="font-size:13px;">${t.niveles}</div>`;
+    })()}
+  </div>
   <div>Tendencia: ${analisis?.tendencia ?? "N/D"}</div>
   <div>RSI (14): ${analisis?.rsi14 != null ? formatoNumero(analisis.rsi14) : "N/D"}</div>
   <div>MACD: ${analisis?.macd != null ? formatoNumero(analisis.macd) : "N/D"}</div>
@@ -1251,6 +1360,8 @@ if (!yaTieneAlerta) {
       `;
     }
 
+    const botonIREN = div.querySelector(".editar-iren-coste");
+    if (botonIREN) botonIREN.addEventListener("click", introducirImporteIRENNuevoEUR);
     const botonCoste = div.querySelector(".editar-coste-real");
     if (botonCoste) botonCoste.addEventListener("click", () => cambiarCosteReal(activo.ticker));
     lista.appendChild(div);
