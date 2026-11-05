@@ -524,33 +524,59 @@ function ultimaVelaUtil(a) {
     diff>=-86400000 && diff<=5*86400000; // tolerancia de festivos y fines de semana; no calendario bursátil
 }
 
-// Fase 9: clasificador prudente de recuperación basado en velas diarias.
-// No son avisos push ni equivalen a recomendaciones individualizadas de compra.
-function clasificarRecuperacion(a) {
-  if (!a || !ultimaVelaUtil(a)) return {nivel:"⚪", estado:"NO VERIFICABLE", explicacion:"Última vela no cerrada o demasiado antigua; consulta los datos antes de operar."};
-  const num = x => x == null || x === "" || !Number.isFinite(Number(x)) ? null : Number(x);
+// Fase 10: motivos específicos de ausencia de datos y fechas de vela.
+// Los mercados de criptomonedas operan 24/7; las acciones usan sesiones bursátiles.
+function esCriptomoneda(ticker) {
+  return ["BTC","ETH","SOL","XRP","DOGE","SHIB","ALGO","PEPE","SUI"].includes(String(ticker||"").toUpperCase());
+}
+function estadoFechaRecuperacion(a, ticker) {
+  const mercado = esCriptomoneda(ticker) ? "Cripto (24/7)" : "Bolsa (sesiones)";
+  const fecha = Number(a?.ultimaFechaVela);
+  if (!a) return {util:false, fechaTexto:"Sin fecha", mercado, motivo:"No se recibió análisis técnico de este activo."};
+  if (!Number.isFinite(fecha) || fecha<=0)
+    return {util:false, fechaTexto:"Sin fecha", mercado, motivo:"El proveedor no ha enviado la fecha de la última vela diaria."};
+  const fechaObjeto = new Date(fecha*1000);
+  if (Number.isNaN(fechaObjeto.getTime()))
+    return {util:false, fechaTexto:"Fecha inválida", mercado, motivo:"La fecha de la última vela no es válida."};
+  const fechaTexto=fechaObjeto.toLocaleDateString("es-ES",{timeZone:"UTC",day:"2-digit",month:"2-digit",year:"numeric"});
+  const dias=(Date.now()-fecha*1000)/86400000;
+  // Tolerancia de 5 días para festivos o fines de semana; no es un calendario real de mercado.
+  if (dias>5) return {util:false,fechaTexto,mercado,motivo:"Última vela con más de cinco días de antigüedad. Revisar si faltan cotizaciones."};
+  if (dias < -1) return {util:false,fechaTexto,mercado,motivo:"Fecha de vela posterior a la fecha de consulta. Revisar el proveedor."};
+  if (a.ultimaVelaCerrada!==true)
+    return {util:false,fechaTexto,mercado,motivo:"El proveedor no confirma el cierre de la última vela diaria."};
+  return {util:true,fechaTexto,mercado,motivo:"Última vela cerrada y con fecha dentro del margen permitido."};
+}
+function clasificarRecuperacion(a, ticker) {
+  const fecha=estadoFechaRecuperacion(a,ticker);
+  const base={fechaTexto:fecha.fechaTexto,mercado:fecha.mercado,condicionesCumplidas:0};
+  if (!fecha.util) return {...base,nivel:"⚪",estado:"NO VERIFICABLE",explicacion:fecha.motivo};
+  const num=x=>x==null || x==="" || !Number.isFinite(Number(x)) ? null : Number(x);
   const rsi=num(a.rsi14), anterior=num(a.rsi14Anterior);
   const macd=num(a.macd), senal=num(a.macdSignal);
   const volumen=num(a.volumenActual), media=num(a.volumenMedio20);
-  if ([rsi,anterior,macd,senal,volumen,media].some(x=>x===null) || media<=0 ||
-      !["ALCISTA","BAJISTA","MIXTA"].includes(a.tendencia)) {
-    return {nivel:"⚪", estado:"DATOS INSUFICIENTES", explicacion:"Falta RSI anterior, MACD, línea de señal, volumen o tendencia."};
-  }
+  const faltanDatos=[];
+  if(rsi===null) faltanDatos.push("RSI actual");
+  if(anterior===null) faltanDatos.push("RSI anterior");
+  if(macd===null) faltanDatos.push("MACD");
+  if(senal===null) faltanDatos.push("línea de señal del MACD");
+  if(volumen===null) faltanDatos.push("volumen actual");
+  if(media===null || media<=0) faltanDatos.push("media de volumen válida");
+  if(!["ALCISTA","BAJISTA","MIXTA"].includes(a.tendencia)) faltanDatos.push("tendencia");
+  if(faltanDatos.length) return {...base,nivel:"⚪",estado:"DATOS INSUFICIENTES",explicacion:"Faltan: "+faltanDatos.join(", ")+"."};
   const mejoraRSI=rsi>anterior && rsi>=30 && rsi<=70;
   const favorableMACD=macd>senal;
   const volumenConfirmado=volumen/media>=1.2;
   const tendenciaAlcista=a.tendencia==="ALCISTA";
-  if (tendenciaAlcista && mejoraRSI && favorableMACD && volumenConfirmado) {
-    return {nivel:"🟢",estado:"RECUPERACIÓN TÉCNICA FAVORABLE",explicacion:"En la última vela cerrada coinciden tendencia alcista, RSI creciente, MACD sobre su señal y volumen ≥1,2× la media. No garantiza continuidad ni supone orden de compra."};
-  }
   const cumplidos=[tendenciaAlcista,mejoraRSI,favorableMACD,volumenConfirmado].filter(Boolean).length;
+  if (cumplidos===4) return {...base,condicionesCumplidas:4,nivel:"🟢",estado:"RECUPERACIÓN TÉCNICA FAVORABLE",explicacion:"Coinciden tendencia alcista, RSI creciente, MACD sobre su señal y volumen ≥1,2× su media. No garantiza continuidad ni es una orden de compra."};
   const faltan=[];
-  if (!tendenciaAlcista) faltan.push("tendencia alcista");
-  if (!mejoraRSI) faltan.push("RSI creciente entre 30 y 70");
-  if (!favorableMACD) faltan.push("MACD por encima de su señal");
-  if (!volumenConfirmado) faltan.push("volumen ≥1,2× la media");
-  if (cumplidos>=2) return {nivel:"🟡",estado:"MEJORA PARCIAL",explicacion:"Faltan: "+faltan.join(", ")+". No hay recuperación confirmada."};
-  return {nivel:"🔴",estado:"SIN RECUPERACIÓN CONFIRMADA",explicacion:"Condiciones sin alinear. Faltan: "+faltan.join(", ")+"."};
+  if(!tendenciaAlcista) faltan.push("tendencia alcista");
+  if(!mejoraRSI) faltan.push("RSI creciente entre 30 y 70");
+  if(!favorableMACD) faltan.push("MACD por encima de su señal");
+  if(!volumenConfirmado) faltan.push("volumen ≥1,2× su media");
+  if(cumplidos>=2) return {...base,condicionesCumplidas:cumplidos,nivel:"🟡",estado:"MEJORA PARCIAL",explicacion:"Cumple "+cumplidos+" de 4 filtros. Faltan: "+faltan.join(", ")+". No hay recuperación confirmada."};
+  return {...base,condicionesCumplidas:cumplidos,nivel:"🔴",estado:"SIN RECUPERACIÓN CONFIRMADA",explicacion:"Cumple "+cumplidos+" de 4 filtros. Faltan: "+faltan.join(", ")+"."};
 }
 // Explica el MACD sin confundir valor positivo con cruce alcista confirmado.
 function descripcionMacd(a) {
@@ -816,7 +842,7 @@ try {
 } catch (error) {
   console.warn("Análisis no disponible", activo.ticker);
 }
-const estadoRecuperacion = clasificarRecuperacion(analisis);
+const estadoRecuperacion = clasificarRecuperacion(analisis, activo.ticker);
 seguimientoRecuperacion.push({ ticker: activo.ticker, nombre: activo.nombre,
   ...estadoRecuperacion });
 const adx = Number(analisis?.adx14);
@@ -992,19 +1018,12 @@ if (
 const senalesSoporte = [];
 
 if (analisis?.rupturaConfirmada === true) {
-  senalesSoporte.push(
-    "🔴 Ruptura de soporte detectada en velas anteriores; comprobar situación actual"
-  );
+  senalesSoporte.push("🔴 Ruptura de soporte detectada en velas anteriores; comprobar situación actual");
 } else if (analisis?.rupturaProvisional === true) {
-  senalesSoporte.push(
-    "🟠 Posible ruptura de soporte pendiente de confirmación"
-  );
+  senalesSoporte.push("🟠 Posible ruptura de soporte pendiente de confirmación");
 } else if (analisis?.recuperacionSoporte === true) {
-  senalesSoporte.push(
-    "🟢 Recuperación del soporte detectada en el análisis diario"
-  );
+  senalesSoporte.push("🟢 Recuperación del soporte detectada en el análisis diario");
 }
-
 
 const detalleSoporte = senalesSoporte.length
   ? "\n📊 " + senalesSoporte.join(" | ")
@@ -1845,18 +1864,20 @@ if (alertas.length > 0) {
 // Alertas informativas solo dentro de esta pantalla; sin notificaciones push ni negociación automática.
 const ordenSeguimiento = {"🟢":0,"🟡":1,"🔴":2,"⚪":3};
 const ordenarSeguimiento = seguimientoRecuperacion.slice().sort((a,b) =>
-  (ordenSeguimiento[a.nivel] ?? 4) - (ordenSeguimiento[b.nivel] ?? 4));
+  (ordenSeguimiento[a.nivel] ?? 4) - (ordenSeguimiento[b.nivel] ?? 4) ||
+  (Number(b.condicionesCumplidas)||0) - (Number(a.condicionesCumplidas)||0));
 const prioridad = ordenarSeguimiento.filter(a=>a.nivel==="🟢" || a.nivel==="🟡");
 const resto = ordenarSeguimiento.filter(a=>a.nivel!=="🟢" && a.nivel!=="🟡");
 const htmlSeguro = texto => String(texto).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 const renderEstado = a => '<div style="padding:12px;border:1px solid #334a70;border-radius:10px;background:#152849;margin:8px 0;line-height:1.55;">'+
   '<strong>'+a.nivel+' '+htmlSeguro(a.nombre)+' ('+htmlSeguro(a.ticker)+'): '+htmlSeguro(a.estado)+'</strong>'+
+  '<div style="color:#9cb5d9;font-size:12px;margin:5px 0;">Última vela: '+htmlSeguro(a.fechaTexto||'Sin fecha')+' · '+htmlSeguro(a.mercado||'Mercado no identificado')+'</div>'+
   '<div style="color:#cbd5e1;font-size:13px;">'+htmlSeguro(a.explicacion)+'</div></div>';
 const panelRecuperacion = '<section style="margin:22px 0 10px;padding:15px;border:1px solid #5176a8;border-radius:13px;background:#0d203c;">'+
   '<h3 style="margin:0 0 8px;">🎯 Alertas de recuperación · última consulta</h3>'+
-  '<p style="font-size:13px;color:#b7c7df;">Evaluación al abrir/actualizar la app con velas diarias: no son notificaciones automáticas ni cotizaciones en tiempo real. Verde exige RSI, MACD, tendencia y volumen alineados; amarillo indica mejora parcial. Blanco significa que no se puede verificar. Comprueba siempre los datos antes de operar.</p>'+
+  '<p style="font-size:13px;color:#b7c7df;">Evaluación al abrir/actualizar la app con velas diarias: no son notificaciones automáticas ni cotizaciones en tiempo real. Verde exige RSI, MACD, tendencia y volumen alineados; amarillo indica mejora parcial. Blanco indica fecha/cierre inválido o indicadores insuficientes, con motivo específico. Se muestra la fecha de la última vela; en cripto el mercado opera 24/7. Ordenamos los casos parciales por número de filtros cumplidos. Comprueba los datos antes de operar.</p>'+
   (prioridad.length ? prioridad.map(renderEstado).join("") : '<p style="color:#cbd5e1;">No hay recuperaciones favorables o mejoras parciales verificadas en esta consulta.</p>')+
-  '<details style="margin-top:12px;"><summary style="cursor:pointer;">Ver también otros estados ('+resto.length+')</summary>'+
+  '<details style="margin-top:12px;"><summary style="cursor:pointer;">Ver señales sin confirmar y datos pendientes ('+resto.length+')</summary>'+
   resto.map(renderEstado).join("")+'</details></section>';
 alertasDinamicas.insertAdjacentHTML("afterbegin", panelRecuperacion);
 
