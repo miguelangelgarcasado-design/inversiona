@@ -446,6 +446,84 @@ function evaluarSemaforoTecnico(a, precioMercado, cambio, convierte) {
   return {color,titulo,texto,niveles,fecha};
 }
 
+function puntuacionTecnica(a) {
+  if (!a) return null;
+
+  let puntos = 0;
+  let maximo = 0;
+
+  if (["ALCISTA", "BAJISTA", "MIXTA"].includes(a.tendencia)) {
+    maximo += 25;
+    if (a.tendencia === "ALCISTA") puntos += 25;
+    if (a.tendencia === "MIXTA") puntos += 12;
+  }
+
+  if (a.rsi14 != null && Number.isFinite(Number(a.rsi14))) {
+    maximo += 20;
+    const r = Number(a.rsi14);
+    if (r >= 45 && r <= 65) puntos += 20;
+    else if (r >= 35 && r < 45) puntos += 12;
+    else if (r > 65 && r <= 70) puntos += 12;
+    else if (r >= 30 && r < 35) puntos += 6;
+  }
+
+  if (a.macd != null && a.macdSignal != null) {
+    const m = Number(a.macd);
+    const s = Number(a.macdSignal);
+    if (Number.isFinite(m) && Number.isFinite(s)) {
+      maximo += 25;
+      if (m > 0 && m > s) puntos += 25;
+      else if (m > s) puntos += 15;
+      else if (m > 0) puntos += 10;
+    }
+  }
+
+  if (a.adx14 != null && Number.isFinite(Number(a.adx14))) {
+    maximo += 15;
+    const adx = Number(a.adx14);
+    if (adx >= 25 && a.tendencia === "ALCISTA") puntos += 15;
+    else if (adx >= 20 && a.tendencia === "ALCISTA") puntos += 8;
+    else if (adx < 20) puntos += 4;
+  }
+
+  if (a.volumenActual != null && a.volumenMedio20 > 0) {
+    maximo += 15;
+    const ratio = Number(a.volumenActual) / Number(a.volumenMedio20);
+    if (Number.isFinite(ratio)) {
+      if (ratio >= 1.2 && a.tendencia === "ALCISTA") puntos += 15;
+      else if (ratio >= 1 && a.tendencia === "ALCISTA") puntos += 10;
+      else if (ratio >= 0.8) puntos += 5;
+    }
+  }
+
+  if (maximo < 70) return null;
+
+  const nota = Math.round(puntos / maximo * 100);
+  return nota;
+}
+function descripcionPuntuacion(a) {
+  const nota=puntuacionTecnica(a);
+  if (nota===null) return "Puntuación no disponible: faltan indicadores; no tomar decisiones a partir de esta nota.";
+  const lectura=nota>=70?"fortaleza relativa":nota>=40?"señales mixtas":"debilidad técnica";
+  return "Puntuación actual: "+nota+"/100 ("+lectura+"). Es una nota orientativa, NO una orden de compra o venta. La confirmación requiere revisar tendencia, MACD, RSI, volumen y fecha de la vela.";
+}
+function descripcionVolumen(a) {
+  if (!a || a.volumenActual==null || !Number.isFinite(Number(a.volumenActual)) ||
+      a.volumenMedio20==null || !Number.isFinite(Number(a.volumenMedio20)) || Number(a.volumenMedio20)<=0)
+    return "📊 Volumen: datos insuficientes.";
+  const ratio=Number(a.volumenActual)/Number(a.volumenMedio20);
+  if (ratio < 1.2) return "📉 Volumen sin aumento destacado ("+formatoNumero(ratio)+"× la media).";
+  if (a.tendencia==="BAJISTA") return "⚠️ Volumen alto ("+formatoNumero(ratio)+"× la media) en tendencia bajista: puede indicar presión vendedora, no confirma compras.";
+  if (a.tendencia==="ALCISTA") return "📈 Volumen alto ("+formatoNumero(ratio)+"× la media) en tendencia alcista: acompaña el movimiento, pero no prueba que todas las operaciones sean compras.";
+  return "📊 Volumen alto ("+formatoNumero(ratio)+"× la media): dirección no confirmada.";
+}
+function ultimaVelaUtil(a) {
+  const ts=Number(a?.ultimaFechaVela);
+  const diff=Date.now()-ts*1000;
+  return a?.ultimaVelaCerrada===true && Number.isFinite(ts) && ts>0 &&
+    diff>=-86400000 && diff<=5*86400000; // tolerancia de festivos y fines de semana; no calendario bursátil
+}
+
 // Explica el MACD sin confundir valor positivo con cruce alcista confirmado.
 function descripcionMacd(a) {
   const m = a?.macd == null ? NaN : Number(a.macd);
@@ -1130,70 +1208,11 @@ ${(() => {
 })()}
 </div>
 <div style="margin-top:12px;padding:12px;border-radius:10px;background:#172b4d;">
-${(() => {
-  const a = analisis;
-  if (!a) return "⚪ Puntuación no disponible";
-
-  let puntos = 0;
-  let maximo = 0;
-
-  if (["ALCISTA", "BAJISTA", "MIXTA"].includes(a.tendencia)) {
-    maximo += 25;
-    if (a.tendencia === "ALCISTA") puntos += 25;
-    if (a.tendencia === "MIXTA") puntos += 12;
-  }
-
-  if (a.rsi14 != null && Number.isFinite(Number(a.rsi14))) {
-    maximo += 20;
-    const r = Number(a.rsi14);
-    if (r >= 45 && r <= 65) puntos += 20;
-    else if (r >= 35 && r < 45) puntos += 12;
-    else if (r > 65 && r <= 70) puntos += 12;
-    else if (r >= 30 && r < 35) puntos += 6;
-  }
-
-  if (a.macd != null && a.macdSignal != null) {
-    const m = Number(a.macd);
-    const s = Number(a.macdSignal);
-    if (Number.isFinite(m) && Number.isFinite(s)) {
-      maximo += 25;
-      if (m > 0 && m > s) puntos += 25;
-      else if (m > s) puntos += 15;
-      else if (m > 0) puntos += 10;
-    }
-  }
-
-  if (a.adx14 != null && Number.isFinite(Number(a.adx14))) {
-    maximo += 15;
-    const adx = Number(a.adx14);
-    if (adx >= 25 && a.tendencia === "ALCISTA") puntos += 15;
-    else if (adx >= 20 && a.tendencia === "ALCISTA") puntos += 8;
-    else if (adx < 20) puntos += 4;
-  }
-
-  if (a.volumenActual != null && a.volumenMedio20 > 0) {
-    maximo += 15;
-    const ratio = Number(a.volumenActual) / Number(a.volumenMedio20);
-    if (Number.isFinite(ratio)) {
-      if (ratio >= 1.2 && a.tendencia === "ALCISTA") puntos += 15;
-      else if (ratio >= 1 && a.tendencia === "ALCISTA") puntos += 10;
-      else if (ratio >= 0.8) puntos += 5;
-    }
-  }
-
-  if (maximo < 70) return "⚪ Puntuación: datos insuficientes";
-
-  const nota = Math.round(puntos / maximo * 100);
-  const color = nota >= 70 ? "🟢" : nota >= 40 ? "🟡" : "🔴";
-
-  return color + " PUNTUACIÓN TÉCNICA: " + nota +
-    "/100 — " + (nota >= 70 ? "Fortaleza técnica" :
-    nota >= 40 ? "Señales mixtas" : "Debilidad técnica");
-})()}
+${(() => { const nota=puntuacionTecnica(analisis); return nota == null ? "⚪ Puntuación: datos insuficientes" : (nota>=70?"🟢":nota>=40?"🟡":"🔴")+" PUNTUACIÓN TÉCNICA: "+nota+"/100 — "+(nota>=70?"Fortaleza técnica":nota>=40?"Señales mixtas":"Debilidad técnica"); })()}
 </div>
 <div style="margin-top:8px;padding:10px 12px;border-radius:9px;border:1px solid #3d5878;color:#cbd5e1;font-size:13px;line-height:1.6;">
   <strong>🧭 Puntuación frente a confirmación</strong>
-  <div>La nota resume indicadores, pero NO es una orden de compra. Un 70/100 puede coexistir con «VIGILAR» si el MACD, el volumen o la recuperación todavía no están confirmados.</div>
+  <div>${descripcionPuntuacion(analisis)}</div>
   <div style="margin-top:5px;">${textoConfirmacion(analisis)}</div>
   <div style="margin-top:5px;">Si la última vela es antigua o provisional, prevalece la advertencia del semáforo.</div>
 </div>
@@ -1237,9 +1256,7 @@ ${(() => {
 
     if (a.volumenActual != null && a.volumenMedio20 > 0) {
       const ratio = a.volumenActual / a.volumenMedio20;
-      detalles.push(ratio >= 1.2
-        ? "📈 Volumen superior a la media."
-        : "📉 Volumen sin incremento significativo.");
+      detalles.push(descripcionVolumen(a));
     }
 
     return detalles.join("<br>");
@@ -1257,6 +1274,7 @@ ${(() => {
     return "⚪ Datos insuficientes";
   }
 
+  if (!ultimaVelaUtil(a)) return "⚪ RECUPERACIÓN NO VERIFICABLE: vela sin cierre confirmado o demasiado antigua.";
   const rsi = Number(a.rsi14);
   const rsiAnterior = a.rsi14Anterior == null
   ? null
