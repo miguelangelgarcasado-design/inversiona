@@ -446,6 +446,34 @@ function evaluarSemaforoTecnico(a, precioMercado, cambio, convierte) {
   return {color,titulo,texto,niveles,fecha};
 }
 
+// Explica el MACD sin confundir valor positivo con cruce alcista confirmado.
+function descripcionMacd(a) {
+  const m = a?.macd == null ? NaN : Number(a.macd);
+  const s = a?.macdSignal == null ? NaN : Number(a.macdSignal);
+  if (!Number.isFinite(m)) return "MACD: no disponible";
+  const valor = formatoNumero(m);
+  if (!Number.isFinite(s)) return "MACD: " + valor + " · falta línea de señal";
+  if (m > s) return "MACD: " + valor + " · por encima de su señal (impulso relativo favorable)";
+  if (m < s) return "MACD: " + valor + " · por debajo de su señal (sin cruce alcista confirmado)";
+  return "MACD: " + valor + " · igual a su señal (sin cruce confirmado)";
+}
+function textoConfirmacion(a) {
+  if (!a) return "No hay datos suficientes para confirmar una entrada.";
+  const t = a.tendencia;
+  const m = a.macd == null ? NaN : Number(a.macd);
+  const s = a.macdSignal == null ? NaN : Number(a.macdSignal);
+  const r = a.rsi14 == null ? NaN : Number(a.rsi14);
+  const anterior = a.rsi14Anterior == null ? NaN : Number(a.rsi14Anterior);
+  const volumen = a.volumenActual == null ? NaN : Number(a.volumenActual);
+  const media = a.volumenMedio20 == null ? NaN : Number(a.volumenMedio20);
+  const pendientes = [];
+  if (t !== "ALCISTA") pendientes.push("tendencia alcista");
+  if (!Number.isFinite(m) || !Number.isFinite(s) || m <= s) pendientes.push("MACD por encima de su señal");
+  if (!Number.isFinite(r) || !Number.isFinite(anterior) || r <= anterior) pendientes.push("RSI mejorando");
+  if (!Number.isFinite(volumen) || !Number.isFinite(media) || media <= 0 || volumen / media < 1.2) pendientes.push("volumen al menos 1,2 veces su media");
+  if (!pendientes.length) return "Los filtros básicos se cumplen. Revisa el semáforo, la fecha de vela y tu riesgo antes de actuar.";
+  return "Todavía faltan: " + pendientes.join("; ") + ".";
+}
 // Una sola consulta por activo durante la carga de la cartera.
 // La hora mostrada es la de consulta, NO la de la última operación bursátil.
 const consultasCotizacion = new Map();
@@ -1013,7 +1041,7 @@ const actualEUR = valorActual;
   </div>
   <div>Tendencia: ${analisis?.tendencia ?? "N/D"}</div>
   <div>RSI (14): ${analisis?.rsi14 != null ? formatoNumero(analisis.rsi14) : "N/D"}</div>
-  <div>MACD: ${analisis?.macd != null ? formatoNumero(analisis.macd) : "N/D"}</div>
+  <div>${descripcionMacd(analisis)}</div>
   <div>Soporte: ${analisis?.soporte != null && Number.isFinite(Number(analisis.soporte)) ? formatoNumero(necesitaCambio ? Number(analisis.soporte) / eurUsd : Number(analisis.soporte)) + " €" : "N/D"}</div>
   <div>Resistencia: ${analisis?.resistencia != null && Number.isFinite(Number(analisis.resistencia)) ? formatoNumero(necesitaCambio ? Number(analisis.resistencia) / eurUsd : Number(analisis.resistencia)) + " €" : "N/D"}</div>
  ${(() => {
@@ -1053,7 +1081,7 @@ const actualEUR = valorActual;
 })()}
 
 
-  <div style="margin-top:8px;color:#7dd3fc;">${analisis?.tendencia === "BAJISTA" && analisis?.rsi14 < 30 ? "⚠️ Sobreventa en tendencia bajista: vigilar posible rebote, sin compra confirmada" : analisis?.tendencia === "ALCISTA" && analisis?.macd > 0 ? "📈 Tendencia alcista con MACD positivo" : "🔎 Mantener en vigilancia: señal no confirmada"}</div>
+  <div style="margin-top:8px;color:#7dd3fc;">${analisis?.tendencia === "BAJISTA" && analisis?.rsi14 < 30 ? "⚠️ Sobreventa en tendencia bajista: vigilar posible rebote, sin compra confirmada" : analisis?.tendencia === "ALCISTA" && analisis?.macd != null && analisis?.macdSignal != null && Number(analisis.macd) > Number(analisis.macdSignal) ? "📈 Tendencia alcista con MACD por encima de su señal" : "🔎 Mantener en vigilancia: señal no confirmada"}</div>
 
 <div style="margin-top:12px;padding:12px;border-radius:10px;background:#102a43;">
 ${(() => {
@@ -1162,6 +1190,12 @@ ${(() => {
     "/100 — " + (nota >= 70 ? "Fortaleza técnica" :
     nota >= 40 ? "Señales mixtas" : "Debilidad técnica");
 })()}
+</div>
+<div style="margin-top:8px;padding:10px 12px;border-radius:9px;border:1px solid #3d5878;color:#cbd5e1;font-size:13px;line-height:1.6;">
+  <strong>🧭 Puntuación frente a confirmación</strong>
+  <div>La nota resume indicadores, pero NO es una orden de compra. Un 70/100 puede coexistir con «VIGILAR» si el MACD, el volumen o la recuperación todavía no están confirmados.</div>
+  <div style="margin-top:5px;">${textoConfirmacion(analisis)}</div>
+  <div style="margin-top:5px;">Si la última vela es antigua o provisional, prevalece la advertencia del semáforo.</div>
 </div>
 <div style="margin-top:12px;padding:12px;background:#102a43;border-radius:10px;">
   <strong>🔎 ¿Qué influye en la puntuación?</strong>
