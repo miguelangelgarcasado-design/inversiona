@@ -1892,19 +1892,23 @@ const ordenarSeguimiento = seguimientoRecuperacion.slice().sort((a,b) =>
   (ordenSeguimiento[a.nivel] ?? 4) - (ordenSeguimiento[b.nivel] ?? 4) ||
   (Number(b.condicionesCumplidas)||0) - (Number(a.condicionesCumplidas)||0));
 const prioridad = ordenarSeguimiento.filter(a=>a.nivel==="🟢" || a.nivel==="🟡");
+// Las lecturas abiertas no son estados confirmados, y se ordenan por filtros superados.
 const provisionales = ordenarSeguimiento.filter(a=>a.provisional && a.nivel!=="🟢" && a.nivel!=="🟡")
-  .sort((a,b)=>b.provisional.aprobados-a.provisional.aprobados);
+  .sort((a,b)=>b.provisional.aprobados-a.provisional.aprobados || a.nombre.localeCompare(b.nombre, "es"));
 const resto = ordenarSeguimiento.filter(a=>a.nivel!=="🟢" && a.nivel!=="🟡" && !a.provisional);
 const htmlSeguro = texto => String(texto).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+// Fase 12: una vela abierta presenta una señal informativa PROVISIONAL, no «NO VERIFICABLE» como titular.
 const renderEstado = a => '<div style="padding:12px;border:1px solid #334a70;border-radius:10px;background:#152849;margin:8px 0;line-height:1.55;">'+
-  '<strong>'+a.nivel+' '+htmlSeguro(a.nombre)+' ('+htmlSeguro(a.ticker)+'): '+htmlSeguro(a.estado)+'</strong>'+
+  '<strong>'+(a.provisional
+    ? '🟠 '+htmlSeguro(a.nombre)+' ('+htmlSeguro(a.ticker)+'): LECTURA PROVISIONAL · '+a.provisional.aprobados+'/4'
+    : a.nivel+' '+htmlSeguro(a.nombre)+' ('+htmlSeguro(a.ticker)+'): '+htmlSeguro(a.estado))+'</strong>'+
   '<div style="color:#9cb5d9;font-size:12px;margin:5px 0;">Última vela: '+htmlSeguro(a.fechaTexto||'Sin fecha')+' · '+htmlSeguro(a.mercado||'Mercado no identificado')+'</div>'+
-  '<div style="color:#cbd5e1;font-size:13px;">'+htmlSeguro(a.explicacion)+'</div>'+
-  (a.provisional ? '<div style="margin-top:8px;padding:9px;background:#2b3040;border-left:3px solid #fbbf24;color:#f9e2aa;font-size:12px;">🟠 '+htmlSeguro(a.provisional.resumen)+'</div>' : '')+
+  (!a.provisional ? '<div style="color:#cbd5e1;font-size:13px;">'+htmlSeguro(a.explicacion)+'</div>' : '')+
+  (a.provisional ? '<div style="margin-top:8px;padding:9px;background:#2b3040;border-left:3px solid #fbbf24;color:#f9e2aa;font-size:12px;">'+htmlSeguro(a.provisional.resumen)+'<div style="margin-top:5px;opacity:.85;">Motivo de provisionalidad: '+htmlSeguro(a.explicacion)+'</div></div>' : '')+
   '</div>';
 const panelRecuperacion = '<section style="margin:22px 0 10px;padding:15px;border:1px solid #5176a8;border-radius:13px;background:#0d203c;">'+
   '<h3 style="margin:0 0 8px;">🎯 Seguimiento técnico · provisional y cierre confirmado</h3>'+
-  '<p style="font-size:13px;color:#b7c7df;">Evaluación al abrir/actualizar la app con velas diarias: no son notificaciones automáticas ni cotizaciones en tiempo real. Verde exige RSI, MACD, tendencia y volumen alineados; amarillo indica mejora parcial. Blanco indica fecha/cierre inválido o indicadores insuficientes, con motivo específico. Se muestra la fecha de la última vela; en cripto el mercado opera 24/7. Las lecturas de velas abiertas se muestran en un grupo provisional distinto, sin validación de entrada. Ordenamos los casos parciales por número de filtros cumplidos. Comprueba los datos antes de operar.</p>'+
+  '<p style="font-size:13px;color:#b7c7df;">Evaluación al abrir/actualizar la app con velas diarias: no son notificaciones automáticas ni cotizaciones en tiempo real. Verde exige RSI, MACD, tendencia y volumen alineados; amarillo indica mejora parcial. Blanco indica fecha/cierre inválido o indicadores insuficientes, con motivo específico. Se muestra la fecha de la última vela; en cripto el mercado opera 24/7. Las velas abiertas se muestran como LECTURA PROVISIONAL, no como alerta de compra. Los casos provisionales se ordenan por filtros cumplidos; la ausencia de cierre confirmado sigue indicada en el detalle. Comprueba los datos antes de operar.</p>'+
   (prioridad.length ? prioridad.map(renderEstado).join("") : '<p style="color:#cbd5e1;">No hay recuperaciones favorables o mejoras parciales verificadas en esta consulta.</p>')+
   (provisionales.length ? '<details style="margin-top:12px;"><summary style="cursor:pointer;color:#f9e2aa;">🟠 Lecturas provisionales durante la sesión ('+provisionales.length+')</summary><p style="color:#e6c99b;font-size:12px;">Vela aún sin cierre confirmado. El precio intradía y los indicadores pueden no compartir el mismo momento de consulta. No usar como señal confirmada.</p>'+provisionales.map(renderEstado).join("")+'</details>' : '')+
   '<details style="margin-top:12px;"><summary style="cursor:pointer;">Ver señales sin confirmar y datos pendientes ('+resto.length+')</summary>'+
