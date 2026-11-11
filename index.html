@@ -135,13 +135,13 @@
     <div id="laboratorioF18" style="margin-top:12px;padding:13px;background:#102b3b;border:1px solid #477589;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando laboratorio de simulación...</div>
 
     <section id="laboratorioHistoricoF19" style="margin-top:14px;padding:13px;border:1px solid #527c93;border-radius:11px;background:#112c3c;line-height:1.55;">
-      <strong>📈 Simulación histórica · Fase 19</strong>
+      <strong>📈 Simulación histórica · Fase 20: operaciones y riesgo</strong>
       <p style="font-size:12px;color:#c4d8e6">Selecciona un CSV de velas diarias de UNA acción (Date, Open, High, Low, Close, Volume), ordenadas o no. Se calcula cada señal al cierre y se simula la entrada en la apertura siguiente. Salida tras 10 sesiones, en la apertura siguiente. Incluye costes configurables. No ejecuta órdenes ni utiliza velas futuras para generar señales.</p>
       <label for="archivoVelasF19" style="display:block;margin-bottom:5px">CSV histórico</label>
       <input type="file" id="archivoVelasF19" accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
       <label for="costeF19" style="display:block;margin-top:12px">Coste total estimado por operación (ida y vuelta): <strong id="costeF19Texto">0,30 %</strong></label>
       <input type="range" id="costeF19" min="0" max="2" step="0.05" value="0.3" style="width:100%" />
-      <div id="resultadoF19" style="margin-top:12px;font-size:13px" aria-live="polite">Sin CSV: todavía no se ha realizado ninguna simulación histórica.</div>
+      <div id="resultadoF19" style="margin-top:12px;font-size:13px" aria-live="polite">Sin CSV: carga las velas para examinar operaciones individuales y riesgo.</div>
       <p style="font-size:11px;color:#b7cad8">Experimento educativo: operaciones largas únicamente, sin apalancamiento ni dividendos; la estrategia no replica fielmente órdenes del bróker. La selección de parámetros con estos mismos datos puede sobreajustar los resultados. No modifica tus recomendaciones ni tus posiciones.</p>
     </section>
     <details style="margin-top:12px;"><summary style="cursor:pointer;">Ver las últimas decisiones registradas</summary><div id="memoriaDecisionesDetalle" style="margin-top:8px;"></div></details>
@@ -1162,20 +1162,41 @@ function senalF19(v,ind,i,modo){
   if(modo==="moderada")return r>=35&&r<=70&&vr>=0.8;
   return r>=30&&r<=70&&vr>=1.2;
 }
-function probarF19(v,ind,modo,coste,limite){
-  const operaciones=[];let next=55;
-  for(let i=55;i+11<limite;i++){
-    if(i<next||!senalF19(v,ind,i,modo))continue;
+// Fase 20: todas las señales se deciden al cierre i. Entrada i+1,
+// salida i+11, sin consultar precios posteriores para decidir una entrada.
+function operacionesF20(v,ind,modo,coste,desde,hasta){
+  const operaciones=[];let siguiente=Math.max(55,desde);
+  for(let i=Math.max(55,desde);i+11<hasta;i++){
+    if(i<siguiente||!senalF19(v,ind,i,modo))continue;
     const entrada=v[i+1].open,salida=v[i+11].open;
     const bruto=(salida/entrada-1)*100,neto=bruto-coste;
-    operaciones.push({fecha:v[i].fecha,entradaFecha:v[i+1].fecha,salidaFecha:v[i+11].fecha,bruto,neto});
-    next=i+11;
+    const rsi=ind.rsi[i],vol=ind.ratio[i],macd=ind.m[i],senal=ind.sig[i],sma=ind.sma50[i];
+    // Excursión adversa intraperiodo usando mínimos de cada sesión;
+    // observación de riesgo retrospectiva, NO nivel ejecutable ni stop real.
+    let peorMinimo=entrada,peorFecha=v[i+1].fecha;
+    for(let k=i+1;k<=i+10;k++)if(v[k].low<peorMinimo){peorMinimo=v[k].low;peorFecha=v[k].fecha;}
+    const mae=Math.max(0,(1-peorMinimo/entrada)*100);
+    operaciones.push({fecha:v[i].fecha,entradaFecha:v[i+1].fecha,salidaFecha:v[i+11].fecha,
+      entrada,salida,bruto,neto,mae,peorFecha,riesgoCoste:coste,
+      rsi,vol,macd,senal,media50:sma,variacionRSI:rsi-ind.rsi[i-1]});
+    siguiente=i+11;
   }
-  const ganan=operaciones.filter(x=>x.neto>0).length;
-  const media=operaciones.length?operaciones.reduce((s,x)=>s+x.neto,0)/operaciones.length:null;
-  let capital=1,peak=1,maxDD=0;
-  for(const op of operaciones){capital*=Math.max(0,1+op.neto/100);peak=Math.max(peak,capital);maxDD=Math.max(maxDD,(1-capital/peak)*100);}
-  return {n:operaciones.length,ganan,media,compuesto:(capital-1)*100,dd:maxDD};
+  return operaciones;
+}
+function resumenF20(operaciones,coste){
+  let capital=1,pico=1,dd=0;
+  for(const op of operaciones){
+    const previo=capital;
+    // El máximo descenso se observa en los mínimos diarios de cada operación,
+    // incluyendo coste estimado. No cubre gaps intradiarios ni cartera total.
+    const valle=previo*Math.max(0,1-(op.mae+coste)/100);
+    dd=Math.max(dd,(1-valle/pico)*100);
+    capital=previo*Math.max(0,1+op.neto/100);
+    pico=Math.max(pico,capital);
+    dd=Math.max(dd,(1-capital/pico)*100);
+  }
+  return {n:operaciones.length,ganan:operaciones.filter(x=>x.neto>0).length,
+    compuesto:(capital-1)*100,dd};
 }
 function resultadoHistoricoF19(){
   const el=document.getElementById("resultadoF19");if(!el||!F19.velas)return;
@@ -1186,26 +1207,37 @@ function resultadoHistoricoF19(){
   h.textContent="Archivo: "+F19.nombre+" · "+v.length+" velas ("+v[0].fecha+" a "+v[v.length-1].fecha+"). Entrenamiento: 70 % inicial; prueba posterior: 30 % final. Horizonte: 10 sesiones.";
   const tabla=document.createElement("div");tabla.style.cssText="display:grid;gap:9px;margin-top:10px";
   const etiquetas={actual:"Regla actual de recuperación",moderada:"Alternativa moderada",estricta:"Alternativa estricta"};
+  const fmt=(n,d=2)=>Number(n).toFixed(d).replace(".",",");
   for(const modo of Object.keys(etiquetas)){
-    // Solo señales en la franja reservada; los indicadores pueden mirar hacia atrás,
-    // nunca hacia delante. Entrada y salida siempre dentro de la franja.
-    const todos=probarF19(v,ind,modo,coste,v.length);
-    const enPrueba=[];let siguiente=divisoria;
-    for(let i=Math.max(55,divisoria);i+11<v.length;i++){
-      if(i<siguiente||!senalF19(v,ind,i,modo))continue;
-      const neto=(v[i+11].open/v[i+1].open-1)*100-coste;
-      enPrueba.push(neto);siguiente=i+11;
-    }
-    let cap=1,pico=1,dd=0;for(const x of enPrueba){cap*=Math.max(0,1+x/100);pico=Math.max(pico,cap);dd=Math.max(dd,(1-cap/pico)*100);}
+    const todas=operacionesF20(v,ind,modo,coste,55,v.length);
+    const enPrueba=operacionesF20(v,ind,modo,coste,divisoria,v.length);
+    const r=resumenF20(enPrueba,coste);
     const b=document.createElement("div");b.style.cssText="padding:10px;background:#1b384e;border:1px solid #42667f;border-radius:9px";
     const title=document.createElement("strong");title.textContent=etiquetas[modo];
     const dato=document.createElement("p");dato.style.cssText="margin:5px 0;font-size:12px";
-    dato.textContent="Periodo completo: "+todos.n+" operaciones simuladas. Prueba final (30 %): "+enPrueba.length+" operaciones · Aciertos "+enPrueba.filter(x=>x>0).length+" · Resultado compuesto "+((cap-1)*100).toFixed(2)+" % · Caída máxima entre operaciones "+dd.toFixed(2)+" %.";
-    const nota=document.createElement("small");nota.style.color="#f2d7a4";nota.textContent=enPrueba.length<5?"Muestra de prueba insuficiente: no comparar estrategias todavía.":"Resultado hipotético, no rentabilidad de la cartera.";
-    b.append(title,dato,nota);tabla.appendChild(b);
+    dato.textContent="Periodo completo: "+todas.length+" operaciones simuladas. Prueba final (30 %): "+r.n+" operaciones · Aciertos "+r.ganan+" · Resultado compuesto "+fmt(r.compuesto)+" % · Caída máxima observada con mínimos diarios "+fmt(r.dd)+" %.";
+    const nota=document.createElement("small");nota.style.color="#f2d7a4";nota.textContent=r.n<5?"Muestra de prueba insuficiente: no comparar estrategias todavía.":"Resultado hipotético, no rentabilidad de la cartera.";
+    b.append(title,dato,nota);
+    const details=document.createElement("details");details.style.marginTop="10px";
+    const summary=document.createElement("summary");summary.style.cssText="cursor:pointer;color:#cce4fa";
+    summary.textContent="Ver operaciones ("+todas.length+") · identificar las de prueba final";
+    details.appendChild(summary);
+    if(!todas.length){const t=document.createElement("p");t.textContent="No hubo operaciones en este periodo.";details.appendChild(t);}
+    for(const op of todas){
+      const prueba=op.fecha>=v[divisoria].fecha;
+      const linea=document.createElement("div");linea.style.cssText="padding:9px 0;border-bottom:1px solid #36566e;font-size:12px;line-height:1.55";
+      const cab=document.createElement("strong");cab.textContent=(prueba?"🧪 PRUEBA FINAL · ":"ENTRENAMIENTO · ")+op.fecha+" · "+(op.neto>=0?"+":"")+fmt(op.neto)+" % neto estimado";
+      const info=document.createElement("div");info.textContent="Señal al cierre "+op.fecha+" | Compra apertura "+op.entradaFecha+" a "+fmt(op.entrada)+" USD | Salida apertura "+op.salidaFecha+" a "+fmt(op.salida)+" USD. Bruto "+fmt(op.bruto)+" %, costes "+fmt(coste)+" %.";
+      const indtxt=document.createElement("div");indtxt.style.color="#bcd2e4";
+      indtxt.textContent="Motivos observados al emitir la señal: RSI "+fmt(op.rsi)+" (variación +"+fmt(op.variacionRSI)+"), MACD "+fmt(op.macd)+" > señal "+fmt(op.senal)+", cierre sobre media de 50 sesiones y volumen "+fmt(op.vol)+"× su media.";
+      const riesgotxt=document.createElement("div");riesgotxt.style.color="#f0d7b4";
+      riesgotxt.textContent="Mayor caída desde la entrada hasta un mínimo diario observado: "+fmt(op.mae)+" % ("+op.peorFecha+"). No representa un stop garantizado.";
+      linea.append(cab,info,indtxt,riesgotxt);details.appendChild(linea);
+    }
+    b.appendChild(details);tabla.appendChild(b);
   }
   const aviso=document.createElement("p");aviso.style.cssText="font-size:12px;color:#c8d7e3";
-  aviso.textContent="Simulación sin posiciones simultáneas, cada operación dura 10 sesiones y usa apertura siguiente. No reproduce ventas reales, cambios de divisa, dividendos, deslizamiento adicional ni costes fijos. La caída máxima se calcula solo en los cierres de operaciones y subestima pérdidas intraperiodo. Seleccionar una estrategia por su resultado en este archivo no prueba su ventaja futura.";
+  aviso.textContent="Fase 20: simulación solo de compras (posiciones largas), sin posiciones simultáneas. Señal al cierre; entrada y salida a aperturas posteriores. Caída máxima aproximada calculada con mínimos diarios mientras la operación está abierta (no con datos intradía completos): no refleja gaps ejecutables, deslizamientos, impuestos, dividendos, cambio de divisa ni otras posiciones. Los resultados no demuestran que una regla sea superior ni modifican tu cartera.";
   el.replaceChildren(h,tabla,aviso);
 }
 function iniciarF19(){
