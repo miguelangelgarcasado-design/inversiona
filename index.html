@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InversiónIA · Fase 18</title>
+  <title>InversiónIA · Fase 19</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a5cff">
 
@@ -133,6 +133,17 @@
     </div>
     <div id="diagnosticoF17" style="margin-top:12px;padding:12px;background:#142c48;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando evaluación...</div>
     <div id="laboratorioF18" style="margin-top:12px;padding:13px;background:#102b3b;border:1px solid #477589;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando laboratorio de simulación...</div>
+
+    <section id="laboratorioHistoricoF19" style="margin-top:14px;padding:13px;border:1px solid #527c93;border-radius:11px;background:#112c3c;line-height:1.55;">
+      <strong>📈 Simulación histórica · Fase 19</strong>
+      <p style="font-size:12px;color:#c4d8e6">Selecciona un CSV de velas diarias de UNA acción (Date, Open, High, Low, Close, Volume), ordenadas o no. Se calcula cada señal al cierre y se simula la entrada en la apertura siguiente. Salida tras 10 sesiones, en la apertura siguiente. Incluye costes configurables. No ejecuta órdenes ni utiliza velas futuras para generar señales.</p>
+      <label for="archivoVelasF19" style="display:block;margin-bottom:5px">CSV histórico</label>
+      <input type="file" id="archivoVelasF19" accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
+      <label for="costeF19" style="display:block;margin-top:12px">Coste total estimado por operación (ida y vuelta): <strong id="costeF19Texto">0,30 %</strong></label>
+      <input type="range" id="costeF19" min="0" max="2" step="0.05" value="0.3" style="width:100%" />
+      <div id="resultadoF19" style="margin-top:12px;font-size:13px" aria-live="polite">Sin CSV: todavía no se ha realizado ninguna simulación histórica.</div>
+      <p style="font-size:11px;color:#b7cad8">Experimento educativo: operaciones largas únicamente, sin apalancamiento ni dividendos; la estrategia no replica fielmente órdenes del bróker. La selección de parámetros con estos mismos datos puede sobreajustar los resultados. No modifica tus recomendaciones ni tus posiciones.</p>
+    </section>
     <details style="margin-top:12px;"><summary style="cursor:pointer;">Ver las últimas decisiones registradas</summary><div id="memoriaDecisionesDetalle" style="margin-top:8px;"></div></details>
     <p class="muted" style="font-size:12px;">Solo en este navegador: no se sincroniza con otros dispositivos. Exporta el JSON como copia de seguridad. La actualización de la web normalmente conserva los datos locales, pero borrar datos del navegador puede eliminarlos. No incluye ni sustituye operaciones reales de tu bróker.</p>
   </div>
@@ -1089,6 +1100,127 @@ function laboratorioMemoriaF18(memoria){
   const advertencia=document.createElement("p");advertencia.style.cssText="font-size:12px;color:#b7d0df;margin:7px 0 0";
   advertencia.textContent="Los resultados utilizan la primera cotización observada tras ~7 días naturales, no cierres exactos ni rentabilidad neta. La comparación es descriptiva, no causal; no hay aprendizaje autónomo ni backtesting completo.";
   panel.replaceChildren(titulo,intro,resumen,tabla,aviso,advertencia);
+}
+
+
+// Fase 19: simulación local sobre CSV de velas diarias subido voluntariamente.
+// Independiente de los datos en vivo y de la memoria de recomendaciones.
+const F19={velas:null,nombre:""};
+function csvF19(texto){
+  const filas=texto.replace(/^\uFEFF/,"").trim().split(/\r?\n/).filter(Boolean);
+  if(filas.length<2)throw Error("El CSV no contiene velas diarias.");
+  const sep=(filas[0].match(/;/g)||[]).length>(filas[0].match(/,/g)||[]).length?";":",";
+  const cab=filas[0].split(sep).map(x=>x.trim().toLowerCase().replace(/[^a-z]/g,""));
+  const idx=(...n)=>cab.findIndex(x=>n.includes(x));
+  const pos={fecha:idx("date","fecha"),open:idx("open","apertura"),high:idx("high","maximo"),low:idx("low","minimo"),close:idx("close","cierre","adjclose"),volume:idx("volume","volumen")};
+  if(Object.values(pos).some(x=>x<0))throw Error("Columnas necesarias: Date, Open, High, Low, Close, Volume.");
+  const decimal=v=>{const a=String(v||"").trim().replace(/\"/g,"");return Number(sep===";"?a.replace(",","."):a);};
+  const velas=[];
+  for(const linea of filas.slice(1)){
+    const x=linea.split(sep).map(v=>v.trim().replace(/^\"|\"$/g,""));
+    const fecha=x[pos.fecha];
+    const op=decimal(x[pos.open]),hi=decimal(x[pos.high]),lo=decimal(x[pos.low]),cl=decimal(x[pos.close]),vo=decimal(x[pos.volume]);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(fecha)||![op,hi,lo,cl,vo].every(Number.isFinite)||Math.min(op,hi,lo,cl)<=0||vo<0)continue;
+    if(hi<Math.max(op,cl) || lo>Math.min(op,cl))continue;
+    velas.push({fecha,open:op,high:hi,low:lo,close:cl,volume:vo});
+  }
+  velas.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const unicas=velas.filter((v,i)=>i===0||v.fecha!==velas[i-1].fecha);
+  if(unicas.length<100)throw Error("Se necesitan al menos 100 velas válidas; recibidas: "+unicas.length+".");
+  if(unicas.length>3000)throw Error("Por seguridad, el máximo es 3.000 velas por archivo.");
+  return unicas;
+}
+function indicadoresF19(v){
+  const closes=v.map(x=>x.close), vol=v.map(x=>x.volume),n=v.length;
+  const ema=(periodo)=>{const r=Array(n).fill(null),k=2/(periodo+1);let suma=0;for(let i=0;i<n;i++){if(i<periodo){suma+=closes[i];if(i===periodo-1)r[i]=suma/periodo;}else r[i]=closes[i]*k+r[i-1]*(1-k);}return r;};
+  const e12=ema(12),e26=ema(26),m=Array(n).fill(null),sig=Array(n).fill(null),sma50=Array(n).fill(null),ratio=Array(n).fill(null),rsi=Array(n).fill(null);
+  for(let i=0;i<n;i++)if(e12[i]!==null&&e26[i]!==null)m[i]=e12[i]-e26[i];
+  const first=m.findIndex(x=>x!==null);
+  let sm=0;for(let i=first;i<n;i++){if(i<first+9){sm+=m[i];if(i===first+8)sig[i]=sm/9;}else sig[i]=m[i]*0.2+sig[i-1]*0.8;}
+  let gains=0,losses=0,avgG=0,avgL=0;
+  for(let i=1;i<n;i++){
+    const d=closes[i]-closes[i-1];
+    if(i<=14){gains+=Math.max(0,d);losses+=Math.max(0,-d);if(i===14){avgG=gains/14;avgL=losses/14;}}
+    else{avgG=(avgG*13+Math.max(0,d))/14;avgL=(avgL*13+Math.max(0,-d))/14;}
+    if(i>=14)rsi[i]=avgL===0?100:100-100/(1+avgG/avgL);
+  }
+  let sumC=0,sumV=0;
+  for(let i=0;i<n;i++){
+    sumC+=closes[i];sumV+=vol[i];
+    if(i>=50)sumC-=closes[i-50];
+    if(i>=20)sumV-=vol[i-20];
+    if(i>=49)sma50[i]=sumC/50;
+    if(i>=19)ratio[i]=(sumV-vol[i]+vol[i])/20>0?vol[i]/(sumV/20):null;
+  }
+  return {rsi,m,sig,sma50,ratio};
+}
+function senalF19(v,ind,i,modo){
+  if(i<55 || ind.rsi[i]===null||ind.sig[i]===null||ind.ratio[i]===null||ind.sma50[i]===null)return false;
+  const r=ind.rsi[i],macd=ind.m[i],signal=ind.sig[i],vr=ind.ratio[i],alcista=v[i].close>ind.sma50[i];
+  if(!alcista||macd<=signal||r<=ind.rsi[i-1])return false;
+  if(modo==="estricta")return r>=35&&r<=65&&vr>=1.2;
+  if(modo==="moderada")return r>=35&&r<=70&&vr>=0.8;
+  return r>=30&&r<=70&&vr>=1.2;
+}
+function probarF19(v,ind,modo,coste,limite){
+  const operaciones=[];let next=55;
+  for(let i=55;i+11<limite;i++){
+    if(i<next||!senalF19(v,ind,i,modo))continue;
+    const entrada=v[i+1].open,salida=v[i+11].open;
+    const bruto=(salida/entrada-1)*100,neto=bruto-coste;
+    operaciones.push({fecha:v[i].fecha,entradaFecha:v[i+1].fecha,salidaFecha:v[i+11].fecha,bruto,neto});
+    next=i+11;
+  }
+  const ganan=operaciones.filter(x=>x.neto>0).length;
+  const media=operaciones.length?operaciones.reduce((s,x)=>s+x.neto,0)/operaciones.length:null;
+  let capital=1,peak=1,maxDD=0;
+  for(const op of operaciones){capital*=Math.max(0,1+op.neto/100);peak=Math.max(peak,capital);maxDD=Math.max(maxDD,(1-capital/peak)*100);}
+  return {n:operaciones.length,ganan,media,compuesto:(capital-1)*100,dd:maxDD};
+}
+function resultadoHistoricoF19(){
+  const el=document.getElementById("resultadoF19");if(!el||!F19.velas)return;
+  const v=F19.velas,ind=indicadoresF19(v),coste=Number(document.getElementById("costeF19").value);
+  document.getElementById("costeF19Texto").textContent=coste.toFixed(2).replace(".",",")+" %";
+  const divisoria=Math.floor(v.length*.7);
+  const h=document.createElement("div");
+  h.textContent="Archivo: "+F19.nombre+" · "+v.length+" velas ("+v[0].fecha+" a "+v[v.length-1].fecha+"). Entrenamiento: 70 % inicial; prueba posterior: 30 % final. Horizonte: 10 sesiones.";
+  const tabla=document.createElement("div");tabla.style.cssText="display:grid;gap:9px;margin-top:10px";
+  const etiquetas={actual:"Regla actual de recuperación",moderada:"Alternativa moderada",estricta:"Alternativa estricta"};
+  for(const modo of Object.keys(etiquetas)){
+    // Solo señales en la franja reservada; los indicadores pueden mirar hacia atrás,
+    // nunca hacia delante. Entrada y salida siempre dentro de la franja.
+    const todos=probarF19(v,ind,modo,coste,v.length);
+    const enPrueba=[];let siguiente=divisoria;
+    for(let i=Math.max(55,divisoria);i+11<v.length;i++){
+      if(i<siguiente||!senalF19(v,ind,i,modo))continue;
+      const neto=(v[i+11].open/v[i+1].open-1)*100-coste;
+      enPrueba.push(neto);siguiente=i+11;
+    }
+    let cap=1,pico=1,dd=0;for(const x of enPrueba){cap*=Math.max(0,1+x/100);pico=Math.max(pico,cap);dd=Math.max(dd,(1-cap/pico)*100);}
+    const b=document.createElement("div");b.style.cssText="padding:10px;background:#1b384e;border:1px solid #42667f;border-radius:9px";
+    const title=document.createElement("strong");title.textContent=etiquetas[modo];
+    const dato=document.createElement("p");dato.style.cssText="margin:5px 0;font-size:12px";
+    dato.textContent="Periodo completo: "+todos.n+" operaciones simuladas. Prueba final (30 %): "+enPrueba.length+" operaciones · Aciertos "+enPrueba.filter(x=>x>0).length+" · Resultado compuesto "+((cap-1)*100).toFixed(2)+" % · Caída máxima entre operaciones "+dd.toFixed(2)+" %.";
+    const nota=document.createElement("small");nota.style.color="#f2d7a4";nota.textContent=enPrueba.length<5?"Muestra de prueba insuficiente: no comparar estrategias todavía.":"Resultado hipotético, no rentabilidad de la cartera.";
+    b.append(title,dato,nota);tabla.appendChild(b);
+  }
+  const aviso=document.createElement("p");aviso.style.cssText="font-size:12px;color:#c8d7e3";
+  aviso.textContent="Simulación sin posiciones simultáneas, cada operación dura 10 sesiones y usa apertura siguiente. No reproduce ventas reales, cambios de divisa, dividendos, deslizamiento adicional ni costes fijos. La caída máxima se calcula solo en los cierres de operaciones y subestima pérdidas intraperiodo. Seleccionar una estrategia por su resultado en este archivo no prueba su ventaja futura.";
+  el.replaceChildren(h,tabla,aviso);
+}
+function iniciarF19(){
+  const input=document.getElementById("archivoVelasF19"), slider=document.getElementById("costeF19");
+  input?.addEventListener("change",async()=>{
+    const f=input.files?.[0];if(!f)return;
+    const el=document.getElementById("resultadoF19");
+    try{if(f.size>2000000)throw Error("Archivo demasiado grande (máximo 2 MB).");
+      const texto=await f.text();F19.velas=csvF19(texto);F19.nombre=f.name;resultadoHistoricoF19();
+    }catch(e){F19.velas=null;el.textContent="No se pudo realizar la simulación: "+e.message;}
+  });
+  slider?.addEventListener("input",()=>{
+    document.getElementById("costeF19Texto").textContent=Number(slider.value).toFixed(2).replace(".",",")+" %";
+    if(F19.velas)resultadoHistoricoF19();
+  });
 }
 
 function iniciarControlesMemoriaF16(){
@@ -2294,7 +2426,7 @@ async function cargarNoticias() {
 }
 
 cargarNoticias();
-window.addEventListener("DOMContentLoaded", ()=>{iniciarControlesMemoriaF16();cargarDatos();});
+window.addEventListener("DOMContentLoaded", ()=>{iniciarControlesMemoriaF16();iniciarF19();cargarDatos();});
 </script>
 
 <div class="wrap">
