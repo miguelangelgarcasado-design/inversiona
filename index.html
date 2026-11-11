@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InversiónIA · Fase 14</title>
+  <title>InversiónIA · Fase 15</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a5cff">
 
@@ -613,40 +613,53 @@ function clasificarRecuperacion(a, ticker) {
   if(cumplidos>=2) return {...base,condicionesCumplidas:cumplidos,nivel:"🟡",estado:"MEJORA PARCIAL",explicacion:"Cumple "+cumplidos+" de 4 filtros. Faltan: "+faltan.join(", ")+". No hay recuperación confirmada."};
   return {...base,condicionesCumplidas:cumplidos,nivel:"🔴",estado:"SIN RECUPERACIÓN CONFIRMADA",explicacion:"Cumple "+cumplidos+" de 4 filtros. Faltan: "+faltan.join(", ")+"."};
 }
-// Fase 14: radar temprano, lectura descriptiva SIN pronosticar tendencia de varios días.
-// Solo disponemos de RSI actual/anterior y del MACD frente a su señal actual;
-// no inferimos evolución histórica de MACD, precio ni volumen.
+// Fase 15: índice de observación 0–100. Mide calidad de indicios presentes,
+// NO probabilidad de subida, ni cambio histórico confirmado de MACD/precio.
 function radarTemprano(a, ticker) {
   if (!a) return null;
-  const fecha = estadoFechaRecuperacion(a, ticker);
-  const provisional = lecturaProvisional(a, ticker);
-  const num = v => v == null || v === "" || !Number.isFinite(Number(v)) ? null : Number(v);
-  const rsi = num(a.rsi14), anterior = num(a.rsi14Anterior);
-  const macd = num(a.macd), senal = num(a.macdSignal);
-  const vol = num(a.volumenActual), media = num(a.volumenMedio20);
-  if (rsi===null || anterior===null || macd===null || senal===null ||
-      vol===null || media===null || media<=0) return null;
-  // Una vela sin cierre puede describirse provisionalmente, nunca como confirmada.
+  const fecha=estadoFechaRecuperacion(a,ticker);
+  const provisional=lecturaProvisional(a,ticker);
+  const num=v=>v==null || v==="" || !Number.isFinite(Number(v)) ? null : Number(v);
+  const rsi=num(a.rsi14), anterior=num(a.rsi14Anterior);
+  const macd=num(a.macd), senal=num(a.macdSignal);
+  const vol=num(a.volumenActual), media=num(a.volumenMedio20);
+  if ([rsi,anterior,macd,senal,vol,media].some(x=>x===null) || media<=0) return null;
   if (!fecha.util && !provisional) return null;
-  const rsiSube = rsi > anterior;
-  const cruceRelativo = macd > senal; // no equivale a un cruce nuevo ni a una aceleración del MACD
-  const volumenAlto = vol/media >= 1.2;
-  const alcista = a.tendencia === "ALCISTA";
-  // Volumen alto en caída NO se trata como señal alcista.
-  const volumenAcompana = volumenAlto && alcista;
-  const datos = [rsiSube, cruceRelativo, volumenAcompana];
-  const favorables = datos.filter(Boolean).length;
-  const parcial = !fecha.util;
-  const notas = [
-    "RSI " + (rsiSube ? "mejora" : (rsi < anterior ? "retrocede" : "sin avance")) +
-      " (" + formatoNumero(anterior) + " → " + formatoNumero(rsi) + ")",
-    "MACD " + (cruceRelativo ? "por encima de su señal" : "sin confirmación sobre su señal"),
-    "Volumen " + formatoNumero(vol/media) + "× la media" +
-      (volumenAlto && !alcista ? "; no confirma compras con tendencia " + String(a.tendencia||"sin definir").toLowerCase() : ""),
-    "Tendencia: " + String(a.tendencia||"sin datos")
+  const delta=rsi-anterior, ratio=vol/media;
+  const tendencia=String(a.tendencia||"SIN DATOS");
+  const alcista=tendencia==="ALCISTA", mixta=tendencia==="MIXTA";
+  const macdFavor=macd>senal;
+  // Pesos: RSI hasta 30, posición del MACD 25, volumen 20,
+  // tendencia 20, zona de RSI no extrema 5. Sin series históricas de MACD
+  // NO puede medirse aceleración ni un cruce de hoy.
+  let puntosRSI = delta>=3?30:delta>=1.5?24:delta>=0.5?16:delta>=0.25?8:delta>0?3:0;
+  if(rsi>70) puntosRSI=Math.min(puntosRSI,5);
+  if(rsi<30) puntosRSI=Math.min(puntosRSI,10);
+  const puntosMACD=macdFavor?25:0;
+  const puntosVolumen = alcista && macdFavor
+    ? (ratio>=1.2?20:ratio>=1?14:ratio>=0.8?8:ratio>=0.5?3:0)
+    : (ratio>=1.2 && mixta && macdFavor ? 7 : 0);
+  const puntosTendencia=alcista?20:mixta?8:0;
+  const puntosZona=(rsi>=35 && rsi<=65)?5:0;
+  const puntuacion=Math.max(0,Math.min(100,puntosRSI+puntosMACD+puntosVolumen+puntosTendencia+puntosZona));
+  // Excluir cambios anecdóticos, sobrecompra y caídas con volumen mínimo
+  // de la lista prioritaria, aunque mostramos el motivo de la exclusión.
+  const apto=delta>=0.5 && rsi>=30 && rsi<=70 && macdFavor && ratio>=0.5 && tendencia!=="BAJISTA" && puntuacion>=45;
+  const etiqueta=apto?(puntuacion>=75?"INDICIOS MÁS SÓLIDOS":"INDICIOS A VIGILAR"):"INDICIOS INSUFICIENTES";
+  const motivos=[];
+  if(delta<0.5) motivos.push("variación del RSI demasiado pequeña");
+  if(rsi>70) motivos.push("RSI por encima de 70");
+  if(rsi<30) motivos.push("RSI por debajo de 30");
+  if(!macdFavor) motivos.push("MACD no supera su señal");
+  if(ratio<0.5) motivos.push("volumen inferior a 0,5× la media");
+  if(tendencia==="BAJISTA") motivos.push("tendencia bajista");
+  const notas=[
+    "RSI "+formatoNumero(anterior)+" → "+formatoNumero(rsi)+" (Δ "+(delta>=0?"+":"")+formatoNumero(delta)+")",
+    "MACD "+(macdFavor?"sobre su señal":"sin confirmación"),
+    "Volumen "+formatoNumero(ratio)+"× su media",
+    "Tendencia: "+tendencia
   ];
-  const etiqueta = favorables >= 2 && rsiSube && cruceRelativo ? "INDICIOS A VIGILAR" : "SIN IMPULSO TEMPRANO SUFICIENTE";
-  return {ticker, provisional:parcial, favorables, etiqueta, notas};
+  return {ticker, provisional:!fecha.util, puntuacion, apto, etiqueta, notas, motivos};
 }
 
 // Explica el MACD sin confundir valor positivo con cruce alcista confirmado.
@@ -1964,20 +1977,28 @@ const panelRecuperacion = '<section style="margin:22px 0 10px;padding:15px;borde
   '<details style="margin-top:12px;"><summary style="cursor:pointer;">Ver señales sin confirmar y datos pendientes ('+resto.length+')</summary>'+
   resto.map(renderEstado).join("")+'</details></section>';
 alertasDinamicas.insertAdjacentHTML("afterbegin", panelRecuperacion);
-// Radar informativo, independiente de las alertas confirmadas. No proyecta varios días.
+// Fase 15: radar ordenado por calidad de indicios, no por probabilidades.
 const candidatosTempranos = seguimientoTemprano
-  .filter(x => x.favorables>=2 && x.etiqueta==="INDICIOS A VIGILAR")
-  .sort((a,b)=>b.favorables-a.favorables || a.nombre.localeCompare(b.nombre,"es"));
-const listaRadar = candidatosTempranos.length
-  ? candidatosTempranos.map(x=>'<div style="padding:9px 11px;margin-top:8px;border-radius:9px;background:#182f4c;border:1px solid #365b80;">'+
-       '<strong>'+(x.provisional?'🟠':'🟡')+' '+htmlSeguro(x.nombre)+' ('+htmlSeguro(x.ticker)+') · '+htmlSeguro(x.etiqueta)+'</strong>'+
-       '<div style="font-size:12px;color:#c0d3e9;margin-top:5px;">'+htmlSeguro(x.notas.join(' · '))+'</div>'+
-       (x.provisional?'<div style="font-size:12px;color:#f8d69d;">Vela abierta: lectura provisional.</div>':'')+'</div>').join('')
-  : '<p style="font-size:13px;color:#cad7e6;">Ningún activo reúne todavía los indicios mínimos de mejora del RSI y posición relativa del MACD en los datos disponibles.</p>';
+  .filter(x=>x.apto)
+  .sort((a,b)=>b.puntuacion-a.puntuacion || a.nombre.localeCompare(b.nombre,"es"));
+const descartadosTempranos = seguimientoTemprano.filter(x=>!x.apto)
+  .sort((a,b)=>b.puntuacion-a.puntuacion || a.nombre.localeCompare(b.nombre,"es"));
+const renderRadar=x=>'<div style="padding:10px 11px;margin-top:8px;border-radius:9px;background:#182f4c;border:1px solid #365b80;line-height:1.5;">'+
+  '<strong>'+(x.provisional?'🟠':'🟡')+' '+htmlSeguro(x.nombre)+' ('+htmlSeguro(x.ticker)+') · '+htmlSeguro(x.etiqueta)+'</strong>'+
+  '<div style="font-size:14px;margin-top:5px;"><strong>Índice de observación: '+x.puntuacion+'/100</strong> · '+(x.provisional?'PROVISIONAL':'vela cerrada según proveedor')+'</div>'+
+  '<div style="height:7px;background:#263c52;border-radius:7px;overflow:hidden;margin:6px 0;"><div style="height:100%;width:'+x.puntuacion+'%;background:'+(x.puntuacion>=75?'#60b68b':x.puntuacion>=45?'#e3b44e':'#8b9cb0')+';"></div></div>'+
+  '<div style="font-size:12px;color:#c0d3e9;">'+htmlSeguro(x.notas.join(' · '))+'</div>'+
+  (x.motivos.length?'<div style="font-size:12px;color:#f0d5aa;margin-top:3px;">Limitaciones: '+htmlSeguro(x.motivos.join("; "))+'.</div>':'')+
+  '</div>';
+const listaRadar=candidatosTempranos.length
+  ? candidatosTempranos.map(renderRadar).join('')
+  : '<p style="font-size:13px;color:#cad7e6;">Ninguna acción alcanza los criterios mínimos del radar en esta consulta.</p>';
 const radarHTML='<section style="margin:14px 0;padding:14px;border:1px solid #4a7596;border-radius:12px;background:#10263d;">'+
-  '<h3 style="margin:0 0 8px;">🔎 Radar de recuperación temprana</h3>'+
-  '<p style="font-size:12px;color:#c5d5e5;">Prioriza RSI al alza y MACD sobre su señal. El volumen alto solo acompaña si la tendencia es alcista. Son indicios observados, NO cruces nuevos confirmados, predicciones ni órdenes de compra; no hay historial suficiente para afirmar una mejora sostenida durante varios días.</p>'+
-  '<details><summary style="cursor:pointer;color:#cce5f8;">Ver posibles mejoras ('+candidatosTempranos.length+')</summary>'+listaRadar+'</details></section>';
+  '<h3 style="margin:0 0 8px;">🔎 Radar de recuperación temprana · Fase 15</h3>'+
+  '<p style="font-size:12px;color:#c5d5e5;">Nuevo índice de observación de 0 a 100: avance del RSI, posición del MACD, tendencia y volumen. Penaliza RSI &gt;70, variaciones mínimas y volumen débil. Es una escala heurística, NO probabilidad de subida ni recomendación de compra. Sin historial adicional no se puede confirmar aceleración del MACD ni recuperación sostenida. Una vela abierta sigue siendo provisional.</p>'+
+  '<details><summary style="cursor:pointer;color:#cce5f8;">Ver indicios priorizados ('+candidatosTempranos.length+')</summary>'+listaRadar+'</details>'+
+  (descartadosTempranos.length?'<details style="margin-top:12px;"><summary style="cursor:pointer;color:#bdcfe1;">Ver lecturas descartadas ('+descartadosTempranos.length+')</summary>'+descartadosTempranos.map(renderRadar).join('')+'</details>':'')+
+  '</section>';
 alertasDinamicas.insertAdjacentHTML("afterbegin", radarHTML);
 
 }
