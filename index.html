@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InversiónIA · Fase 17</title>
+  <title>InversiónIA · Fase 18</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a5cff">
 
@@ -124,7 +124,7 @@
   </div>
 
   <div class="card" id="memoriaDecisionesCard" style="border:1px solid #587b9d;">
-    <h2>🧠 Memoria y evaluación de decisiones · Fase 17</h2>
+    <h2>🧠 Memoria y evaluación de decisiones · Fase 18</h2>
     <p class="muted" style="font-size:13px;line-height:1.55;">Conserva las recomendaciones de la Fase 16. Registra nuevos datos con indicadores legibles y distingue mantener una posición de vigilarla. Revisa resultados observados después de 7, 21 y 42 días naturales, sin confundirlos con cierres exactos de sesiones. El diagnóstico estadístico exige muestras suficientes y NO cambia las reglas de compra o venta.</p>
     <div id="memoriaDecisionesEstado" style="font-size:14px;line-height:1.5;">Cargando memoria...</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
@@ -132,6 +132,7 @@
       <button type="button" id="borrarMemoria" style="padding:9px 12px;border:1px solid #bb7474;border-radius:9px;background:#462b37;color:white;cursor:pointer;">Borrar historial</button>
     </div>
     <div id="diagnosticoF17" style="margin-top:12px;padding:12px;background:#142c48;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando evaluación...</div>
+    <div id="laboratorioF18" style="margin-top:12px;padding:13px;background:#102b3b;border:1px solid #477589;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando laboratorio de simulación...</div>
     <details style="margin-top:12px;"><summary style="cursor:pointer;">Ver las últimas decisiones registradas</summary><div id="memoriaDecisionesDetalle" style="margin-top:8px;"></div></details>
     <p class="muted" style="font-size:12px;">Solo en este navegador: no se sincroniza con otros dispositivos. Exporta el JSON como copia de seguridad. La actualización de la web normalmente conserva los datos locales, pero borrar datos del navegador puede eliminarlos. No incluye ni sustituye operaciones reales de tu bróker.</p>
   </div>
@@ -955,6 +956,7 @@ function pintarMemoriaF16(memoria){
     ". Estas comparaciones NO miden rentabilidad neta, acierto de mantenimiento ni rendimiento frente a un índice.";
   detalle.replaceChildren();
   diagnosticoMemoriaF17(memoria);
+  laboratorioMemoriaF18(memoria);
   for(const a of memoria.slice(-15).reverse()){
     const d=document.createElement("div");
     d.style.cssText="padding:9px;margin:7px 0;background:#172b4d;border-radius:8px;font-size:13px;line-height:1.55";
@@ -1019,6 +1021,74 @@ function diagnosticoMemoriaF17(memoria){
     ?"Hipótesis para investigar (sin aplicar cambios): "+candidatos.slice(0,3).map(x=>x.nombre+" — "+x.fallos+" resultados desfavorables de "+x.casos).join("; ")+". Validar en fechas futuras antes de modificar filtros."
     :"No aparecen patrones de errores suficientemente repetidos con los umbrales actuales. Continuar recopilando datos.";
   panel.appendChild(aviso);
+}
+
+
+// Fase 18: laboratorio de estrategias sombra construido sobre instantáneas
+// previamente registradas. No se alteran decisiones históricas, cartera,
+// órdenes ni reglas de la app. NO es un backtest histórico de velas.
+function decisionSombraF18(a,modo){
+  const r=valorValidoF16(a.rsi), macd=valorValidoF16(a.macd), signal=valorValidoF16(a.macdSignal);
+  const v=valorValidoF16(a.volumenRelativo), t=String(a.tendencia||"");
+  if([r,macd,signal,v].some(x=>x===null))return "SIN DATOS";
+  if(modo==="estricta"){
+    if(t==="ALCISTA" && r>=35 && r<=65 && macd>signal && v>=1.2)return "COMPRA";
+    if(t==="BAJISTA" && r<35 && macd<signal && v>=1)return "VENTA";
+  }else if(modo==="moderada"){
+    if(t==="ALCISTA" && r>=35 && r<=70 && macd>signal && v>=0.8)return "COMPRA";
+    if(t==="BAJISTA" && r<40 && macd<signal && v>=0.8)return "VENTA";
+  }
+  return "ESPERAR";
+}
+function laboratorioMemoriaF18(memoria){
+  const panel=document.getElementById("laboratorioF18");if(!panel)return;
+  const titulo=document.createElement("strong");
+  titulo.textContent="🧪 Laboratorio de simulación · Fase 18";
+  const intro=document.createElement("p");
+  intro.style.cssText="margin:8px 0;color:#c7dce8";
+  intro.textContent="Comparación prospectiva de reglas alternativas (sombra) con las condiciones guardadas cuando se emitió cada recomendación. No ejecuta compras, no cambia criterios y no utiliza datos futuros para generar la señal.";
+  const lineas=[];
+  const propuestas=[
+    {id:"moderada",nombre:"Alternativa moderada",descripcion:"Compra: tendencia alcista, RSI 35–70, MACD favorable, volumen ≥0,8×. Venta: bajista, RSI <40, MACD desfavorable, volumen ≥0,8×."},
+    {id:"estricta",nombre:"Alternativa estricta",descripcion:"Compra: alcista, RSI 35–65, MACD favorable, volumen ≥1,2×. Venta: bajista, RSI <35, MACD desfavorable, volumen ≥1×."}
+  ];
+  // La comparación solo usa el primer resultado posterior a 7 días,
+  // disponible si se volvió a abrir la app y el activo se consultó.
+  const observadas=memoria.filter(a=>a.evaluaciones?.[7] &&
+    Number.isFinite(Number(a.evaluaciones[7].cambioPct)) &&
+    Number.isFinite(Number(a.precioMercado)) && a.precioMercado>0);
+  const muestrasFechas=new Set(observadas.map(a=>a.vela));
+  const favorable=(tipo,cambio)=>tipo==="COMPRA"?cambio>0:tipo==="VENTA"?cambio<0:null;
+  const evaluacion=(lista,fn)=>{
+    const decisivas=lista.map(a=>({a,d:fn(a)})).filter(x=>x.d==="COMPRA"||x.d==="VENTA");
+    const ok=decisivas.filter(x=>favorable(x.d,Number(x.a.evaluaciones[7].cambioPct))).length;
+    return {n:decisivas.length,ok,fechas:new Set(decisivas.map(x=>x.a.vela)).size};
+  };
+  const original=evaluacion(observadas,a=>a.decision);
+  const resumen=document.createElement("div");
+  resumen.textContent="Instantáneas registradas: "+memoria.length+" · Con comparación posterior a ~7 días: "+observadas.length+" · Fechas de origen: "+muestrasFechas.size+".";
+  const tabla=document.createElement("div");
+  tabla.style.cssText="display:grid;gap:8px;margin-top:10px;";
+  const crearFila=(nombre,descripcion,metrica)=>{
+    const caja=document.createElement("div");caja.style.cssText="padding:10px;border:1px solid #3b6175;border-radius:8px;background:#193349;";
+    const h=document.createElement("strong");h.textContent=nombre;
+    const p=document.createElement("div");p.style.cssText="color:#bfd3e1;font-size:12px;margin-top:3px;";p.textContent=descripcion;
+    const stats=document.createElement("div");stats.style.cssText="margin-top:6px;";
+    stats.textContent=metrica.n?"Señales direccionales evaluadas: "+metrica.n+" · Dirección favorable: "+metrica.ok+"/"+metrica.n+" · Fechas: "+metrica.fechas:"Sin señales direccionales evaluadas todavía.";
+    caja.append(h,p,stats);tabla.appendChild(caja);
+  };
+  crearFila("Reglas registradas (referencia)","Solo recomendaciones registradas como COMPRA o VENTA; mantener/vigilar queda fuera.",original);
+  for(const propuesta of propuestas){
+    crearFila(propuesta.nombre,propuesta.descripcion,evaluacion(observadas,a=>decisionSombraF18(a,propuesta.id)));
+  }
+  const aviso=document.createElement("p");aviso.style.cssText="font-size:12px;color:#f0d8a2;margin:10px 0 0;";
+  const suficientes=observadas.length>=30 && muestrasFechas.size>=10;
+  aviso.textContent=suficientes
+    ? "Resultados exploratorios, NO validados: las estrategias pueden generar señales en conjuntos de activos diferentes. Faltan costes, deslizamiento, benchmark y validación fuera de muestra; no cambiar reglas todavía."
+    : "APRENDIZAJE EN ESPERA: para una primera comparación exploratoria se requieren al menos 30 instantáneas con resultado posterior y 10 fechas de origen. Incluso entonces hará falta validación fuera de muestra. No puede concluirse qué estrategia gana todavía.";
+  const advertencia=document.createElement("p");advertencia.style.cssText="font-size:12px;color:#b7d0df;margin:7px 0 0";
+  advertencia.textContent="Los resultados utilizan la primera cotización observada tras ~7 días naturales, no cierres exactos ni rentabilidad neta. La comparación es descriptiva, no causal; no hay aprendizaje autónomo ni backtesting completo.";
+  panel.replaceChildren(titulo,intro,resumen,tabla,aviso,advertencia);
 }
 
 function iniciarControlesMemoriaF16(){
