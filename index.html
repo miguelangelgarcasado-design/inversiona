@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InversiónIA · Fase 16</title>
+  <title>InversiónIA · Fase 17</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a5cff">
 
@@ -124,13 +124,14 @@
   </div>
 
   <div class="card" id="memoriaDecisionesCard" style="border:1px solid #587b9d;">
-    <h2>🧠 Memoria de decisiones · Fase 16</h2>
-    <p class="muted" style="font-size:13px;line-height:1.55;">Guarda automáticamente, una vez por acción y vela diaria confirmada, las recomendaciones que generan las reglas de la app. Conserva precio de mercado, RSI, MACD, tendencia, volumen y motivos. Las evalúa al volver a abrir la app después de unos 7, 21 y 42 días naturales; NO son resultados exactos a 5, 15 o 30 sesiones. No aprende ni modifica las reglas todavía.</p>
+    <h2>🧠 Memoria y evaluación de decisiones · Fase 17</h2>
+    <p class="muted" style="font-size:13px;line-height:1.55;">Conserva las recomendaciones de la Fase 16. Registra nuevos datos con indicadores legibles y distingue mantener una posición de vigilarla. Revisa resultados observados después de 7, 21 y 42 días naturales, sin confundirlos con cierres exactos de sesiones. El diagnóstico estadístico exige muestras suficientes y NO cambia las reglas de compra o venta.</p>
     <div id="memoriaDecisionesEstado" style="font-size:14px;line-height:1.5;">Cargando memoria...</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
       <button type="button" id="exportarMemoria" style="padding:9px 12px;border:1px solid #6c9fbe;border-radius:9px;background:#1b426b;color:white;cursor:pointer;">⬇ Exportar historial JSON</button>
       <button type="button" id="borrarMemoria" style="padding:9px 12px;border:1px solid #bb7474;border-radius:9px;background:#462b37;color:white;cursor:pointer;">Borrar historial</button>
     </div>
+    <div id="diagnosticoF17" style="margin-top:12px;padding:12px;background:#142c48;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando evaluación...</div>
     <details style="margin-top:12px;"><summary style="cursor:pointer;">Ver las últimas decisiones registradas</summary><div id="memoriaDecisionesDetalle" style="margin-top:8px;"></div></details>
     <p class="muted" style="font-size:12px;">Solo en este navegador: no se sincroniza con otros dispositivos. Exporta el JSON como copia de seguridad. La actualización de la web normalmente conserva los datos locales, pero borrar datos del navegador puede eliminarlos. No incluye ni sustituye operaciones reales de tu bróker.</p>
   </div>
@@ -893,11 +894,11 @@ function guardarMemoriaF16(a){
   catch(e){console.warn("No se pudo guardar memoria",e);return false;}
 }
 function valorValidoF16(v){return v!=null && v!=="" && Number.isFinite(Number(v))?Number(v):null;}
-function claseDecisionF16(estado,recomendacion){
+function claseDecisionF16(estado,recomendacion,unidades){
   const t=(estado+" "+recomendacion).toUpperCase();
   if(/VENTA|VENDER|RECOGER BENEFICIOS|OBJETIVO ALCANZADO/.test(t))return "VENTA";
   if(/OPORTUNIDAD DE COMPRA|ZONA DE COMPRA|VALORAR COMPRA/.test(t) && !/NO CONFIRMADA|ESPERAR|NO AMPLIAR/.test(t))return "COMPRA";
-  return "MANTENER/VIGILAR";
+  return Number(unidades)>0?"MANTENER":"VIGILAR";
 }
 function actualizarMemoriaF16(memoria,ticker,precioMercado,moneda,ahora){
   const precio=valorValidoF16(precioMercado);
@@ -931,7 +932,7 @@ function anotarMemoriaF16(memoria,activo,analisis,precio,estado,recomendacion,ah
   const vol=valorValidoF16(analisis?.volumenActual),prom=valorValidoF16(analisis?.volumenMedio20);
   const moneda=activo.cotizaUSD||activo.moneda==="$"?"USD":"EUR";
   memoria.push({version:1,ticker:activo.ticker,nombre:activo.nombre,vela,
-    registradoEn:new Date(ahora).toISOString(),decision:claseDecisionF16(estado,recomendacion),
+    registradoEn:new Date(ahora).toISOString(),decision:claseDecisionF16(estado,recomendacion,activo.titulos??activo.cantidad),
     estado,razon:recomendacion,precioMercado:precioValido,moneda,
     rsi:valorValidoF16(analisis?.rsi14),macd:valorValidoF16(analisis?.macd),
     macdSignal:valorValidoF16(analisis?.macdSignal),tendencia:String(analisis?.tendencia||"SIN DATOS"),
@@ -953,24 +954,79 @@ function pintarMemoriaF16(memoria){
     (evaluadas.length?" · Favorables: "+aciertos+"/"+evaluadas.length:"")+
     ". Estas comparaciones NO miden rentabilidad neta, acierto de mantenimiento ni rendimiento frente a un índice.";
   detalle.replaceChildren();
+  diagnosticoMemoriaF17(memoria);
   for(const a of memoria.slice(-15).reverse()){
     const d=document.createElement("div");
     d.style.cssText="padding:9px;margin:7px 0;background:#172b4d;border-radius:8px;font-size:13px;line-height:1.55";
     const e=Object.entries(a.evaluaciones||{}).map(([dias,x])=>
       dias+" d naturales: "+(x.cambioPct>=0?"+":"")+x.cambioPct.toFixed(2)+" % (observado "+x.observadoEn.slice(0,10)+")").join(" · ");
     d.textContent=a.nombre+" ("+a.ticker+") · "+a.decision+" · vela "+a.vela+
-      " · Precio observado "+a.precioMercado+" "+a.moneda+
-      " · RSI "+(a.rsi??"N/D")+" · Tendencia "+a.tendencia+
+      " · Precio observado "+formatoNumero(a.precioMercado)+" "+a.moneda+
+      " · RSI "+(a.rsi==null?"N/D":formatoNumero(a.rsi))+" · Tendencia "+a.tendencia+
       " · Motivo: "+a.razon+(e?" · Seguimiento aproximado: "+e:" · Pendiente de evaluación");
     detalle.appendChild(d);
   }
 }
+// Fase 17: diagnóstico retrospectivo basado solo en evaluaciones reales disponibles.
+// La misma decisión no cuenta tres veces: se usa exclusivamente su primera
+// evaluación (7 días naturales) y se distinguen los tipos de decisión.
+function diagnosticoMemoriaF17(memoria){
+  const panel=document.getElementById("diagnosticoF17");
+  if(!panel)return;
+  const muestra=memoria.map(a=>({a,r:a.evaluaciones?.[7]}))
+    .filter(x=>x.r && Number.isFinite(Number(x.r.cambioPct)));
+  const deCompraVenta=muestra.filter(x=>x.a.decision==="COMPRA" || x.a.decision==="VENTA");
+  const compras=deCompraVenta.filter(x=>x.a.decision==="COMPRA");
+  const ventas=deCompraVenta.filter(x=>x.a.decision==="VENTA");
+  const otras=muestra.filter(x=>!(["COMPRA","VENTA"].includes(x.a.decision)));
+  const tasa=xs=> xs.length?xs.filter(x=>x.r.favorable===true).length+" de "+xs.length:"sin evaluaciones";
+  const aviso=document.createElement("div");
+  aviso.style.cssText="margin-top:8px;color:#c3d7e9;";
+  const n=deCompraVenta.length;
+  let resumen="Evaluaciones del primer umbral (aprox. 7 días): "+muestra.length+
+    ". Compras: "+tasa(compras)+" favorables. Ventas: "+tasa(ventas)+
+    " favorables. Mantener/vigilar: "+otras.length+" observaciones, sin calificación de acierto porque no existe un criterio de referencia definido.";
+  const titulo=document.createElement("strong");titulo.textContent="📋 Diagnóstico de recomendaciones · Fase 17";
+  const detalle=document.createElement("div");detalle.textContent=resumen;
+  panel.replaceChildren(titulo,detalle);
+  // No proponer ajustes automáticos a partir de una o dos operaciones.
+  if(n<12){
+    aviso.textContent="Aprendizaje pendiente: se necesitan al menos 12 recomendaciones direccionales evaluadas a 7 días y datos de distintas fechas para estudiar patrones. No se altera ninguna regla.";
+    panel.appendChild(aviso);return;
+  }
+  const fechas=new Set(deCompraVenta.map(x=>x.a.vela));
+  if(fechas.size<4){
+    aviso.textContent="Muestra concentrada en pocas fechas: se necesitan al menos 4 sesiones de origen distintas para investigar patrones sin sacar conclusiones precipitadas.";
+    panel.appendChild(aviso);return;
+  }
+  const grupos=new Map();
+  for(const x of deCompraVenta){
+    const a=x.a;
+    const condiciones=[
+      "RSI menor de 35: "+(a.rsi!=null&&a.rsi<35),
+      "Tendencia bajista: "+(a.tendencia==="BAJISTA"),
+      "MACD debajo de su señal: "+(a.macd!=null&&a.macdSignal!=null&&a.macd<a.macdSignal),
+      "Volumen inferior a la media: "+(a.volumenRelativo!=null&&a.volumenRelativo<1)
+    ];
+    for(const cond of condiciones){
+      const v=grupos.get(cond)||[];v.push(x);grupos.set(cond,v);
+    }
+  }
+  const candidatos=[...grupos].filter(([k,v])=>v.length>=6&&new Set(v.map(x=>x.a.vela)).size>=3)
+    .map(([nombre,v])=>({nombre,casos:v.length,fallos:v.filter(x=>x.r.favorable===false).length}))
+    .filter(x=>x.fallos/x.casos>=0.6).sort((a,b)=>b.fallos/b.casos-a.fallos/a.casos);
+  aviso.textContent=candidatos.length
+    ?"Hipótesis para investigar (sin aplicar cambios): "+candidatos.slice(0,3).map(x=>x.nombre+" — "+x.fallos+" resultados desfavorables de "+x.casos).join("; ")+". Validar en fechas futuras antes de modificar filtros."
+    :"No aparecen patrones de errores suficientemente repetidos con los umbrales actuales. Continuar recopilando datos.";
+  panel.appendChild(aviso);
+}
+
 function iniciarControlesMemoriaF16(){
   document.getElementById("exportarMemoria")?.addEventListener("click",()=>{
-    const data=JSON.stringify({tipo:"InversionIA memoria de recomendaciones Fase16",exportadoEn:new Date().toISOString(),
+    const data=JSON.stringify({tipo:"InversionIA memoria de recomendaciones Fase17",exportadoEn:new Date().toISOString(),
       aviso:"Datos locales. Evaluaciones aproximadas y no señales de trading verificadas.",registros:leerMemoriaF16()},null,2);
     const url=URL.createObjectURL(new Blob([data],{type:"application/json"}));
-    const a=document.createElement("a");a.href=url;a.download="InversionIA_memoria_fase16.json";
+    const a=document.createElement("a");a.href=url;a.download="InversionIA_memoria_fase17.json";
     document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
   });
   document.getElementById("borrarMemoria")?.addEventListener("click",()=>{
