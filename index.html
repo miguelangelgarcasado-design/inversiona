@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InversiónIA · Fase 15</title>
+  <title>InversiónIA · Fase 16</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a5cff">
 
@@ -121,6 +121,18 @@
     <div id="alertasDinamicas">
       <span class="muted">Cargando alertas...</span>
     </div>
+  </div>
+
+  <div class="card" id="memoriaDecisionesCard" style="border:1px solid #587b9d;">
+    <h2>🧠 Memoria de decisiones · Fase 16</h2>
+    <p class="muted" style="font-size:13px;line-height:1.55;">Guarda automáticamente, una vez por acción y vela diaria confirmada, las recomendaciones que generan las reglas de la app. Conserva precio de mercado, RSI, MACD, tendencia, volumen y motivos. Las evalúa al volver a abrir la app después de unos 7, 21 y 42 días naturales; NO son resultados exactos a 5, 15 o 30 sesiones. No aprende ni modifica las reglas todavía.</p>
+    <div id="memoriaDecisionesEstado" style="font-size:14px;line-height:1.5;">Cargando memoria...</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+      <button type="button" id="exportarMemoria" style="padding:9px 12px;border:1px solid #6c9fbe;border-radius:9px;background:#1b426b;color:white;cursor:pointer;">⬇ Exportar historial JSON</button>
+      <button type="button" id="borrarMemoria" style="padding:9px 12px;border:1px solid #bb7474;border-radius:9px;background:#462b37;color:white;cursor:pointer;">Borrar historial</button>
+    </div>
+    <details style="margin-top:12px;"><summary style="cursor:pointer;">Ver las últimas decisiones registradas</summary><div id="memoriaDecisionesDetalle" style="margin-top:8px;"></div></details>
+    <p class="muted" style="font-size:12px;">Solo en este navegador: no se sincroniza con otros dispositivos. Exporta el JSON como copia de seguridad. La actualización de la web normalmente conserva los datos locales, pero borrar datos del navegador puede eliminarlos. No incluye ni sustituye operaciones reales de tu bróker.</p>
   </div>
 
   <div id="panelPrincipal" class="card" style="border:1px solid #0a5cff;">
@@ -868,6 +880,107 @@ function calcularCosteEnEUR(activo, unidades, eurUsd, costes) {
   return { total, provisional: true };
 }
 
+// Fase 16: bitácora de recomendaciones de la propia app, con evaluación retrospectiva.
+// No es machine learning, no modifica reglas ni recupera precios históricos ausentes.
+const CLAVE_MEMORIA_F16="inversionia_2026_memoria_f16_v1";
+const HORIZONTES_F16=[7,21,42]; // días naturales, ventanas orientativas, NO sesiones exactas
+function leerMemoriaF16(){
+  try { const a=JSON.parse(localStorage.getItem(CLAVE_MEMORIA_F16)||"[]"); return Array.isArray(a)?a:[]; }
+  catch(_){return [];}
+}
+function guardarMemoriaF16(a){
+  try {localStorage.setItem(CLAVE_MEMORIA_F16,JSON.stringify(a.slice(-600)));return true;}
+  catch(e){console.warn("No se pudo guardar memoria",e);return false;}
+}
+function valorValidoF16(v){return v!=null && v!=="" && Number.isFinite(Number(v))?Number(v):null;}
+function claseDecisionF16(estado,recomendacion){
+  const t=(estado+" "+recomendacion).toUpperCase();
+  if(/VENTA|VENDER|RECOGER BENEFICIOS|OBJETIVO ALCANZADO/.test(t))return "VENTA";
+  if(/OPORTUNIDAD DE COMPRA|ZONA DE COMPRA|VALORAR COMPRA/.test(t) && !/NO CONFIRMADA|ESPERAR|NO AMPLIAR/.test(t))return "COMPRA";
+  return "MANTENER/VIGILAR";
+}
+function actualizarMemoriaF16(memoria,ticker,precioMercado,moneda,ahora){
+  const precio=valorValidoF16(precioMercado);
+  if(precio===null || precio<=0)return false;
+  let cambiado=false;
+  for(const item of memoria){
+    if(item.ticker!==ticker || item.moneda!==moneda || item.evaluaciones==null)continue;
+    for(const dias of HORIZONTES_F16){
+      if(item.evaluaciones[dias])continue;
+      // Primera consulta posterior al umbral: no equivale al precio del día exacto.
+      if(ahora-Date.parse(item.registradoEn)>=dias*86400000){
+        const cambioPct=(precio/item.precioMercado-1)*100;
+        const favorable=item.decision==="COMPRA"?cambioPct>0:item.decision==="VENTA"?cambioPct<0:null;
+        item.evaluaciones[dias]={observadoEn:new Date(ahora).toISOString(),precioMercado:precio,
+          cambioPct:Number(cambioPct.toFixed(3)),favorable,
+          aviso:"Primera cotización observada tras el umbral; no es el precio exacto de la sesión objetivo."};
+        cambiado=true;
+      }
+    }
+  }
+  return cambiado;
+}
+function anotarMemoriaF16(memoria,activo,analisis,precio,estado,recomendacion,ahora){
+  const fecha=valorValidoF16(analisis?.ultimaFechaVela);
+  if(!ultimaVelaUtil(analisis)||fecha===null)return false;
+  const precioValido=valorValidoF16(precio);
+  if(precioValido===null || precioValido<=0)return false;
+  const vela=new Date(fecha*1000).toISOString().slice(0,10);
+  // Una entrada por activo y vela. Si cambian las reglas durante el día, no reescribir el pasado.
+  if(memoria.some(a=>a.ticker===activo.ticker && a.vela===vela))return false;
+  const vol=valorValidoF16(analisis?.volumenActual),prom=valorValidoF16(analisis?.volumenMedio20);
+  const moneda=activo.cotizaUSD||activo.moneda==="$"?"USD":"EUR";
+  memoria.push({version:1,ticker:activo.ticker,nombre:activo.nombre,vela,
+    registradoEn:new Date(ahora).toISOString(),decision:claseDecisionF16(estado,recomendacion),
+    estado,razon:recomendacion,precioMercado:precioValido,moneda,
+    rsi:valorValidoF16(analisis?.rsi14),macd:valorValidoF16(analisis?.macd),
+    macdSignal:valorValidoF16(analisis?.macdSignal),tendencia:String(analisis?.tendencia||"SIN DATOS"),
+    volumenRelativo:vol!==null&&prom>0?Number((vol/prom).toFixed(3)):null,
+    evaluaciones:{}});
+  if(memoria.length>600)memoria.splice(0,memoria.length-600);
+  return true;
+}
+function pintarMemoriaF16(memoria){
+  const estado=document.getElementById("memoriaDecisionesEstado");
+  const detalle=document.getElementById("memoriaDecisionesDetalle");
+  if(!estado||!detalle)return;
+  const evaluadas=memoria.flatMap(a=>Object.entries(a.evaluaciones||{}).map(([dias,r])=>({...r,dias,decision:a.decision})))
+    .filter(x=>x.favorable!==null);
+  const aciertos=evaluadas.filter(x=>x.favorable===true).length;
+  const sinEvaluar=memoria.filter(a=>!Object.keys(a.evaluaciones||{}).length).length;
+  estado.textContent="Decisiones guardadas: "+memoria.length+" · Pendientes de primera revisión: "+sinEvaluar+
+    " · Comparaciones direccionales disponibles (compra/venta): "+evaluadas.length+
+    (evaluadas.length?" · Favorables: "+aciertos+"/"+evaluadas.length:"")+
+    ". Estas comparaciones NO miden rentabilidad neta, acierto de mantenimiento ni rendimiento frente a un índice.";
+  detalle.replaceChildren();
+  for(const a of memoria.slice(-15).reverse()){
+    const d=document.createElement("div");
+    d.style.cssText="padding:9px;margin:7px 0;background:#172b4d;border-radius:8px;font-size:13px;line-height:1.55";
+    const e=Object.entries(a.evaluaciones||{}).map(([dias,x])=>
+      dias+" d naturales: "+(x.cambioPct>=0?"+":"")+x.cambioPct.toFixed(2)+" % (observado "+x.observadoEn.slice(0,10)+")").join(" · ");
+    d.textContent=a.nombre+" ("+a.ticker+") · "+a.decision+" · vela "+a.vela+
+      " · Precio observado "+a.precioMercado+" "+a.moneda+
+      " · RSI "+(a.rsi??"N/D")+" · Tendencia "+a.tendencia+
+      " · Motivo: "+a.razon+(e?" · Seguimiento aproximado: "+e:" · Pendiente de evaluación");
+    detalle.appendChild(d);
+  }
+}
+function iniciarControlesMemoriaF16(){
+  document.getElementById("exportarMemoria")?.addEventListener("click",()=>{
+    const data=JSON.stringify({tipo:"InversionIA memoria de recomendaciones Fase16",exportadoEn:new Date().toISOString(),
+      aviso:"Datos locales. Evaluaciones aproximadas y no señales de trading verificadas.",registros:leerMemoriaF16()},null,2);
+    const url=URL.createObjectURL(new Blob([data],{type:"application/json"}));
+    const a=document.createElement("a");a.href=url;a.download="InversionIA_memoria_fase16.json";
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+  });
+  document.getElementById("borrarMemoria")?.addEventListener("click",()=>{
+    if(confirm("¿Borrar definitivamente la memoria de recomendaciones guardada en este navegador? Exporta una copia antes si deseas conservarla.")){
+      localStorage.removeItem(CLAVE_MEMORIA_F16);pintarMemoriaF16([]);
+    }
+  });
+  pintarMemoriaF16(leerMemoriaF16());
+}
+
 async function cargarDatos() {
   const lista = document.getElementById("listaActivos");
   const alertasDinamicas = document.getElementById("alertasDinamicas");
@@ -912,6 +1025,9 @@ async function cargarDatos() {
   const alertas = [];
   const seguimientoRecuperacion = [];
   const seguimientoTemprano = [];
+  const memoriaF16=leerMemoriaF16();
+  const ahoraMemoriaF16=Date.now();
+  let cambiosMemoriaF16=false;
 
   for (const activo of activos) {
     const div = document.createElement("div");
@@ -964,6 +1080,7 @@ const necesitaCambio = activo.cotizaUSD || activo.moneda === "$";
 if (necesitaCambio && (!Number.isFinite(eurUsd) || eurUsd <= 0)) {
   throw new Error("EUR/USD no disponible; se evita usar una conversión falsa");
 }
+if (actualizarMemoriaF16(memoriaF16,activo.ticker,precioNumero,necesitaCambio?"USD":"EUR",ahoraMemoriaF16)) cambiosMemoriaF16=true;
 const precioEUR = necesitaCambio ? precioNumero / eurUsd : precioNumero;
 const coste = calcularCosteEnEUR(activo, unidades, eurUsd, costesGuardados);
 const invertido = coste.total;
@@ -1183,6 +1300,7 @@ const detalleInterpretacion = interpretacionTecnica
   ? "\n🧠 " + interpretacionTecnica
   : "";
 
+   if (anotarMemoriaF16(memoriaF16,activo,analisis,precioNumero,estado,recomendacion,ahoraMemoriaF16)) cambiosMemoriaF16=true;
    alertas.push(
   colorAlerta + " " + activo.nombre +
   " — " + estado + " (" + porcentajeTexto + ")" +
@@ -2000,6 +2118,10 @@ const radarHTML='<section style="margin:14px 0;padding:14px;border:1px solid #4a
   (descartadosTempranos.length?'<details style="margin-top:12px;"><summary style="cursor:pointer;color:#bdcfe1;">Ver lecturas descartadas ('+descartadosTempranos.length+')</summary>'+descartadosTempranos.map(renderRadar).join('')+'</details>':'')+
   '</section>';
 alertasDinamicas.insertAdjacentHTML("afterbegin", radarHTML);
+if(cambiosMemoriaF16 && !guardarMemoriaF16(memoriaF16)){
+  const el=document.getElementById("memoriaDecisionesEstado");
+  if(el)el.textContent="⚠️ No se pudo guardar la memoria: revisa el almacenamiento del navegador.";
+} else pintarMemoriaF16(memoriaF16);
 
 }
 
@@ -2046,7 +2168,7 @@ async function cargarNoticias() {
 }
 
 cargarNoticias();
-window.addEventListener("DOMContentLoaded", cargarDatos);
+window.addEventListener("DOMContentLoaded", ()=>{iniciarControlesMemoriaF16();cargarDatos();});
 </script>
 
 <div class="wrap">
