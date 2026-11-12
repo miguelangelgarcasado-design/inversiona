@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InversiónIA · Fase 24</title>
+  <title>InversiónIA · Fase 25</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a5cff">
 
@@ -135,15 +135,23 @@
     <div id="laboratorioF18" style="margin-top:12px;padding:13px;background:#102b3b;border:1px solid #477589;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando laboratorio de simulación...</div>
 
     <section id="laboratorioHistoricoF19" style="margin-top:14px;padding:13px;border:1px solid #527c93;border-radius:11px;background:#112c3c;line-height:1.55;">
-      <strong>📈 Simulación histórica · Fase 24: operaciones, riesgo e informe de aprendizaje</strong>
+      <strong>📈 Simulación histórica · Fase 25: periodos, señales y aprendizaje</strong>
       <p style="font-size:12px;color:#c4d8e6">Selecciona un CSV de velas diarias de UNA acción (Date, Open, High, Low, Close, Volume), ordenadas o no. Se calcula cada señal al cierre y se simula la entrada en la apertura siguiente. Salida tras 10 sesiones, en la apertura siguiente. Incluye costes configurables. No ejecuta órdenes ni utiliza velas futuras para generar señales.</p>
       <label for="archivoVelasF19" style="display:block;margin-bottom:5px">CSV histórico</label>
       <input type="file" id="archivoVelasF19" accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
       <div style="margin-top:14px;padding:11px;border:1px solid #52849c;border-radius:9px;background:#123148">
-        <strong>🧪 Validación con otras acciones · Fase 24</strong>
+        <strong>🧪 Validación con otras acciones · Fase 25</strong>
         <p style="font-size:12px;color:#cbdbea">Selecciona hasta 8 archivos CSV diarios de acciones distintas de IREN (puedes seleccionar varios a la vez). Este laboratorio no guarda ni altera la cartera.</p>
         <label for="archivosValidacionF22" style="display:block;margin:5px 0">CSV de validación independientes</label>
         <input type="file" id="archivosValidacionF22" multiple accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
+        <label for="ventanaEstudioF25" style="display:block;margin-top:12px;font-size:13px">🗓️ Periodo de estudio histórico</label>
+        <select id="ventanaEstudioF25" style="margin-top:5px;padding:9px;width:100%;max-width:100%;background:#183c54;color:white;border:1px solid #6b9cba;border-radius:7px;font-size:13px">
+          <option value="30">Último 30 % de velas (referencia Fase 24)</option>
+          <option value="50">Último 50 % de velas (exploratorio)</option>
+          <option value="70">Último 70 % de velas (exploratorio)</option>
+          <option value="100">Todo el historial útil (exploratorio)</option>
+        </select>
+        <p style="font-size:11px;color:#f0d7ad;margin:6px 0 2px">El periodo se calcula sobre las velas que contenga el CSV. Para analizar varios años hay que cargar un CSV de varios años. Ampliar la ventana reutiliza datos históricos; NO equivale a una validación independiente.</p>
         <div id="resultadoF22" style="font-size:12px;margin-top:9px">Sin archivos de validación.</div>
       </div>
       <label for="costeF19" style="display:block;margin-top:12px">Coste total estimado por operación (ida y vuelta): <strong id="costeF19Texto">0,30 %</strong></label>
@@ -1262,6 +1270,52 @@ function compararFiltrosF21(enEntreno, enTest, coste, fmt){
 // Cada fichero se calcula por separado, sin usar velas futuras para cada señal.
 const F22={archivos:[],cargando:false};
 function resumenEscenarioF22(ops,coste,filtro){return resumenF20(ops.filter(filtro),coste);}
+// Fase 25: periodo seleccionable y explicación escalonada de los requisitos
+// de la estrategia moderada. No altera senalF19 ni las operaciones reales.
+function inicioEstudioF25(v){
+  const opcion=document.getElementById("ventanaEstudioF25")?.value||"30";
+  const porcentaje=["30","50","70","100"].includes(opcion)?Number(opcion):30;
+  return porcentaje===100?55:Math.max(55,Math.floor(v.length*(1-porcentaje/100)));
+}
+function diagnosticoSenalesF25(v,ind,inicio,operaciones){
+  const finales=v.length-11;
+  const d={candidatas:0,tendencia:0,rangoRSI:0,rsiSube:0,macd:0,volumen:0};
+  for(let i=Math.max(55,inicio);i<finales;i++){
+    // Solo señales con indicadores válidos y apertura de salida i+11 disponible.
+    if(![ind.rsi[i],ind.rsi[i-1],ind.sig[i],ind.m[i],ind.ratio[i],ind.sma50[i]].every(Number.isFinite))continue;
+    d.candidatas++;
+    if(!(v[i].close>ind.sma50[i]))continue; d.tendencia++;
+    if(!(ind.rsi[i]>=35&&ind.rsi[i]<=70))continue; d.rangoRSI++;
+    if(!(ind.rsi[i]>ind.rsi[i-1]))continue; d.rsiSube++;
+    if(!(ind.m[i]>ind.sig[i]))continue; d.macd++;
+    if(!(ind.ratio[i]>=0.8))continue; d.volumen++;
+  }
+  const bloque=document.createElement("details");bloque.style.cssText="font-size:12px;margin:10px 0;border:1px solid #466b80;border-radius:8px;padding:8px";
+  const titulo=document.createElement("summary");titulo.style.cssText="cursor:pointer;color:#d7e7f3;font-weight:bold";
+  titulo.textContent="🔎 Por qué se generan "+operaciones.length+" operaciones · ver diagnóstico";
+  bloque.append(titulo);
+  const intro=document.createElement("p");intro.textContent="Sesiones examinadas con salida a 10 sesiones disponible: "+d.candidatas+". Filtros de la regla moderada, aplicados en este orden (cada paso incluye los anteriores):";bloque.append(intro);
+  const lista=document.createElement("div");lista.style.cssText="display:grid;gap:5px;color:#d0dfeb";
+  for(const [texto,valor] of [
+    ["Cierre por encima de la media de 50 sesiones",d.tendencia],
+    ["Además RSI entre 35 y 70",d.rangoRSI],
+    ["Además RSI subiendo frente al día anterior",d.rsiSube],
+    ["Además MACD por encima de su señal",d.macd],
+    ["Además volumen relativo ≥0,8×",d.volumen]]){
+    const linea=document.createElement("div");linea.textContent=texto+": "+valor+" sesiones";lista.append(linea);
+  }
+  bloque.append(lista);
+  const final=document.createElement("p");final.style.color="#f3d5a3";
+  final.textContent="Señales potenciales que cumplen todos los filtros: "+d.volumen+". Operaciones sin solapamiento y con salida simulable: "+operaciones.length+". Las señales durante una operación abierta se omiten; los recuentos son sesiones, no rentabilidades.";
+  bloque.append(final);
+  if(!operaciones.length){
+    const aviso=document.createElement("p");aviso.style.color="#f3d5a3";
+    aviso.textContent=d.candidatas===0?"No hay sesiones con indicadores y horizonte de salida completos. Carga más velas o amplía el periodo.":
+      "Cero operaciones NO es un 0 % de rentabilidad conseguido: no hubo entradas bajo estas reglas en la ventana seleccionada.";
+    bloque.append(aviso);
+  }
+  return bloque;
+}
 function renderMultiactivoF22(){
   const panel=document.getElementById("resultadoF22");if(!panel)return;
   const coste=Number(document.getElementById("costeF19")?.value||0.3);
@@ -1281,14 +1335,16 @@ function renderMultiactivoF22(){
     return linea;
   };
   for(const ar of F22.archivos){
-    const v=ar.velas,ind=indicadoresF19(v),division=Math.floor(v.length*.7);
+    const v=ar.velas,ind=indicadoresF19(v),division=inicioEstudioF25(v);
     // Un único conjunto de referencia. Los filtros solamente lo reducen.
     const operaciones=operacionesF20(v,ind,"moderada",coste,division,v.length);
     const caja=document.createElement("section");caja.style.cssText="background:#1a384e;padding:10px;border:1px solid #42667f;border-radius:9px;margin-top:8px";
     const title=document.createElement("strong");title.textContent=ar.nombre+" · "+v.length+" velas ("+v[0].fecha+"–"+v[v.length-1].fecha+")";
     caja.append(title);
     const adv=document.createElement("div");adv.style.cssText="font-size:11px;color:#bbd0df;margin-top:4px";
-    adv.textContent="Prueba: "+v[division].fecha+"–"+v[v.length-1].fecha+" · "+operaciones.length+" operaciones de referencia. Todas las variantes usan estas mismas operaciones.";caja.append(adv);
+    const porcentaje=document.getElementById("ventanaEstudioF25")?.value||"30";
+    adv.textContent="Ventana "+(porcentaje==="100"?"todo el historial útil":porcentaje+" % final")+": "+v[division].fecha+"–"+v[v.length-1].fecha+" · "+operaciones.length+" operaciones de referencia. Todas las variantes usan estas mismas operaciones.";caja.append(adv);
+    caja.append(diagnosticoSenalesF25(v,ind,division,operaciones));
     escenarios.forEach((esc,i)=>{
       const kept=[],discarded=[];
       for(const op of operaciones)(esc.f(op)?kept:discarded).push(op);
@@ -1329,16 +1385,22 @@ function renderMultiactivoF22(){
   const informe=document.createElement("section");
   informe.style.cssText="padding:12px;margin-top:12px;background:#102b40;border:1px solid #83a6bf;border-radius:10px;line-height:1.55";
   const encabezado=document.createElement("strong");
-  encabezado.textContent="🧠 Informe de aprendizaje · Fase 24";
+  encabezado.textContent="🧠 Informe de aprendizaje · Fase 25";
   informe.append(encabezado);
   const metod=document.createElement("p");
   metod.style.cssText="font-size:12px;color:#c7dbe8";
   metod.textContent="Comparación exploratoria con filtros fijos sobre las operaciones moderadas originales. Se cuentan pérdidas evitadas y beneficios perdidos; no se suman rentabilidades de empresas distintas ni se reabren nuevas posiciones al descartar una señal.";
   informe.append(metod);
   const base=totales[0];
+  const notaVentana=document.createElement("p");notaVentana.style.cssText="font-size:12px;color:#f1d49a";
+  const porcentajeEstudio=document.getElementById("ventanaEstudioF25")?.value||"30";
+  notaVentana.textContent=porcentajeEstudio==="30"
+    ?"Ventana: 30 % final de cada archivo. Es la referencia histórica de la Fase 24; los filtros ya han sido examinados con algunas de estas acciones, por lo que NO es una prueba independiente de ellos."
+    :"VENTANA EXPLORATORIA AMPLIADA ("+(porcentajeEstudio==="100"?"todo el historial útil":porcentajeEstudio+" % final")+"): incluye observaciones adicionales anteriores, posiblemente utilizadas para idear o revisar estas reglas. NO interpretes su resultado como validación fuera de muestra.";
+  informe.append(notaVentana);
   const resumenConjunto=document.createElement("p");
   resumenConjunto.style.cssText="font-size:12px;font-weight:600";
-  resumenConjunto.textContent="Archivos cargados: "+F22.archivos.length+" · Operaciones originales en las ventanas de prueba: "+base.base+" · Ganadoras originales: "+base.ganadoras+" · Perdedoras originales: "+(base.base-base.ganadoras)+".";
+  resumenConjunto.textContent="Archivos cargados: "+F22.archivos.length+" · Operaciones originales en las ventanas de estudio: "+base.base+" · Ganadoras originales: "+base.ganadoras+" · Perdedoras originales: "+(base.base-base.ganadoras)+".";
   informe.append(resumenConjunto);
   for(let i=1;i<escenarios.length;i++){
     const a=totales[i];
@@ -1379,6 +1441,7 @@ function renderMultiactivoF22(){
 }
 function iniciarF22(){
   const input=document.getElementById("archivosValidacionF22");
+  document.getElementById("ventanaEstudioF25")?.addEventListener("change",()=>{if(F22.archivos.length)renderMultiactivoF22();});
   input?.addEventListener("change",async()=>{
     const files=Array.from(input.files||[]).slice(0,8);
     const panel=document.getElementById("resultadoF22");
