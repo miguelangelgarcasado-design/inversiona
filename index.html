@@ -135,13 +135,13 @@
     <div id="laboratorioF18" style="margin-top:12px;padding:13px;background:#102b3b;border:1px solid #477589;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando laboratorio de simulación...</div>
 
     <section id="laboratorioHistoricoF19" style="margin-top:14px;padding:13px;border:1px solid #527c93;border-radius:11px;background:#112c3c;line-height:1.55;">
-      <strong>📈 Simulación histórica · Fase 20: operaciones y riesgo</strong>
+      <strong>📈 Simulación histórica · Fase 21: operaciones, riesgo y filtros</strong>
       <p style="font-size:12px;color:#c4d8e6">Selecciona un CSV de velas diarias de UNA acción (Date, Open, High, Low, Close, Volume), ordenadas o no. Se calcula cada señal al cierre y se simula la entrada en la apertura siguiente. Salida tras 10 sesiones, en la apertura siguiente. Incluye costes configurables. No ejecuta órdenes ni utiliza velas futuras para generar señales.</p>
       <label for="archivoVelasF19" style="display:block;margin-bottom:5px">CSV histórico</label>
       <input type="file" id="archivoVelasF19" accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
       <label for="costeF19" style="display:block;margin-top:12px">Coste total estimado por operación (ida y vuelta): <strong id="costeF19Texto">0,30 %</strong></label>
       <input type="range" id="costeF19" min="0" max="2" step="0.05" value="0.3" style="width:100%" />
-      <div id="resultadoF19" style="margin-top:12px;font-size:13px" aria-live="polite">Sin CSV: carga las velas para examinar operaciones individuales y riesgo.</div>
+      <div id="resultadoF19" style="margin-top:12px;font-size:13px" aria-live="polite">Sin CSV: carga las velas para examinar operaciones individuales, riesgo y filtros.</div>
       <p style="font-size:11px;color:#b7cad8">Experimento educativo: operaciones largas únicamente, sin apalancamiento ni dividendos; la estrategia no replica fielmente órdenes del bróker. La selección de parámetros con estos mismos datos puede sobreajustar los resultados. No modifica tus recomendaciones ni tus posiciones.</p>
     </section>
     <details style="margin-top:12px;"><summary style="cursor:pointer;">Ver las últimas decisiones registradas</summary><div id="memoriaDecisionesDetalle" style="margin-top:8px;"></div></details>
@@ -1198,6 +1198,56 @@ function resumenF20(operaciones,coste){
   return {n:operaciones.length,ganan:operaciones.filter(x=>x.neto>0).length,
     compuesto:(capital-1)*100,dd};
 }
+
+// Fase 21: comparador de filtros sobre señales de la alternativa moderada.
+// Los umbrales se plantearon tras observar IREN: la prueba final de este
+// mismo fichero es EXPLORATORIA y NO constituye validación independiente.
+function compararFiltrosF21(todas, divisionFecha, coste, fmt){
+  const panel=document.createElement("section");
+  panel.style.cssText="margin-top:13px;padding:12px;background:#122d40;border:1px solid #50849b;border-radius:10px";
+  const t=document.createElement("strong");t.textContent="🔬 Comparador de filtros · Fase 21";
+  const introduccion=document.createElement("p");
+  introduccion.style.cssText="font-size:12px;line-height:1.6;color:#c9dce9";
+  introduccion.textContent="Hipótesis en simulación: filtrar las señales moderadas según el cambio del RSI y el volumen. La comparación usa las MISMAS operaciones originales, sin abrir posiciones de sustitución. Si se descarta una operación, no simula entradas nuevas durante el intervalo liberado.";
+  panel.append(t,introduccion);
+  const criterios=[
+    {nombre:"Referencia: moderada sin filtro adicional",f:()=>true},
+    {nombre:"RSI: aumento ≥2 puntos",f:o=>o.variacionRSI>=2},
+    {nombre:"Volumen: ≥1,00× la media",f:o=>o.vol>=1},
+    {nombre:"RSI ≥2 puntos + volumen ≥1,00×",f:o=>o.variacionRSI>=2 && o.vol>=1}
+  ];
+  const resumen=(ops)=>{
+    const base=resumenF20(ops,coste);
+    return "Operaciones "+base.n+" · Aciertos "+base.ganan+
+      " · Neto compuesto "+fmt(base.compuesto)+" % · Caída observada "+fmt(base.dd)+" %";
+  };
+  const enTest=todas.filter(o=>o.fecha>=divisionFecha);
+  const enEntreno=todas.filter(o=>o.fecha<divisionFecha);
+  for(const c of criterios){
+    const e=document.createElement("div");
+    e.style.cssText="padding:10px;margin-top:8px;border-radius:8px;background:#1a3a50;border:1px solid #41687f";
+    const encabezado=document.createElement("strong");encabezado.textContent=c.nombre;
+    const train=enEntreno.filter(c.f),test=enTest.filter(c.f);
+    const resumenTrain=document.createElement("div");
+    resumenTrain.style.cssText="font-size:12px;color:#c9d7e8;margin-top:7px";
+    resumenTrain.textContent="Entrenamiento: "+resumen(train);
+    const resumenTest=document.createElement("div");
+    resumenTest.style.cssText="font-size:12px;color:#e5edf5;margin-top:5px";
+    resumenTest.textContent="Prueba final (exploratoria): "+resumen(test);
+    const descartes=enTest.filter(o=>!c.f);
+    const nota=document.createElement("div");nota.style.cssText="font-size:12px;color:#f0d6a9;margin-top:6px";
+    nota.textContent=descartes.length
+      ? "En prueba final descartaría: "+descartes.map(o=>o.fecha+" ("+(o.neto>=0?"+":"")+fmt(o.neto)+" %)").join("; ")+"."
+      : "No descarta operaciones del periodo de prueba final.";
+    e.append(encabezado,resumenTrain,resumenTest,nota);panel.append(e);
+  }
+  const limites=document.createElement("p");
+  limites.style.cssText="font-size:12px;color:#f3d7a5;margin:10px 0 0;line-height:1.5";
+  limites.textContent="ADVERTENCIA: Estos umbrales se eligieron DESPUÉS de ver operaciones de IREN, también las de prueba final. Por tanto, los resultados del 30 % final NO son una validación fuera de muestra de estos nuevos filtros. Se requiere otro periodo y otras acciones no usadas al diseñarlos. Cero operaciones equivale a ausencia de exposición, no a una estrategia ganadora. No se cambian señales reales ni la cartera.";
+  panel.append(limites);
+  return panel;
+}
+
 function resultadoHistoricoF19(){
   const el=document.getElementById("resultadoF19");if(!el||!F19.velas)return;
   const v=F19.velas,ind=indicadoresF19(v),coste=Number(document.getElementById("costeF19").value);
@@ -1236,9 +1286,13 @@ function resultadoHistoricoF19(){
     }
     b.appendChild(details);tabla.appendChild(b);
   }
+  const comparadorF21=compararFiltrosF21(
+    operacionesF20(v,ind,"moderada",coste,55,v.length),
+    v[divisoria].fecha,coste,fmt
+  );
   const aviso=document.createElement("p");aviso.style.cssText="font-size:12px;color:#c8d7e3";
   aviso.textContent="Fase 20: simulación solo de compras (posiciones largas), sin posiciones simultáneas. Señal al cierre; entrada y salida a aperturas posteriores. Caída máxima aproximada calculada con mínimos diarios mientras la operación está abierta (no con datos intradía completos): no refleja gaps ejecutables, deslizamientos, impuestos, dividendos, cambio de divisa ni otras posiciones. Los resultados no demuestran que una regla sea superior ni modifican tu cartera.";
-  el.replaceChildren(h,tabla,aviso);
+  el.replaceChildren(h,tabla,comparadorF21,aviso);
 }
 function iniciarF19(){
   const input=document.getElementById("archivoVelasF19"), slider=document.getElementById("costeF19");
