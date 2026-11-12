@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InversiónIA · Fase 23</title>
+  <title>InversiónIA · Fase 24</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a5cff">
 
@@ -135,12 +135,12 @@
     <div id="laboratorioF18" style="margin-top:12px;padding:13px;background:#102b3b;border:1px solid #477589;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando laboratorio de simulación...</div>
 
     <section id="laboratorioHistoricoF19" style="margin-top:14px;padding:13px;border:1px solid #527c93;border-radius:11px;background:#112c3c;line-height:1.55;">
-      <strong>📈 Simulación histórica · Fase 23: operaciones, riesgo y auditoría</strong>
+      <strong>📈 Simulación histórica · Fase 24: operaciones, riesgo e informe de aprendizaje</strong>
       <p style="font-size:12px;color:#c4d8e6">Selecciona un CSV de velas diarias de UNA acción (Date, Open, High, Low, Close, Volume), ordenadas o no. Se calcula cada señal al cierre y se simula la entrada en la apertura siguiente. Salida tras 10 sesiones, en la apertura siguiente. Incluye costes configurables. No ejecuta órdenes ni utiliza velas futuras para generar señales.</p>
       <label for="archivoVelasF19" style="display:block;margin-bottom:5px">CSV histórico</label>
       <input type="file" id="archivoVelasF19" accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
       <div style="margin-top:14px;padding:11px;border:1px solid #52849c;border-radius:9px;background:#123148">
-        <strong>🧪 Validación con otras acciones · Fase 23</strong>
+        <strong>🧪 Validación con otras acciones · Fase 24</strong>
         <p style="font-size:12px;color:#cbdbea">Selecciona hasta 8 archivos CSV diarios de acciones distintas de IREN (puedes seleccionar varios a la vez). Este laboratorio no guarda ni altera la cartera.</p>
         <label for="archivosValidacionF22" style="display:block;margin:5px 0">CSV de validación independientes</label>
         <input type="file" id="archivosValidacionF22" multiple accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
@@ -1324,6 +1324,55 @@ function renderMultiactivoF22(){
     row.textContent=esc.nombre+": base "+a.base+" operaciones → mantenidas "+a.operaciones+"; "+a.ganadoras+" positivas entre las mantenidas; descartadas "+a.descartadasGanadoras+" ganadoras y "+a.descartadasPerdedoras+" perdedoras.";tot.append(row);
   });
   panel.append(tot);
+
+  // Fase 24: resumen de evidencia conjunto, sin sumar rentabilidades de activos.
+  const informe=document.createElement("section");
+  informe.style.cssText="padding:12px;margin-top:12px;background:#102b40;border:1px solid #83a6bf;border-radius:10px;line-height:1.55";
+  const encabezado=document.createElement("strong");
+  encabezado.textContent="🧠 Informe de aprendizaje · Fase 24";
+  informe.append(encabezado);
+  const metod=document.createElement("p");
+  metod.style.cssText="font-size:12px;color:#c7dbe8";
+  metod.textContent="Comparación exploratoria con filtros fijos sobre las operaciones moderadas originales. Se cuentan pérdidas evitadas y beneficios perdidos; no se suman rentabilidades de empresas distintas ni se reabren nuevas posiciones al descartar una señal.";
+  informe.append(metod);
+  const base=totales[0];
+  const resumenConjunto=document.createElement("p");
+  resumenConjunto.style.cssText="font-size:12px;font-weight:600";
+  resumenConjunto.textContent="Archivos cargados: "+F22.archivos.length+" · Operaciones originales en las ventanas de prueba: "+base.base+" · Ganadoras originales: "+base.ganadoras+" · Perdedoras originales: "+(base.base-base.ganadoras)+".";
+  informe.append(resumenConjunto);
+  for(let i=1;i<escenarios.length;i++){
+    const a=totales[i];
+    const ficha=document.createElement("div");ficha.style.cssText="margin-top:8px;padding:9px;border:1px solid #476c83;border-radius:8px;background:#1b3b50";
+    const cab=document.createElement("strong");cab.textContent=escenarios[i].nombre;
+    const datos=document.createElement("p");datos.style.cssText="font-size:12px;margin:5px 0";
+    datos.textContent="Pérdidas evitadas: "+a.descartadasPerdedoras+" · Ganancias descartadas: "+a.descartadasGanadoras+
+      " · Operaciones restantes: "+a.operaciones+" · Ganadoras restantes: "+a.ganadoras+".";
+    const dictamen=document.createElement("p");dictamen.style.cssText="font-size:12px;color:#f1d49a;margin:5px 0";
+    dictamen.textContent=a.descartadasPerdedoras===0&&a.descartadasGanadoras>0
+      ?"En esta muestra el filtro solo descarta operaciones ganadoras: no hay mejora observada por reducción de pérdidas."
+      :a.descartadasPerdedoras>0&&a.descartadasGanadoras===0
+        ?"En esta muestra evita pérdidas sin descartar ganancias; es una hipótesis que requiere validación en fechas y activos adicionales."
+        :a.descartadasPerdedoras>0&&a.descartadasGanadoras>0
+          ?"El filtro evita pérdidas pero también elimina ganancias. Hay que comparar el coste de oportunidad y el riesgo sin sobreajustar."
+          :"El filtro no descarta ninguna de las operaciones originales: no aporta información diferencial en esta muestra.";
+    ficha.append(cab,datos,dictamen);informe.append(ficha);
+  }
+  const validez=document.createElement("p");
+  validez.style.cssText="font-size:12px;color:#f2d6a6;font-weight:600;margin-top:11px";
+  const distintos=new Set(F22.archivos.map(a=>a.nombre.trim().toUpperCase())).size;
+  if(base.base<30||distintos<5){
+    validez.textContent="EVIDENCIA INSUFICIENTE: hay "+base.base+" operaciones originales y "+distintos+
+      " nombres de archivo distintos. Como referencia exploratoria se buscan ≥30 operaciones y ≥5 acciones, de distintas fechas; incluso cumpliéndolo hará falta una validación posterior realmente independiente. No se propone activar cambios automáticos.";
+  } else {
+    validez.textContent="MUESTRA EXPLORATORIA: alcanza 30 operaciones y 5 nombres de archivo, pero ello NO valida una ventaja. Los umbrales se diseñaron mirando IREN y siguen siendo necesarias pruebas prospectivas y sin reajustar las reglas. No se autoriza cambiar señales automáticamente.";
+  }
+  informe.append(validez);
+  const alcance=document.createElement("p");
+  alcance.style.cssText="font-size:11px;color:#bdd1df";
+  alcance.textContent="Los nombres de fichero no prueban que las empresas sean distintas; archivos repetidos o periodos coincidentes sesgan el recuento. El resultado de cada operación es hipotético, con horizonte fijo de 10 sesiones y costes simplificados. No se ha realizado aprendizaje automático ni se ha modificado la cartera.";
+  informe.append(alcance);
+  panel.append(informe);
+
   const nota=document.createElement("p");nota.style.cssText="font-size:12px;color:#f0d5aa;line-height:1.55";
   nota.textContent="Limitaciones: el nombre del archivo no verifica el ticker ni la procedencia. Usa empresas que NO intervinieron en el diseño de estos filtros; IREN no cuenta como validación independiente. Una sola operación o activo no demuestra ventaja estadística. La coincidencia temporal entre activos introduce dependencia. Los descartes no generan nuevas entradas y los costes son estimados. Las reglas, la memoria y tus posiciones no cambian.";
   panel.append(nota);
