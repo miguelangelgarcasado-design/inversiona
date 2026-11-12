@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InversiónIA · Fase 19</title>
+  <title>InversiónIA · Fase 23</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a5cff">
 
@@ -135,12 +135,12 @@
     <div id="laboratorioF18" style="margin-top:12px;padding:13px;background:#102b3b;border:1px solid #477589;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando laboratorio de simulación...</div>
 
     <section id="laboratorioHistoricoF19" style="margin-top:14px;padding:13px;border:1px solid #527c93;border-radius:11px;background:#112c3c;line-height:1.55;">
-      <strong>📈 Simulación histórica · Fase 22: operaciones, riesgo y validación</strong>
+      <strong>📈 Simulación histórica · Fase 23: operaciones, riesgo y auditoría</strong>
       <p style="font-size:12px;color:#c4d8e6">Selecciona un CSV de velas diarias de UNA acción (Date, Open, High, Low, Close, Volume), ordenadas o no. Se calcula cada señal al cierre y se simula la entrada en la apertura siguiente. Salida tras 10 sesiones, en la apertura siguiente. Incluye costes configurables. No ejecuta órdenes ni utiliza velas futuras para generar señales.</p>
       <label for="archivoVelasF19" style="display:block;margin-bottom:5px">CSV histórico</label>
       <input type="file" id="archivoVelasF19" accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
       <div style="margin-top:14px;padding:11px;border:1px solid #52849c;border-radius:9px;background:#123148">
-        <strong>🧪 Validación con otras acciones · Fase 22</strong>
+        <strong>🧪 Validación con otras acciones · Fase 23</strong>
         <p style="font-size:12px;color:#cbdbea">Selecciona hasta 8 archivos CSV diarios de acciones distintas de IREN (puedes seleccionar varios a la vez). Este laboratorio no guarda ni altera la cartera.</p>
         <label for="archivosValidacionF22" style="display:block;margin:5px 0">CSV de validación independientes</label>
         <input type="file" id="archivosValidacionF22" multiple accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
@@ -1212,7 +1212,7 @@ function resumenF20(operaciones,coste){
 function compararFiltrosF21(enEntreno, enTest, coste, fmt){
   const panel=document.createElement("section");
   panel.style.cssText="margin-top:13px;padding:12px;background:#122d40;border:1px solid #50849b;border-radius:10px";
-  const t=document.createElement("strong");t.textContent="🔬 Comparador de filtros · Fase 22";
+  const t=document.createElement("strong");t.textContent="🔬 Comparador de filtros · Fase 23";
   const introduccion=document.createElement("p");
   introduccion.style.cssText="font-size:12px;line-height:1.6;color:#c9dce9";
   introduccion.textContent="Hipótesis en simulación: filtrar las señales moderadas según el cambio del RSI y el volumen. La comparación usa las MISMAS operaciones originales, sin abrir posiciones de sustitución. Si se descarta una operación, no simula entradas nuevas durante el intervalo liberado.";
@@ -1267,32 +1267,53 @@ function renderMultiactivoF22(){
   const coste=Number(document.getElementById("costeF19")?.value||0.3);
   panel.replaceChildren();
   const p=document.createElement("p");p.style.cssText="font-size:12px;line-height:1.6;color:#c6dbe8";
-  p.textContent="Validación exploratoria con CSV de otros valores distintos de IREN. Umbrales fijos: RSI creciente ≥2 puntos y volumen ≥1× la media. Cada archivo se analiza de forma separada, con señales al cierre y entrada en apertura siguiente. No se incorporan datos al historial de decisiones ni se modifican recomendaciones.";
+  p.textContent="Auditoría exploratoria de descartes con CSV de otros valores distintos de IREN. Umbrales fijos: RSI creciente ≥2 puntos y volumen ≥1× la media. Cada archivo se analiza de forma separada, con señales al cierre y entrada en apertura siguiente. No se incorporan datos al historial de decisiones ni se modifican recomendaciones.";
   panel.append(p);
   if(!F22.archivos.length){const t=document.createElement("p");t.textContent="Sin archivos de validación. Selecciona uno o varios CSV de otras acciones para comparar las mismas reglas.";panel.append(t);return;}
   const fmt=n=>Number(n).toFixed(2).replace(".",",");
   const escenarios=[{nombre:"Moderada sin filtro",f:o=>true},{nombre:"Solo RSI ≥2",f:o=>o.variacionRSI>=2},
     {nombre:"Solo volumen ≥1×",f:o=>o.vol>=1},{nombre:"RSI ≥2 y volumen ≥1×",f:o=>o.variacionRSI>=2&&o.vol>=1}];
-  const totales=escenarios.map(()=>({archivos:0,operaciones:0,ganadoras:0,descartadasGanadoras:0,descartadasPerdedoras:0,retornos:[]}));
+  const totales=escenarios.map(()=>({archivos:0,base:0,operaciones:0,ganadoras:0,descartadasGanadoras:0,descartadasPerdedoras:0}));
+  const detalleOperacion=(o,razones)=>{
+    const f=n=>fmt(n);
+    const linea=document.createElement("div");linea.style.cssText="padding:8px 9px;background:#143044;border-left:3px solid "+(o.neto>0?"#75b99d":"#e89b95")+";border-radius:6px;margin:6px 0;font-size:12px;line-height:1.55";
+    linea.textContent="Señal "+o.fecha+" · Entrada "+o.entradaFecha+" a "+f(o.entrada)+" · Salida "+o.salidaFecha+" a "+f(o.salida)+" · Neto estimado "+(o.neto>=0?"+":"")+f(o.neto)+" % · RSI Δ "+f(o.variacionRSI)+" · Volumen "+f(o.vol)+"× · Motivo: "+razones.join(" y ");
+    return linea;
+  };
   for(const ar of F22.archivos){
     const v=ar.velas,ind=indicadoresF19(v),division=Math.floor(v.length*.7);
+    // Un único conjunto de referencia. Los filtros solamente lo reducen.
     const operaciones=operacionesF20(v,ind,"moderada",coste,division,v.length);
     const caja=document.createElement("section");caja.style.cssText="background:#1a384e;padding:10px;border:1px solid #42667f;border-radius:9px;margin-top:8px";
     const title=document.createElement("strong");title.textContent=ar.nombre+" · "+v.length+" velas ("+v[0].fecha+"–"+v[v.length-1].fecha+")";
     caja.append(title);
     const adv=document.createElement("div");adv.style.cssText="font-size:11px;color:#bbd0df;margin-top:4px";
-    adv.textContent="Prueba: "+v[division].fecha+"–"+v[v.length-1].fecha+" · "+operaciones.length+" operaciones moderadas de referencia.";caja.append(adv);
+    adv.textContent="Prueba: "+v[division].fecha+"–"+v[v.length-1].fecha+" · "+operaciones.length+" operaciones de referencia. Todas las variantes usan estas mismas operaciones.";caja.append(adv);
     escenarios.forEach((esc,i)=>{
-      const kept=operaciones.filter(esc.f),discarded=operaciones.filter(o=>!esc.f);
+      const kept=[],discarded=[];
+      for(const op of operaciones)(esc.f(op)?kept:discarded).push(op);
       const r=resumenF20(kept,coste),agg=totales[i];
-      agg.archivos++;agg.operaciones+=r.n;agg.ganadoras+=r.ganan;
-      agg.descartadasGanadoras+=discarded.filter(o=>o.neto>0).length;
-      agg.descartadasPerdedoras+=discarded.filter(o=>o.neto<=0).length;
-      // Guardamos resultados por fichero, sin componer rentabilidades entre activos distintos.
-      if(r.n)agg.retornos.push(r.compuesto);
-      const linea=document.createElement("p");linea.style.cssText="font-size:12px;margin:6px 0;line-height:1.5";
-      linea.textContent=esc.nombre+": "+r.n+" op. · "+r.ganan+" positivas · "+fmt(r.compuesto)+" % neto compuesto · descartadas "+discarded.length+" ("+discarded.filter(o=>o.neto>0).length+" ganadoras / "+discarded.filter(o=>o.neto<=0).length+" perdedoras)";
+      agg.archivos++;agg.base+=operaciones.length;agg.operaciones+=kept.length;agg.ganadoras+=r.ganan;
+      const ganadoras=discarded.filter(o=>o.neto>0),perdedoras=discarded.filter(o=>o.neto<=0);
+      agg.descartadasGanadoras+=ganadoras.length;
+      agg.descartadasPerdedoras+=perdedoras.length;
+      const linea=document.createElement("p");linea.style.cssText="font-size:12px;margin:8px 0;line-height:1.55";
+      linea.textContent=esc.nombre+": referencia "+operaciones.length+" → mantenidas "+kept.length+" · "+r.ganan+" positivas · "+fmt(r.compuesto)+" % neto compuesto · descartadas "+discarded.length+" ("+ganadoras.length+" ganadoras / "+perdedoras.length+" perdedoras).";
       caja.append(linea);
+      if(kept.length+discarded.length!==operaciones.length){const error=document.createElement("p");error.style.color="#ff9e9e";error.textContent="Aviso de integridad: el recuento no coincide con el conjunto de referencia.";caja.append(error);}
+      if(discarded.length){
+        const det=document.createElement("details");det.style.cssText="margin:3px 0 10px;font-size:12px";
+        const sum=document.createElement("summary");sum.style.cssText="cursor:pointer;color:#e8d5a8";sum.textContent="Ver "+discarded.length+" operaciones descartadas y sus motivos";det.append(sum);
+        const detalle=document.createElement("div");detalle.style.marginTop="6px";
+        const resumen=document.createElement("p");resumen.textContent="Se habrían excluido "+perdedoras.length+" pérdidas y "+ganadoras.length+" ganancias (resultados de estas operaciones en la simulación original). No se recalculan nuevas entradas.";detalle.append(resumen);
+        for(const op of discarded){
+          const razones=[];
+          if(i===1||i===3)if(!(op.variacionRSI>=2))razones.push("RSI Δ inferior a 2");
+          if(i===2||i===3)if(!(op.vol>=1))razones.push("volumen inferior a 1×");
+          detalle.append(detalleOperacion(op,razones.length?razones:["no supera el filtro"]));
+        }
+        det.append(detalle);caja.append(det);
+      }
     });
     panel.append(caja);
   }
@@ -1300,7 +1321,7 @@ function renderMultiactivoF22(){
   const tit=document.createElement("strong");tit.textContent="Resumen multiarchivo (sin rentabilidad agregada)";tot.append(tit);
   escenarios.forEach((esc,i)=>{
     const a=totales[i],row=document.createElement("p");row.style.cssText="font-size:12px;line-height:1.6";
-    row.textContent=esc.nombre+": "+a.operaciones+" operaciones evaluadas; "+a.ganadoras+" positivas; descartadas "+a.descartadasGanadoras+" ganadoras y "+a.descartadasPerdedoras+" perdedoras.";tot.append(row);
+    row.textContent=esc.nombre+": base "+a.base+" operaciones → mantenidas "+a.operaciones+"; "+a.ganadoras+" positivas entre las mantenidas; descartadas "+a.descartadasGanadoras+" ganadoras y "+a.descartadasPerdedoras+" perdedoras.";tot.append(row);
   });
   panel.append(tot);
   const nota=document.createElement("p");nota.style.cssText="font-size:12px;color:#f0d5aa;line-height:1.55";
