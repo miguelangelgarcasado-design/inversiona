@@ -135,10 +135,17 @@
     <div id="laboratorioF18" style="margin-top:12px;padding:13px;background:#102b3b;border:1px solid #477589;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando laboratorio de simulación...</div>
 
     <section id="laboratorioHistoricoF19" style="margin-top:14px;padding:13px;border:1px solid #527c93;border-radius:11px;background:#112c3c;line-height:1.55;">
-      <strong>📈 Simulación histórica · Fase 21: operaciones, riesgo y filtros</strong>
+      <strong>📈 Simulación histórica · Fase 22: operaciones, riesgo y validación</strong>
       <p style="font-size:12px;color:#c4d8e6">Selecciona un CSV de velas diarias de UNA acción (Date, Open, High, Low, Close, Volume), ordenadas o no. Se calcula cada señal al cierre y se simula la entrada en la apertura siguiente. Salida tras 10 sesiones, en la apertura siguiente. Incluye costes configurables. No ejecuta órdenes ni utiliza velas futuras para generar señales.</p>
       <label for="archivoVelasF19" style="display:block;margin-bottom:5px">CSV histórico</label>
       <input type="file" id="archivoVelasF19" accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
+      <div style="margin-top:14px;padding:11px;border:1px solid #52849c;border-radius:9px;background:#123148">
+        <strong>🧪 Validación con otras acciones · Fase 22</strong>
+        <p style="font-size:12px;color:#cbdbea">Selecciona hasta 8 archivos CSV diarios de acciones distintas de IREN (puedes seleccionar varios a la vez). Este laboratorio no guarda ni altera la cartera.</p>
+        <label for="archivosValidacionF22" style="display:block;margin:5px 0">CSV de validación independientes</label>
+        <input type="file" id="archivosValidacionF22" multiple accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
+        <div id="resultadoF22" style="font-size:12px;margin-top:9px">Sin archivos de validación.</div>
+      </div>
       <label for="costeF19" style="display:block;margin-top:12px">Coste total estimado por operación (ida y vuelta): <strong id="costeF19Texto">0,30 %</strong></label>
       <input type="range" id="costeF19" min="0" max="2" step="0.05" value="0.3" style="width:100%" />
       <div id="resultadoF19" style="margin-top:12px;font-size:13px" aria-live="polite">Sin CSV: carga las velas para examinar operaciones individuales, riesgo y filtros.</div>
@@ -1202,10 +1209,10 @@ function resumenF20(operaciones,coste){
 // Fase 21: comparador de filtros sobre señales de la alternativa moderada.
 // Los umbrales se plantearon tras observar IREN: la prueba final de este
 // mismo fichero es EXPLORATORIA y NO constituye validación independiente.
-function compararFiltrosF21(todas, divisionFecha, coste, fmt){
+function compararFiltrosF21(enEntreno, enTest, coste, fmt){
   const panel=document.createElement("section");
   panel.style.cssText="margin-top:13px;padding:12px;background:#122d40;border:1px solid #50849b;border-radius:10px";
-  const t=document.createElement("strong");t.textContent="🔬 Comparador de filtros · Fase 21";
+  const t=document.createElement("strong");t.textContent="🔬 Comparador de filtros · Fase 22";
   const introduccion=document.createElement("p");
   introduccion.style.cssText="font-size:12px;line-height:1.6;color:#c9dce9";
   introduccion.textContent="Hipótesis en simulación: filtrar las señales moderadas según el cambio del RSI y el volumen. La comparación usa las MISMAS operaciones originales, sin abrir posiciones de sustitución. Si se descarta una operación, no simula entradas nuevas durante el intervalo liberado.";
@@ -1221,8 +1228,6 @@ function compararFiltrosF21(todas, divisionFecha, coste, fmt){
     return "Operaciones "+base.n+" · Aciertos "+base.ganan+
       " · Neto compuesto "+fmt(base.compuesto)+" % · Caída observada "+fmt(base.dd)+" %";
   };
-  const enTest=todas.filter(o=>o.fecha>=divisionFecha);
-  const enEntreno=todas.filter(o=>o.fecha<divisionFecha);
   for(const c of criterios){
     const e=document.createElement("div");
     e.style.cssText="padding:10px;margin-top:8px;border-radius:8px;background:#1a3a50;border:1px solid #41687f";
@@ -1235,17 +1240,89 @@ function compararFiltrosF21(todas, divisionFecha, coste, fmt){
     resumenTest.style.cssText="font-size:12px;color:#e5edf5;margin-top:5px";
     resumenTest.textContent="Prueba final (exploratoria): "+resumen(test);
     const descartes=enTest.filter(o=>!c.f);
+    const descartesTrain=enEntreno.filter(o=>!c.f);
     const nota=document.createElement("div");nota.style.cssText="font-size:12px;color:#f0d6a9;margin-top:6px";
     nota.textContent=descartes.length
       ? "En prueba final descartaría: "+descartes.map(o=>o.fecha+" ("+(o.neto>=0?"+":"")+fmt(o.neto)+" %)").join("; ")+"."
       : "No descarta operaciones del periodo de prueba final.";
-    e.append(encabezado,resumenTrain,resumenTest,nota);panel.append(e);
+    const trainDesc=document.createElement("div");trainDesc.style.cssText="font-size:12px;color:#c4d4e7;margin-top:5px";
+    trainDesc.textContent="Descartadas en entrenamiento: "+descartesTrain.length+" (ganadoras "+descartesTrain.filter(o=>o.neto>0).length+", perdedoras "+descartesTrain.filter(o=>o.neto<=0).length+").";
+    const testDesc=document.createElement("div");testDesc.style.cssText="font-size:12px;color:#c4d4e7;margin-top:3px";
+    testDesc.textContent="Descartadas en prueba final: "+descartes.length+" (ganadoras "+descartes.filter(o=>o.neto>0).length+", perdedoras "+descartes.filter(o=>o.neto<=0).length+").";
+    e.append(encabezado,resumenTrain,resumenTest,trainDesc,testDesc,nota);panel.append(e);
   }
   const limites=document.createElement("p");
   limites.style.cssText="font-size:12px;color:#f3d7a5;margin:10px 0 0;line-height:1.5";
   limites.textContent="ADVERTENCIA: Estos umbrales se eligieron DESPUÉS de ver operaciones de IREN, también las de prueba final. Por tanto, los resultados del 30 % final NO son una validación fuera de muestra de estos nuevos filtros. Se requiere otro periodo y otras acciones no usadas al diseñarlos. Cero operaciones equivale a ausencia de exposición, no a una estrategia ganadora. No se cambian señales reales ni la cartera.";
   panel.append(limites);
   return panel;
+}
+
+// Fase 22: validación exploratoria multi-activo, con filtros FIJOS definidos tras IREN.
+// Cada fichero se calcula por separado, sin usar velas futuras para cada señal.
+const F22={archivos:[],cargando:false};
+function resumenEscenarioF22(ops,coste,filtro){return resumenF20(ops.filter(filtro),coste);}
+function renderMultiactivoF22(){
+  const panel=document.getElementById("resultadoF22");if(!panel)return;
+  const coste=Number(document.getElementById("costeF19")?.value||0.3);
+  panel.replaceChildren();
+  const p=document.createElement("p");p.style.cssText="font-size:12px;line-height:1.6;color:#c6dbe8";
+  p.textContent="Validación exploratoria con CSV de otros valores distintos de IREN. Umbrales fijos: RSI creciente ≥2 puntos y volumen ≥1× la media. Cada archivo se analiza de forma separada, con señales al cierre y entrada en apertura siguiente. No se incorporan datos al historial de decisiones ni se modifican recomendaciones.";
+  panel.append(p);
+  if(!F22.archivos.length){const t=document.createElement("p");t.textContent="Sin archivos de validación. Selecciona uno o varios CSV de otras acciones para comparar las mismas reglas.";panel.append(t);return;}
+  const fmt=n=>Number(n).toFixed(2).replace(".",",");
+  const escenarios=[{nombre:"Moderada sin filtro",f:o=>true},{nombre:"Solo RSI ≥2",f:o=>o.variacionRSI>=2},
+    {nombre:"Solo volumen ≥1×",f:o=>o.vol>=1},{nombre:"RSI ≥2 y volumen ≥1×",f:o=>o.variacionRSI>=2&&o.vol>=1}];
+  const totales=escenarios.map(()=>({archivos:0,operaciones:0,ganadoras:0,descartadasGanadoras:0,descartadasPerdedoras:0,retornos:[]}));
+  for(const ar of F22.archivos){
+    const v=ar.velas,ind=indicadoresF19(v),division=Math.floor(v.length*.7);
+    const operaciones=operacionesF20(v,ind,"moderada",coste,division,v.length);
+    const caja=document.createElement("section");caja.style.cssText="background:#1a384e;padding:10px;border:1px solid #42667f;border-radius:9px;margin-top:8px";
+    const title=document.createElement("strong");title.textContent=ar.nombre+" · "+v.length+" velas ("+v[0].fecha+"–"+v[v.length-1].fecha+")";
+    caja.append(title);
+    const adv=document.createElement("div");adv.style.cssText="font-size:11px;color:#bbd0df;margin-top:4px";
+    adv.textContent="Prueba: "+v[division].fecha+"–"+v[v.length-1].fecha+" · "+operaciones.length+" operaciones moderadas de referencia.";caja.append(adv);
+    escenarios.forEach((esc,i)=>{
+      const kept=operaciones.filter(esc.f),discarded=operaciones.filter(o=>!esc.f);
+      const r=resumenF20(kept,coste),agg=totales[i];
+      agg.archivos++;agg.operaciones+=r.n;agg.ganadoras+=r.ganan;
+      agg.descartadasGanadoras+=discarded.filter(o=>o.neto>0).length;
+      agg.descartadasPerdedoras+=discarded.filter(o=>o.neto<=0).length;
+      // Guardamos resultados por fichero, sin componer rentabilidades entre activos distintos.
+      if(r.n)agg.retornos.push(r.compuesto);
+      const linea=document.createElement("p");linea.style.cssText="font-size:12px;margin:6px 0;line-height:1.5";
+      linea.textContent=esc.nombre+": "+r.n+" op. · "+r.ganan+" positivas · "+fmt(r.compuesto)+" % neto compuesto · descartadas "+discarded.length+" ("+discarded.filter(o=>o.neto>0).length+" ganadoras / "+discarded.filter(o=>o.neto<=0).length+" perdedoras)";
+      caja.append(linea);
+    });
+    panel.append(caja);
+  }
+  const tot=document.createElement("div");tot.style.cssText="padding:11px;border:1px solid #7aa8ac;border-radius:9px;margin-top:10px;background:#13374b";
+  const tit=document.createElement("strong");tit.textContent="Resumen multiarchivo (sin rentabilidad agregada)";tot.append(tit);
+  escenarios.forEach((esc,i)=>{
+    const a=totales[i],row=document.createElement("p");row.style.cssText="font-size:12px;line-height:1.6";
+    row.textContent=esc.nombre+": "+a.operaciones+" operaciones evaluadas; "+a.ganadoras+" positivas; descartadas "+a.descartadasGanadoras+" ganadoras y "+a.descartadasPerdedoras+" perdedoras.";tot.append(row);
+  });
+  panel.append(tot);
+  const nota=document.createElement("p");nota.style.cssText="font-size:12px;color:#f0d5aa;line-height:1.55";
+  nota.textContent="Limitaciones: el nombre del archivo no verifica el ticker ni la procedencia. Usa empresas que NO intervinieron en el diseño de estos filtros; IREN no cuenta como validación independiente. Una sola operación o activo no demuestra ventaja estadística. La coincidencia temporal entre activos introduce dependencia. Los descartes no generan nuevas entradas y los costes son estimados. Las reglas, la memoria y tus posiciones no cambian.";
+  panel.append(nota);
+}
+function iniciarF22(){
+  const input=document.getElementById("archivosValidacionF22");
+  input?.addEventListener("change",async()=>{
+    const files=Array.from(input.files||[]).slice(0,8);
+    const panel=document.getElementById("resultadoF22");
+    if(!files.length)return;
+    const resultados=[],errores=[];
+    for(const f of files){
+      try{if(f.size>2000000)throw Error("más de 2 MB");
+        const v=csvF19(await f.text());
+        resultados.push({nombre:f.name,velas:v});
+      }catch(e){errores.push(f.name+": "+e.message);}
+    }
+    F22.archivos=resultados;renderMultiactivoF22();
+    if(errores.length){const p=document.createElement("p");p.style.color="#efbbab";p.textContent="Archivos no cargados: "+errores.join(" | ");panel.prepend(p);}
+  });
 }
 
 function resultadoHistoricoF19(){
@@ -1287,8 +1364,8 @@ function resultadoHistoricoF19(){
     b.appendChild(details);tabla.appendChild(b);
   }
   const comparadorF21=compararFiltrosF21(
-    operacionesF20(v,ind,"moderada",coste,55,v.length),
-    v[divisoria].fecha,coste,fmt
+    operacionesF20(v,ind,"moderada",coste,55,divisoria),
+    operacionesF20(v,ind,"moderada",coste,divisoria,v.length),coste,fmt
   );
   const aviso=document.createElement("p");aviso.style.cssText="font-size:12px;color:#c8d7e3";
   aviso.textContent="Fase 20: simulación solo de compras (posiciones largas), sin posiciones simultáneas. Señal al cierre; entrada y salida a aperturas posteriores. Caída máxima aproximada calculada con mínimos diarios mientras la operación está abierta (no con datos intradía completos): no refleja gaps ejecutables, deslizamientos, impuestos, dividendos, cambio de divisa ni otras posiciones. Los resultados no demuestran que una regla sea superior ni modifican tu cartera.";
@@ -1306,6 +1383,7 @@ function iniciarF19(){
   slider?.addEventListener("input",()=>{
     document.getElementById("costeF19Texto").textContent=Number(slider.value).toFixed(2).replace(".",",")+" %";
     if(F19.velas)resultadoHistoricoF19();
+    if(F22.archivos.length)renderMultiactivoF22();
   });
 }
 
@@ -2512,7 +2590,7 @@ async function cargarNoticias() {
 }
 
 cargarNoticias();
-window.addEventListener("DOMContentLoaded", ()=>{iniciarControlesMemoriaF16();iniciarF19();cargarDatos();});
+window.addEventListener("DOMContentLoaded", ()=>{iniciarControlesMemoriaF16();iniciarF19();iniciarF22();cargarDatos();});
 </script>
 
 <div class="wrap">
