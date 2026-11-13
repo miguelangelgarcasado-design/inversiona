@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InversiónIA · Fase 26</title>
+  <title>InversiónIA · Fase 27</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a5cff">
 
@@ -135,12 +135,12 @@
     <div id="laboratorioF18" style="margin-top:12px;padding:13px;background:#102b3b;border:1px solid #477589;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando laboratorio de simulación...</div>
 
     <section id="laboratorioHistoricoF19" style="margin-top:14px;padding:13px;border:1px solid #527c93;border-radius:11px;background:#112c3c;line-height:1.55;">
-      <strong>📈 Simulación histórica · Fase 26: señales omitidas y simulación paralela</strong>
+      <strong>📈 Simulación histórica · Fase 27: capital limitado y operaciones simultáneas</strong>
       <p style="font-size:12px;color:#c4d8e6">Selecciona un CSV de velas diarias de UNA acción (Date, Open, High, Low, Close, Volume), ordenadas o no. Se calcula cada señal al cierre y se simula la entrada en la apertura siguiente. Salida tras 10 sesiones, en la apertura siguiente. Incluye costes configurables. No ejecuta órdenes ni utiliza velas futuras para generar señales.</p>
       <label for="archivoVelasF19" style="display:block;margin-bottom:5px">CSV histórico</label>
       <input type="file" id="archivoVelasF19" accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
       <div style="margin-top:14px;padding:11px;border:1px solid #52849c;border-radius:9px;background:#123148">
-        <strong>🧪 Validación con otras acciones · Fase 26</strong>
+        <strong>🧪 Validación con otras acciones · Fase 27</strong>
         <p style="font-size:12px;color:#cbdbea">Selecciona hasta 8 archivos CSV diarios de acciones distintas de IREN (puedes seleccionar varios a la vez). Este laboratorio no guarda ni altera la cartera.</p>
         <label for="archivosValidacionF22" style="display:block;margin:5px 0">CSV de validación independientes</label>
         <input type="file" id="archivosValidacionF22" multiple accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
@@ -1388,6 +1388,93 @@ function panelSolapesF26(v,ind,desde,coste,referencia,fmt){
   return panel;
 }
 
+
+// Fase 27: simulación hipotética con CAPITAL FIJO por activo.
+// Sin margen ni posiciones fraccionarias limitadas: se admiten fracciones para
+// no confundir la calidad de la señal con el tamaño de una acción.
+// Una señal SOLO puede abrirse en la apertura siguiente a su cierre.
+function simularCapitalF27(v,ind,desde,coste,limite){
+  const inicial=10000,costeLado=coste/200; // coste dado EN PORCENTAJE total ida/vuelta
+  let efectivo=inicial,abiertas=[],pico=inicial,dd=0,maxAbiertas=0;
+  let entradas=0,positivas=0,omitidasCupo=0,cerradas=0,capitalInmovilizado=0;
+  const operaciones=[],n=v.length;
+  // El retorno de una señal de la sesión i requiere apertura i+1 e i+11.
+  // No abrimos señales sin salida completa observada dentro del CSV.
+  const entradasPosibles=new Set();
+  for(let i=Math.max(55,desde);i+11<n;i++)if(senalF19(v,ind,i,'moderada'))entradasPosibles.add(i+1);
+  for(let t=Math.max(56,desde+1);t<n;t++){
+    const apertura=v[t].open;
+    // Liquidaciones en apertura, ANTES de eventuales entradas en esa misma apertura.
+    for(let j=abiertas.length-1;j>=0;j--){
+      const p=abiertas[j];if(p.salida!==t)continue;
+      const cobro=p.titulos*apertura*(1-costeLado);
+      efectivo+=cobro;const ganancia=cobro-p.gasto;
+      if(ganancia>0)positivas++;
+      cerradas++;
+      operaciones.push({entrada:v[p.entrada].fecha,salida:v[t].fecha,ganancia,porcentaje:100*ganancia/p.gasto});
+      abiertas.splice(j,1);
+    }
+    if(entradasPosibles.has(t)){
+      if(abiertas.length>=limite){omitidasCupo++;}
+      else {
+        // Valorar posiciones existentes al precio de apertura para dimensionar
+        // con SOLO información conocida a la apertura del día t.
+        const patrimonioApertura=efectivo+abiertas.reduce((a,p)=>a+p.titulos*apertura,0);
+        const presupuesto=Math.min(efectivo,patrimonioApertura/limite);
+        if(presupuesto>0.01 && Number.isFinite(apertura) && apertura>0){
+          const titulos=presupuesto/(apertura*(1+costeLado));
+          efectivo-=presupuesto;
+          abiertas.push({entrada:t,salida:t+10,titulos,gasto:presupuesto});
+          entradas++;
+        } else omitidasCupo++;
+      }
+    }
+    maxAbiertas=Math.max(maxAbiertas,abiertas.length);
+    // Curva al cierre diario. Incluye el coste de entrada y salida (de esta
+    // última cuando la posición se cierra); no incluye mínimos intradía.
+    const equity=efectivo+abiertas.reduce((a,p)=>a+p.titulos*v[t].close,0);
+    if(equity>pico)pico=equity;
+    dd=Math.max(dd,100*(1-equity/pico));
+    capitalInmovilizado+=(equity>0?(equity-efectivo)/equity:0);
+  }
+  // Por construcción todas las entradas tienen salida t+10 dentro del CSV.
+  const fin=efectivo+abiertas.reduce((a,p)=>a+p.titulos*v[n-1].close,0);
+  return {limite,inicial,fin,neto:100*(fin/inicial-1),dd,entradas,cerradas,
+    positivas,omitidasCupo,maxAbiertas,
+    exposicion:100*capitalInmovilizado/Math.max(1,n-Math.max(56,desde+1)),operaciones};
+}
+function panelCapitalF27(v,ind,desde,coste,fmt){
+  const panel=document.createElement('details');
+  panel.style.cssText='margin:12px 0;padding:12px;border:1px solid #84a9bf;border-radius:10px;background:#102e43;font-size:12px;line-height:1.6';
+  const titulo=document.createElement('summary');
+  titulo.style.cssText='cursor:pointer;font-weight:bold;color:#e6f1ff;font-size:13px';
+  titulo.textContent='💶 Fase 27 · Comparar capital fijo: 1, 2 y 3 posiciones';
+  panel.append(titulo);
+  const intro=document.createElement('p');
+  intro.textContent='Comparación histórica sobre el mismo CSV, con 10.000 unidades monetarias virtuales iniciales, sin aportaciones, deuda ni apalancamiento. Cada entrada usa como máximo 1/N del patrimonio disponible en apertura, con N=1, 2 o 3; el efectivo libre queda sin invertir. Se compra a la apertura siguiente a la señal y se vende 10 sesiones después, también a apertura.';
+  panel.append(intro);
+  const resultados=[1,2,3].map(n=>simularCapitalF27(v,ind,desde,coste,n));
+  const filas=[['Máximo posiciones','1','2','3'],
+    ['Resultado de capital',...resultados.map(r=>(r.neto>=0?'+':'')+fmt(r.neto)+' %')],
+    ['Capital final',...resultados.map(r=>fmt(r.fin))],
+    ['Operaciones cerradas',...resultados.map(r=>String(r.cerradas))],
+    ['Operaciones positivas',...resultados.map(r=>String(r.positivas))],
+    ['Descartadas por cupo',...resultados.map(r=>String(r.omitidasCupo))],
+    ['Caída máxima cierre diario',...resultados.map(r=>fmt(r.dd)+' %')],
+    ['Exposición media aproximada',...resultados.map(r=>fmt(r.exposicion)+' %')]];
+  const tabla=document.createElement('div');tabla.style.cssText='overflow-x:auto';
+  const table=document.createElement('table');table.style.cssText='width:100%;font-size:11px;border-collapse:collapse;min-width:310px';
+  filas.forEach((row,i)=>{const tr=document.createElement('tr');row.forEach((cel,j)=>{
+    const td=document.createElement(i===0?'th':'td');
+    td.textContent=cel;td.style.cssText='padding:7px 3px;border-bottom:1px solid #476679;text-align:'+(j===0?'left':'right')+';'+(i===0?'font-weight:bold;color:#d8ecff':'');
+    tr.append(td);
+  });table.append(tr);});tabla.append(table);panel.append(tabla);
+  const nota=document.createElement('p');nota.style.cssText='font-size:11px;color:#f5d6a7';
+  nota.textContent='Experimento, NO recomendación: entradas distintas y posiciones altamente correlacionadas; los resultados se calculan sobre datos históricos ya conocidos. El capital está expresado en la moneda del CSV (USD para JPM), no en euros reales. Comisiones simétricas según el porcentaje total seleccionado; sin deslizamiento, impuestos, dividendos, cambio de divisa ni restricciones de lotes. La caída máxima se observa en los cierres diarios, no en mínimos intradía. Una exposición mayor puede aumentar el riesgo. No se alteran tu cartera ni señales reales.';
+  panel.append(nota);
+  return panel;
+}
+
 function renderMultiactivoF22(){
   const panel=document.getElementById("resultadoF22");if(!panel)return;
   const coste=Number(document.getElementById("costeF19")?.value||0.3);
@@ -1418,6 +1505,7 @@ function renderMultiactivoF22(){
     adv.textContent="Ventana "+(porcentaje==="100"?"todo el historial útil":porcentaje+" % final")+": "+v[division].fecha+"–"+v[v.length-1].fecha+" · "+operaciones.length+" operaciones de referencia. Todas las variantes usan estas mismas operaciones.";caja.append(adv);
     caja.append(diagnosticoSenalesF25(v,ind,division,operaciones));
     caja.append(panelSolapesF26(v,ind,division,coste,operaciones,fmt));
+    caja.append(panelCapitalF27(v,ind,division,coste,fmt));
     escenarios.forEach((esc,i)=>{
       const kept=[],discarded=[];
       for(const op of operaciones)(esc.f(op)?kept:discarded).push(op);
@@ -1458,7 +1546,7 @@ function renderMultiactivoF22(){
   const informe=document.createElement("section");
   informe.style.cssText="padding:12px;margin-top:12px;background:#102b40;border:1px solid #83a6bf;border-radius:10px;line-height:1.55";
   const encabezado=document.createElement("strong");
-  encabezado.textContent="🧠 Informe de aprendizaje · Fase 26";
+  encabezado.textContent="🧠 Informe de aprendizaje · Fase 27";
   informe.append(encabezado);
   const metod=document.createElement("p");
   metod.style.cssText="font-size:12px;color:#c7dbe8";
