@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InversiónIA · Fase 25</title>
+  <title>InversiónIA · Fase 26</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a5cff">
 
@@ -135,12 +135,12 @@
     <div id="laboratorioF18" style="margin-top:12px;padding:13px;background:#102b3b;border:1px solid #477589;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando laboratorio de simulación...</div>
 
     <section id="laboratorioHistoricoF19" style="margin-top:14px;padding:13px;border:1px solid #527c93;border-radius:11px;background:#112c3c;line-height:1.55;">
-      <strong>📈 Simulación histórica · Fase 25: periodos, señales y aprendizaje</strong>
+      <strong>📈 Simulación histórica · Fase 26: señales omitidas y simulación paralela</strong>
       <p style="font-size:12px;color:#c4d8e6">Selecciona un CSV de velas diarias de UNA acción (Date, Open, High, Low, Close, Volume), ordenadas o no. Se calcula cada señal al cierre y se simula la entrada en la apertura siguiente. Salida tras 10 sesiones, en la apertura siguiente. Incluye costes configurables. No ejecuta órdenes ni utiliza velas futuras para generar señales.</p>
       <label for="archivoVelasF19" style="display:block;margin-bottom:5px">CSV histórico</label>
       <input type="file" id="archivoVelasF19" accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
       <div style="margin-top:14px;padding:11px;border:1px solid #52849c;border-radius:9px;background:#123148">
-        <strong>🧪 Validación con otras acciones · Fase 25</strong>
+        <strong>🧪 Validación con otras acciones · Fase 26</strong>
         <p style="font-size:12px;color:#cbdbea">Selecciona hasta 8 archivos CSV diarios de acciones distintas de IREN (puedes seleccionar varios a la vez). Este laboratorio no guarda ni altera la cartera.</p>
         <label for="archivosValidacionF22" style="display:block;margin:5px 0">CSV de validación independientes</label>
         <input type="file" id="archivosValidacionF22" multiple accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
@@ -1316,6 +1316,78 @@ function diagnosticoSenalesF25(v,ind,inicio,operaciones){
   }
   return bloque;
 }
+
+// Fase 26: laboratorio en sombra. NO altera la lógica de operacionesF20.
+// Cada candidato se crea con datos disponibles hasta el cierre de la señal.
+// El resultado se observa diez sesiones después, exclusivamente para evaluación.
+function laboratorioSolapesF26(v,ind,desde,coste,referencia){
+  const candidatos=[];
+  for(let i=Math.max(55,desde);i+11<v.length;i++){
+    if(!senalF19(v,ind,i,"moderada"))continue;
+    const entrada=v[i+1].open,salida=v[i+11].open;
+    candidatos.push({indice:i,fecha:v[i].fecha,entradaFecha:v[i+1].fecha,
+      salidaFecha:v[i+11].fecha,entrada,salida,
+      neto:(salida/entrada-1)*100-coste});
+  }
+  // Reproduce el calendario de ocupación de la estrategia ORIGINAL;
+  // no se recalculan nuevas operaciones ni se solapan en ella.
+  const indicesRef=new Set(referencia.map(o=>o.fecha));
+  const omitidas=candidatos.filter(c=>!indicesRef.has(c.fecha));
+  const ocupacion=Array(v.length+1).fill(0);
+  // El intervalo es [apertura i+1, apertura i+11).
+  for(const c of candidatos){ocupacion[c.indice+1]++;ocupacion[c.indice+11]--;}
+  let simultaneas=0,maxSimultaneas=0;
+  for(const d of ocupacion){simultaneas+=d;maxSimultaneas=Math.max(maxSimultaneas,simultaneas);}
+  return {candidatos,omitidas,maxSimultaneas};
+}
+function panelSolapesF26(v,ind,desde,coste,referencia,fmt){
+  const info=laboratorioSolapesF26(v,ind,desde,coste,referencia);
+  const panel=document.createElement("details");
+  panel.style.cssText="margin:12px 0;padding:11px;border:1px solid #6e9daa;border-radius:9px;background:#123346;font-size:12px;line-height:1.6";
+  const titulo=document.createElement("summary");
+  titulo.style.cssText="font-size:13px;font-weight:bold;cursor:pointer;color:#dceefa";
+  titulo.textContent="🧪 Fase 26 · Señales omitidas y simultáneas ("+info.omitidas.length+")";
+  panel.append(titulo);
+  const nGanadoras=info.omitidas.filter(o=>o.neto>0).length;
+  const nPerdedoras=info.omitidas.length-nGanadoras;
+  const intro=document.createElement("p");
+  intro.textContent="Señales válidas en sesiones: "+info.candidatos.length+
+    " · Ejecutadas en la simulación original: "+referencia.length+
+    " · Omitidas mientras había una posición: "+info.omitidas.length+
+    ". Entre las omitidas, "+nGanadoras+" habrían terminado positivas y "+nPerdedoras+
+    " no positivas tras 10 sesiones (antes de cualquier límite de liquidez).";
+  const paralelo=document.createElement("p");
+  paralelo.style.cssText="color:#f0d9aa";
+  paralelo.textContent="Simulación experimental: si se abriera UNA posición virtual por CADA señal, habría hasta "+
+    info.maxSimultaneas+" posiciones simultáneas en este activo. No es rentabilidad de cartera: no se asigna capital, no se suman ni componen rendimientos solapados y no se contempla margen ni liquidez adicional.";
+  panel.append(intro,paralelo);
+  const descripcion=document.createElement("p");
+  descripcion.style.cssText="color:#bfd2df";
+  descripcion.textContent="La estrategia real permanece sin solapamiento. Las cifras de operaciones omitidas son resultados contrafactuales; para cada señal se calculan indicadores con velas pasadas y su hipotética salida en una apertura futura. La evaluación posterior no se usa para decidir la señal.";
+  panel.append(descripcion);
+  if(info.omitidas.length){
+    const table=document.createElement("div");
+    table.style.cssText="max-height:390px;overflow:auto;border-top:1px solid #54788c";
+    for(const o of info.omitidas){
+      const linea=document.createElement("div");
+      linea.style.cssText="padding:7px 0;border-bottom:1px solid #36566e;color:"+(o.neto>0?"#c5f0d5":"#ffd2ce");
+      linea.textContent="Señal "+o.fecha+" · entrada "+o.entradaFecha+" a "+fmt(o.entrada)+
+        " · salida "+o.salidaFecha+" a "+fmt(o.salida)+" · resultado virtual "+
+        (o.neto>=0?"+":"")+fmt(o.neto)+" %";
+      table.append(linea);
+    }
+    panel.append(table);
+  } else {
+    const vacio=document.createElement("p");
+    vacio.textContent="No hay señales omitidas en la ventana seleccionada.";
+    panel.append(vacio);
+  }
+  const nota=document.createElement("p");nota.style.cssText="font-size:11px;color:#f4d9ad";
+  nota.textContent="ADVERTENCIA: las señales próximas pueden compartir muchas sesiones y sus resultados NO son observaciones independientes. Se ignoran costes variables y ejecución real. Este laboratorio no modifica cartera, alertas ni reglas.";
+  panel.append(nota);
+  return panel;
+}
+
 function renderMultiactivoF22(){
   const panel=document.getElementById("resultadoF22");if(!panel)return;
   const coste=Number(document.getElementById("costeF19")?.value||0.3);
@@ -1345,6 +1417,7 @@ function renderMultiactivoF22(){
     const porcentaje=document.getElementById("ventanaEstudioF25")?.value||"30";
     adv.textContent="Ventana "+(porcentaje==="100"?"todo el historial útil":porcentaje+" % final")+": "+v[division].fecha+"–"+v[v.length-1].fecha+" · "+operaciones.length+" operaciones de referencia. Todas las variantes usan estas mismas operaciones.";caja.append(adv);
     caja.append(diagnosticoSenalesF25(v,ind,division,operaciones));
+    caja.append(panelSolapesF26(v,ind,division,coste,operaciones,fmt));
     escenarios.forEach((esc,i)=>{
       const kept=[],discarded=[];
       for(const op of operaciones)(esc.f(op)?kept:discarded).push(op);
@@ -1385,7 +1458,7 @@ function renderMultiactivoF22(){
   const informe=document.createElement("section");
   informe.style.cssText="padding:12px;margin-top:12px;background:#102b40;border:1px solid #83a6bf;border-radius:10px;line-height:1.55";
   const encabezado=document.createElement("strong");
-  encabezado.textContent="🧠 Informe de aprendizaje · Fase 25";
+  encabezado.textContent="🧠 Informe de aprendizaje · Fase 26";
   informe.append(encabezado);
   const metod=document.createElement("p");
   metod.style.cssText="font-size:12px;color:#c7dbe8";
