@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InversiónIA · Fase 31</title>
+  <title>InversiónIA · Fase 32</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a5cff">
 
@@ -135,12 +135,12 @@
     <div id="laboratorioF18" style="margin-top:12px;padding:13px;background:#102b3b;border:1px solid #477589;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando laboratorio de simulación...</div>
 
     <section id="laboratorioHistoricoF19" style="margin-top:14px;padding:13px;border:1px solid #527c93;border-radius:11px;background:#112c3c;line-height:1.55;">
-      <strong>📈 Simulación histórica · Fase 31: umbrales y cupos</strong>
+      <strong>📈 Simulación histórica · Fase 32: comprobación temporal</strong>
       <p style="font-size:12px;color:#c4d8e6">Selecciona un CSV de velas diarias de UNA acción (Date, Open, High, Low, Close, Volume), ordenadas o no. Se calcula cada señal al cierre y se simula la entrada en la apertura siguiente. Salida tras 10 sesiones, en la apertura siguiente. Incluye costes configurables. No ejecuta órdenes ni utiliza velas futuras para generar señales.</p>
       <label for="archivoVelasF19" style="display:block;margin-bottom:5px">CSV histórico</label>
       <input type="file" id="archivoVelasF19" accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
       <div style="margin-top:14px;padding:11px;border:1px solid #52849c;border-radius:9px;background:#123148">
-        <strong>🧪 Validación con otras acciones · Fase 31</strong>
+        <strong>🧪 Validación con otras acciones · Fase 32</strong>
         <p style="font-size:12px;color:#cbdbea">Selecciona hasta 8 archivos CSV diarios de acciones distintas de IREN (puedes seleccionar varios a la vez). Este laboratorio no guarda ni altera la cartera.</p>
         <label for="archivosValidacionF22" style="display:block;margin:5px 0">CSV de validación independientes</label>
         <input type="file" id="archivosValidacionF22" multiple accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
@@ -1553,12 +1553,19 @@ function puntuacionPrioridadF29(v,ind,i){
  const tendencia=clamp((precio/sma-1)/0.10,0,1);
  return 100*(0.35*impulso+0.25*fuerza+0.20*volumen+0.20*tendencia);
 }
-function simularPrioridadesF29(archivos,coste,limite,modo,umbral=0){
+function simularPrioridadesF29(archivos,coste,limite,modo,umbral=0,segmentoF32="selector"){
  const inicial=10000,lado=coste/200;
  const activos=archivos.map((ar,id)=>{
-  const v=ar.velas,ind=indicadoresF19(v),desde=inicioEstudioF25(v);
+  const v=ar.velas,ind=indicadoresF19(v);
+  // Fase 32: formación estrictamente anterior al corte y tramo posterior.
+  // El tramo posterior conserva indicadores construidos con datos PREVIOS;
+  // nunca consulta velas posteriores para producir una señal al cierre i.
+  const corte=Math.floor(v.length*0.70);
+  const desde=segmentoF32==='formacion'?55:
+      segmentoF32==='posterior'?Math.max(55,corte):inicioEstudioF25(v);
+  const limiteDatos=segmentoF32==='formacion'?corte:v.length;
   const entradas=new Map(),cierres=new Map();
-  for(let i=Math.max(55,desde);i+11<v.length;i++){
+  for(let i=Math.max(55,desde);i+11<limiteDatos;i++){
    if(!senalF19(v,ind,i,'moderada'))continue;
    entradas.set(v[i+1].fecha,{id,e:i+1,s:i+11,precio:v[i+1].open,
     score:puntuacionPrioridadF29(v,ind,i)});
@@ -1774,6 +1781,59 @@ function panelUmbralesF31(archivos,coste,fmt){
  return panel;
 }
 
+
+// Fase 32. Comprobación temporal FIJA, sin modificar umbrales a posteriori.
+// NOTA: al haberse observado ya las velas de estos archivos en fases previas,
+// el segmento posterior NO es una validación independiente no contaminada.
+function panelComprobacionF32(archivos,coste,fmt){
+ const panel=document.createElement('details');
+ panel.style.cssText='padding:12px;margin:14px 0;border:1px solid #78bba3;border-radius:11px;background:#153644;line-height:1.6';
+ const mk=(tag,txt,style='')=>{const e=document.createElement(tag);e.textContent=txt;if(style)e.style.cssText=style;return e;};
+ panel.append(mk('summary','🧭 Fase 32 · Comparación temporal: sin mínimo frente a 60 puntos','cursor:pointer;font-size:14px;font-weight:700;color:#dbfff0'));
+ panel.append(mk('p','Separamos cada CSV cronológicamente: primer 70 % para observar la estrategia y último 30 % para comprobarla después. Comparamos DOS reglas ya fijadas: sin puntuación mínima y mínimo de 60 puntos. Capital virtual inicial de 10.000 en cada simulación, una posición por empresa y coste elegido arriba. No se cambia ninguna operación ni señal real.','font-size:12px'));
+ const advert=mk('p','IMPORTANTE · NO ES UNA VALIDACIÓN INDEPENDIENTE: los cinco CSV y el tramo final ya se examinaron en fases anteriores y el mínimo de 60 surgió tras observar sus resultados. Este apartado es una auditoría temporal retrospectiva. Para validación fuera de muestra real se necesitan acciones y períodos NUEVOS, fijando de antemano la regla de 60 puntos y sin reajustarla.','font-size:12px;color:#ffe2ab;font-weight:600');panel.append(advert);
+ if(archivos.length<2){panel.append(mk('p','Carga al menos dos CSV para analizar capital compartido.','font-size:12px'));return panel;}
+ const ids=archivos.map(a=>a.nombre.replace(/_1d_.*/i,'').toUpperCase());
+ if(new Set(ids).size<ids.length)panel.append(mk('p','ADVERTENCIA: hay nombres que parecen pertenecer al mismo ticker. Pueden duplicar señales.','color:#ffd0aa;font-size:12px'));
+ const detalle=document.createElement('details');detalle.style.cssText='padding:9px;border:1px solid #577d85;border-radius:8px;margin:10px 0';
+ detalle.append(mk('summary','Ver fechas exactas de formación y prueba por archivo','font-size:12px;font-weight:bold;cursor:pointer'));
+ for(const a of archivos){const v=a.velas,c=Math.floor(v.length*.7);detalle.append(mk('p',a.nombre.replace(/_1d_.*/i,'')+' · '+v.length+' velas · 70 % inicial: '+v[0].fecha+' a '+v[c-1].fecha+' ('+c+' velas); 30 % posterior: '+v[c].fecha+' a '+v[v.length-1].fecha+' ('+(v.length-c)+' velas).','font-size:11px;border-bottom:1px solid #446a79;padding-bottom:7px;overflow-wrap:anywhere'));}
+ panel.append(detalle);
+ const format=n=>Number.isFinite(n)?fmt(n):'N/D';
+ function fila(caja,nombre,valor){
+   const d=mk('div','','display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid #3f6876;font-size:12px');
+   d.append(mk('span',nombre),mk('strong',String(valor),'white-space:nowrap'));caja.append(d);
+ }
+ for(const n of [1,2,3]){
+   const section=document.createElement('details');section.style.cssText='padding:10px;margin:10px 0;border:1px solid #5a9495;border-radius:10px';
+   section.append(mk('summary','Máximo '+n+' posición'+(n===1?'':'es')+' · formación frente a período posterior','cursor:pointer;font-weight:bold;color:#e2f7f3;font-size:13px'));
+   for(const [seg,titulo] of [['formacion','70 % inicial · formación histórica'],['posterior','30 % final · comprobación retrospectiva']]){
+     const base=simularPrioridadesF29(archivos,coste,n,'tecnica',0,seg);
+     const filtro=simularPrioridadesF29(archivos,coste,n,'tecnica',60,seg);
+     const sub=mk('div','','margin:10px 0;padding:9px;border:1px solid #547687;border-radius:9px;background:#1a4051');
+     sub.append(mk('strong',titulo,'color:#e7f5ff;font-size:13px'));
+     for(const [etiqueta,r] of [['Sin mínimo (0)',base],['Mínimo 60',filtro]]){
+       const box=mk('div','','padding:8px;margin-top:8px;border:1px solid #416979;border-radius:7px');
+       box.append(mk('strong',etiqueta,'font-size:12px;color:#cde7f5'));
+       fila(box,'Rentabilidad',(r.neto>=0?'+':'')+format(r.neto)+' %');
+       fila(box,'Caída máxima al cierre',format(r.dd)+' %');
+       fila(box,'Operaciones positivas / cerradas',r.positivas+' / '+r.operaciones);
+       fila(box,'Exposición media',format(r.exposicion)+' %');
+       fila(box,'Rechazadas por puntuación',r.omitidasUmbral);
+       sub.append(box);
+     }
+     sub.append(mk('p','Diferencia 60 − 0: '+(filtro.neto-base.neto>=0?'+':'')+format(filtro.neto-base.neto)+' puntos de rentabilidad. Reducción de caída máxima: '+format(base.dd-filtro.dd)+' puntos.','font-size:12px;color:#ffe3b9'));
+     if(filtro.operaciones<10||base.operaciones<10)sub.append(mk('p','MUESTRA MUY PEQUEÑA: hay menos de 10 operaciones cerradas en al menos una variante. No permite afirmar una ventaja estadística.','font-size:11px;color:#ffccad'));
+     if(!filtro.operaciones)sub.append(mk('p','Cero operaciones significa ausencia de exposición; no demuestra que la estrategia sea rentable.','font-size:11px;color:#ffccad'));
+     section.append(sub);
+   }
+   panel.append(section);
+ }
+ panel.append(mk('p','Metodología: la señal se calcula al cierre con indicadores disponibles hasta esa fecha, entrada a la apertura siguiente y salida a la apertura de la sesión 11. Para la formación solo se incluyen entradas y salidas terminadas antes del corte; para el tramo posterior se utiliza el historial anterior exclusivamente como calentamiento de indicadores. Se reinicia el capital entre tramos. Se omiten operaciones que cruzan el límite temporal, lo que puede sesgar los resultados; sin dividendos, impuestos, deslizamiento ni cambio de divisa.','font-size:11px;color:#c1dce0'));
+ panel.append(mk('p','Decisión de investigación: mantener AMBAS reglas congeladas y probarlas prospectivamente con archivos de nuevas empresas y futuras fechas. No seleccionar automáticamente la regla que mejor salga en estos CSV. No se modifica tu cartera ni alertas.','font-size:12px;color:#ffe2b6'));
+ return panel;
+}
+
 function renderMultiactivoF22(){
   const panel=document.getElementById("resultadoF22");if(!panel)return;
   const coste=Number(document.getElementById("costeF19")?.value||0.3);
@@ -1796,6 +1856,7 @@ function renderMultiactivoF22(){
   panel.append(panelPrioridadF29(F22.archivos,coste,fmt));
   panel.append(panelAuditoriaF30(F22.archivos,coste,fmt));
   panel.append(panelUmbralesF31(F22.archivos,coste,fmt));
+  panel.append(panelComprobacionF32(F22.archivos,coste,fmt));
   for(const ar of F22.archivos){
     const v=ar.velas,ind=indicadoresF19(v),division=inicioEstudioF25(v);
     // Un único conjunto de referencia. Los filtros solamente lo reducen.
@@ -1849,7 +1910,7 @@ function renderMultiactivoF22(){
   const informe=document.createElement("section");
   informe.style.cssText="padding:12px;margin-top:12px;background:#102b40;border:1px solid #83a6bf;border-radius:10px;line-height:1.55";
   const encabezado=document.createElement("strong");
-  encabezado.textContent="🧠 Informe de aprendizaje · Fase 31";
+  encabezado.textContent="🧠 Informe de aprendizaje · Fase 32";
   informe.append(encabezado);
   const metod=document.createElement("p");
   metod.style.cssText="font-size:12px;color:#c7dbe8";
