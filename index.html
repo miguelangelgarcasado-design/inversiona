@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InversiónIA · Fase 30</title>
+  <title>InversiónIA · Fase 31</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a5cff">
 
@@ -135,12 +135,12 @@
     <div id="laboratorioF18" style="margin-top:12px;padding:13px;background:#102b3b;border:1px solid #477589;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando laboratorio de simulación...</div>
 
     <section id="laboratorioHistoricoF19" style="margin-top:14px;padding:13px;border:1px solid #527c93;border-radius:11px;background:#112c3c;line-height:1.55;">
-      <strong>📈 Simulación histórica · Fase 30: auditoría de selección</strong>
+      <strong>📈 Simulación histórica · Fase 31: umbrales y cupos</strong>
       <p style="font-size:12px;color:#c4d8e6">Selecciona un CSV de velas diarias de UNA acción (Date, Open, High, Low, Close, Volume), ordenadas o no. Se calcula cada señal al cierre y se simula la entrada en la apertura siguiente. Salida tras 10 sesiones, en la apertura siguiente. Incluye costes configurables. No ejecuta órdenes ni utiliza velas futuras para generar señales.</p>
       <label for="archivoVelasF19" style="display:block;margin-bottom:5px">CSV histórico</label>
       <input type="file" id="archivoVelasF19" accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
       <div style="margin-top:14px;padding:11px;border:1px solid #52849c;border-radius:9px;background:#123148">
-        <strong>🧪 Validación con otras acciones · Fase 30</strong>
+        <strong>🧪 Validación con otras acciones · Fase 31</strong>
         <p style="font-size:12px;color:#cbdbea">Selecciona hasta 8 archivos CSV diarios de acciones distintas de IREN (puedes seleccionar varios a la vez). Este laboratorio no guarda ni altera la cartera.</p>
         <label for="archivosValidacionF22" style="display:block;margin:5px 0">CSV de validación independientes</label>
         <input type="file" id="archivosValidacionF22" multiple accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
@@ -1553,7 +1553,7 @@ function puntuacionPrioridadF29(v,ind,i){
  const tendencia=clamp((precio/sma-1)/0.10,0,1);
  return 100*(0.35*impulso+0.25*fuerza+0.20*volumen+0.20*tendencia);
 }
-function simularPrioridadesF29(archivos,coste,limite,modo){
+function simularPrioridadesF29(archivos,coste,limite,modo,umbral=0){
  const inicial=10000,lado=coste/200;
  const activos=archivos.map((ar,id)=>{
   const v=ar.velas,ind=indicadoresF19(v),desde=inicioEstudioF25(v);
@@ -1568,7 +1568,7 @@ function simularPrioridadesF29(archivos,coste,limite,modo){
  });
  const fechas=[...new Set(activos.flatMap(a=>a.v.map(x=>x.fecha)))].sort();
  let efectivo=inicial,abiertas=[],pico=inicial,dd=0,cerradas=0,positivas=0,omitidas=0,
-   exposicion=0,observaciones=0,omitidasEmpresa=0,omitidasCupo=0;
+   exposicion=0,observaciones=0,omitidasEmpresa=0,omitidasCupo=0,omitidasUmbral=0;
  const seleccion=[];
  const auditoria=[];
  for(const fecha of fechas){
@@ -1592,6 +1592,8 @@ function simularPrioridadesF29(archivos,coste,limite,modo){
       competidores:candidatos.map(q=>({activo:activos[q.id].nombre,puntuacion:q.score})),
       posicionesPrevias:abiertas.map(p=>activos[p.id].nombre),estado:'',motivo:''};
    auditoria.push(evento);
+   // Fase 31: filtro fijo PREVIO a comprobar cupo; no usa resultados futuros.
+   if(c.score<umbral){evento.estado='DESCARTADA';evento.motivo='Puntuación inferior al umbral '+umbral;omitidas++;omitidasUmbral++;continue;}
    // Máximo una posición abierta por activo. Común a ambos rankings.
    if(abiertas.some(p=>p.id===c.id)){evento.estado='DESCARTADA';evento.motivo='Empresa con posición abierta';omitidas++;omitidasEmpresa++;continue;}
    if(abiertas.length>=limite){evento.estado='DESCARTADA';evento.motivo='Límite de posiciones alcanzado';omitidas++;omitidasCupo++;continue;}
@@ -1613,7 +1615,7 @@ function simularPrioridadesF29(archivos,coste,limite,modo){
  }
  const fin=efectivo+abiertas.reduce((sum,p)=>sum+p.titulos*(activos[p.id].ultima??activos[p.id].v[p.e].open),0);
  return {limite,inicial,fin,neto:100*(fin/inicial-1),dd,operaciones:cerradas,positivas,omitidas,
-  omitidasEmpresa,omitidasCupo,exposicion:100*exposicion/Math.max(1,observaciones),seleccion,auditoria};
+  omitidasEmpresa,omitidasCupo,omitidasUmbral,exposicion:100*exposicion/Math.max(1,observaciones),seleccion,auditoria};
 }
 function panelPrioridadF29(archivos,coste,fmt){
  const panel=document.createElement('details');
@@ -1711,6 +1713,67 @@ function panelAuditoriaF30(archivos,coste,fmt){
  return panel;
 }
 
+
+// Fase 31: prueba de sensibilidad PREDEFINIDA, estrictamente virtual.
+// Los umbrales 0/20/40/60 no se recalibran con beneficios observados.
+// El resultado hipotetico de las senales rechazadas NUNCA decide su entrada.
+function panelUmbralesF31(archivos,coste,fmt){
+ const panel=document.createElement('details');
+ panel.style.cssText='padding:12px;margin:14px 0;border:1px solid #a7b8e8;border-radius:11px;background:#172e4b;line-height:1.6';
+ const mk=(tag,txt,style='')=>{const el=document.createElement(tag);el.textContent=txt;if(style)el.style.cssText=style;return el;};
+ panel.append(mk('summary','🧪 Fase 31 · Puntuación mínima y señales sin cupo','cursor:pointer;font-size:14px;font-weight:700;color:#e3e7ff'));
+ panel.append(mk('p','Análisis en sombra de umbrales técnicos fijos: 0 (referencia sin mínimo), 20, 40 y 60 puntos. Se usan exactamente las mismas señales moderadas y una única caja virtual de 10.000; máximo una posición por empresa. Las señales se ordenan por puntuación técnica antes de aplicar el mínimo. No cambia las decisiones reales.','font-size:12px'));
+ if(archivos.length<2){panel.append(mk('p','Carga dos o más CSV de acciones distintas para realizar el análisis.','color:#f2ddba'));return panel;}
+ const val=n=>Number.isFinite(n)?fmt(n):'N/D';
+ const umbrales=[0,20,40,60];
+ for(const n of [1,2,3]){
+  const caja=document.createElement('details');caja.style.cssText='border:1px solid #6989a6;border-radius:9px;padding:10px;margin:10px 0';
+  caja.append(mk('summary','Máximo '+n+' posición'+(n===1?'':'es')+' · comparar mínimos','cursor:pointer;font-weight:bold;color:#e4edff'));
+  const base=simularPrioridadesF29(archivos,coste,n,'tecnica',0);
+  const filas=umbrales.map(u=>({u,r:u===0?base:simularPrioridadesF29(archivos,coste,n,'tecnica',u)}));
+  for(const {u,r} of filas){
+   const sub=document.createElement('div');sub.style.cssText='margin:9px 0;padding:9px;border:1px solid #52758d;background:#1b3c55;border-radius:8px';
+   sub.append(mk('strong',u===0?'Referencia · sin puntuación mínima':'Mínimo '+u+' puntos','color:#ecf4ff'));
+   for(const [k,v] of [
+    ['Rentabilidad',(r.neto>=0?'+':'')+val(r.neto)+' %'],
+    ['Capital final',val(r.fin)],
+    ['Caída máxima al cierre',val(r.dd)+' %'],
+    ['Operaciones positivas / cerradas',r.positivas+' / '+r.operaciones],
+    ['Exposición media',val(r.exposicion)+' %'],
+    ['Rechazadas por puntuación',r.omitidasUmbral],
+    ['Rechazadas por empresa / cupo',r.omitidasEmpresa+' / '+r.omitidasCupo]
+   ]){
+    const line=mk('div','','display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid #406078;padding:4px 0;font-size:12px');
+    line.append(mk('span',k),mk('strong',String(v),'white-space:nowrap'));sub.append(line);
+   }
+   if(u){
+    const baseSet=new Set(base.seleccion.map(e=>e.fecha+'|'+e.activo));
+    const thisSet=new Set(r.seleccion.map(e=>e.fecha+'|'+e.activo));
+    const eliminadas=base.seleccion.filter(e=>!thisSet.has(e.fecha+'|'+e.activo));
+    const sustitutas=r.seleccion.filter(e=>!baseSet.has(e.fecha+'|'+e.activo));
+    const p=mk('p','Frente a referencia: '+eliminadas.length+' entradas originales ausentes y '+sustitutas.length+' entradas diferentes admitidas. Cambiar un filtro puede liberar capital y alterar operaciones posteriores.','font-size:11px;color:#e9dab9');sub.append(p);
+   }
+   caja.append(sub);
+  }
+  const cupo=base.auditoria.filter(ev=>ev.motivo==='Límite de posiciones alcanzado');
+  const sub=document.createElement('details');sub.style.cssText='margin-top:10px;padding:9px;border:1px solid #6d8eaa;border-radius:8px';
+  sub.append(mk('summary','Ver '+cupo.length+' señales rechazadas por cupo en referencia','font-size:12px;cursor:pointer;font-weight:bold'));
+  sub.append(mk('p','Estas señales se descartaron porque ya se había alcanzado el máximo simultáneo. Su puntuación NO permite afirmar que hubieran sido mejores: para saberlo se necesita otra simulación con capital y reglas de sustitución explícitos.','font-size:11px;color:#f1dbb4'));
+  for(const ev of cupo.slice(0,50)){
+   const b=mk('div','','padding:7px;border-left:3px solid #d8aa7a;background:#123247;margin:6px 0;border-radius:6px;overflow-wrap:anywhere;font-size:11px');
+   b.append(mk('strong',ev.fecha+' · '+ev.activo.replace(/_1d_.*/i,'')+' · score '+val(ev.puntuacion)));
+   if(ev.posicionesPrevias.length)b.append(mk('div','Posiciones existentes: '+ev.posicionesPrevias.map(a=>a.replace(/_1d_.*/i,'')).join(', '),'color:#c6d8e6'));
+   b.append(mk('div','Motivo: '+ev.motivo));sub.append(b);
+  }
+  if(cupo.length>50)sub.append(mk('p','Solo se muestran 50 señales; el total es '+cupo.length+'.','font-size:11px'));
+  if(!cupo.length)sub.append(mk('p','No hubo señales bloqueadas por cupo con este límite.','font-size:12px'));
+  caja.append(sub);panel.append(caja);
+ }
+ panel.append(mk('p','LECTURA CORRECTA: no se debe elegir el umbral que mejor funcionó en estas mismas velas. El cálculo es retrospectivo y las señales se solapan en el tiempo. Para evaluar una mejora habría que fijar las reglas antes y comprobarlas con otros activos y fechas futuras, con costes y tipos de cambio reales. Cero entradas significa estar sin exposición, no rentabilidad demostrada.','font-size:11px;color:#f4d6aa'));
+ panel.append(mk('p','No se cambia ninguna posición real, precio medio, alarma, decisión guardada ni señal operativa.','font-size:11px;color:#c5e3dc'));
+ return panel;
+}
+
 function renderMultiactivoF22(){
   const panel=document.getElementById("resultadoF22");if(!panel)return;
   const coste=Number(document.getElementById("costeF19")?.value||0.3);
@@ -1732,6 +1795,7 @@ function renderMultiactivoF22(){
   panel.append(panelCarteraF28(F22.archivos,coste,fmt));
   panel.append(panelPrioridadF29(F22.archivos,coste,fmt));
   panel.append(panelAuditoriaF30(F22.archivos,coste,fmt));
+  panel.append(panelUmbralesF31(F22.archivos,coste,fmt));
   for(const ar of F22.archivos){
     const v=ar.velas,ind=indicadoresF19(v),division=inicioEstudioF25(v);
     // Un único conjunto de referencia. Los filtros solamente lo reducen.
@@ -1785,7 +1849,7 @@ function renderMultiactivoF22(){
   const informe=document.createElement("section");
   informe.style.cssText="padding:12px;margin-top:12px;background:#102b40;border:1px solid #83a6bf;border-radius:10px;line-height:1.55";
   const encabezado=document.createElement("strong");
-  encabezado.textContent="🧠 Informe de aprendizaje · Fase 30";
+  encabezado.textContent="🧠 Informe de aprendizaje · Fase 31";
   informe.append(encabezado);
   const metod=document.createElement("p");
   metod.style.cssText="font-size:12px;color:#c7dbe8";
