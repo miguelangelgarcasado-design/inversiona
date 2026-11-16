@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InversiónIA · Fase 33</title>
+  <title>InversiónIA · Fase 34</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a5cff">
 
@@ -135,12 +135,12 @@
     <div id="laboratorioF18" style="margin-top:12px;padding:13px;background:#102b3b;border:1px solid #477589;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando laboratorio de simulación...</div>
 
     <section id="laboratorioHistoricoF19" style="margin-top:14px;padding:13px;border:1px solid #527c93;border-radius:11px;background:#112c3c;line-height:1.55;">
-      <strong>📈 Simulación histórica · Fase 33: prueba futura con reglas congeladas</strong>
+      <strong>📈 Simulación histórica · Fase 34: nuevas velas y reglas congeladas</strong>
       <p style="font-size:12px;color:#c4d8e6">Selecciona un CSV de velas diarias de UNA acción (Date, Open, High, Low, Close, Volume), ordenadas o no. Se calcula cada señal al cierre y se simula la entrada en la apertura siguiente. Salida tras 10 sesiones, en la apertura siguiente. Incluye costes configurables. No ejecuta órdenes ni utiliza velas futuras para generar señales.</p>
       <label for="archivoVelasF19" style="display:block;margin-bottom:5px">CSV histórico</label>
       <input type="file" id="archivoVelasF19" accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
       <div style="margin-top:14px;padding:11px;border:1px solid #52849c;border-radius:9px;background:#123148">
-        <strong>🧪 Validación con otras acciones · Fase 33</strong>
+        <strong>🧪 Validación con otras acciones · Fase 34</strong>
         <p style="font-size:12px;color:#cbdbea">Selecciona hasta 8 archivos CSV diarios de acciones distintas de IREN (puedes seleccionar varios a la vez). Este laboratorio no guarda ni altera la cartera.</p>
         <label for="archivosValidacionF22" style="display:block;margin:5px 0">CSV de estudio y candidatos a validación</label>
         <input type="file" id="archivosValidacionF22" multiple accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
@@ -153,6 +153,20 @@
         </select>
         <p style="font-size:11px;color:#f0d7ad;margin:6px 0 2px">El periodo se calcula sobre las velas que contenga el CSV. Para analizar varios años hay que cargar un CSV de varios años. Ampliar la ventana reutiliza datos históricos; NO equivale a una validación independiente.</p>
         <div id="resultadoF22" style="font-size:12px;margin-top:9px">Sin archivos de validación.</div>
+        <section id="autoHistoricoF34" style="margin-top:14px;padding:12px;border:1px solid #78aaa5;border-radius:10px;background:#123a42;line-height:1.6">
+          <strong>📡 Fase 34 · Actualización de velas al abrir la app</strong>
+          <p style="font-size:12px;color:#cfe2e2">Indica hasta 8 tickers NUEVOS de EE. UU., separados por comas (por ejemplo MSFT,NVDA). Se descargan velas diarias CERRADAS mediante /api/history, se unen por fecha sin duplicados y se guardan solo en este navegador. Se intentará actualizar al abrir la app con la lista guardada; NO funciona con el iPhone cerrado ni crea alarmas push. No se modifica la cartera.</p>
+          <label for="tickersAutoF34" style="display:block;font-size:12px">Acciones nuevas que quieres investigar (no repetir IREN, JPM, AAPL, TSLA, RKLB, RXRX ni ASTS)</label>
+          <input id="tickersAutoF34" type="text" placeholder="MSFT,NVDA,AMZN" autocapitalize="characters" spellcheck="false" style="box-sizing:border-box;width:100%;padding:10px;border-radius:7px;border:1px solid #86aebe;background:#0c2538;color:white;font-size:14px" />
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px">
+            <button id="guardarTickersF34" type="button" style="padding:8px 12px;border-radius:8px;background:#2d6579;color:white;border:1px solid #91bccc">Guardar tickers</button>
+            <button id="actualizarVelasF34" type="button" style="padding:8px 12px;border-radius:8px;background:#265f48;color:white;border:1px solid #93c9a4">Actualizar velas ahora</button>
+            <button id="exportarVelasF34" type="button" style="padding:8px 12px;border-radius:8px;background:#263e65;color:white;border:1px solid #839ac7">Exportar copia JSON</button>
+          </div>
+          <div id="estadoVelasF34" aria-live="polite" style="font-size:12px;margin-top:10px;color:#cbdfe4">Sin historial automático guardado.</div>
+          <details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;color:#f4dfb2">Ver evaluación congelada con las velas acumuladas</summary><div id="comparacionVelasF34" style="margin-top:10px;font-size:12px">Aún no hay velas válidas.</div></details>
+          <p style="font-size:11px;color:#f0d6a5;margin-top:9px">Los precios pueden estar sujetos a ajustes, errores o interrupciones del proveedor. Cada resultado es una simulación, no una orden. Copia local: borrar datos del navegador puede eliminarla. Para actualizar automáticamente debe estar publicado también <code>functions/api/history.js</code> en GitHub.</p>
+        </section>
       </div>
       <label for="costeF19" style="display:block;margin-top:12px">Coste total estimado por operación (ida y vuelta): <strong id="costeF19Texto">0,30 %</strong></label>
       <input type="range" id="costeF19" min="0" max="2" step="0.05" value="0.3" style="width:100%" />
@@ -3321,8 +3335,102 @@ async function cargarNoticias() {
   }
 }
 
+
+// Fase 34: historial local de velas CERRADAS obtenido desde el propio servidor.
+// El servidor tiene que publicar /api/history por separado. Fallo seguro:
+// no se inventan velas ni se modifica la cartera, los avisos ni la memoria.
+const CLAVE_VELAS_F34='inversionia_velas_diarias_f34_v1';
+const CLAVE_TICKERS_F34='inversionia_tickers_f34_v1';
+const PROHIBIDOS_F34=new Set(['IREN','JPM','AAPL','TSLA','RKLB','RXRX','ASTS']);
+let cacheVelasF34={},tickersF34=[],actualizandoF34=false;
+function normalizarTickersF34(valor){
+ const lista=String(valor||'').toUpperCase().split(/[;,\s]+/).map(s=>s.trim()).filter(Boolean);
+ const buenos=[...new Set(lista)];
+ if(buenos.length>8)throw Error('Máximo ocho tickers.');
+ for(const t of buenos){
+  if(!/^[A-Z][A-Z0-9.\-]{0,9}$/.test(t))throw Error('Ticker no válido: '+t);
+  if(PROHIBIDOS_F34.has(t))throw Error(t+' ya se utilizó para diseñar los filtros. Elige otra acción.');
+ }
+ return buenos;
+}
+function guardarCacheF34(){
+ try{localStorage.setItem(CLAVE_VELAS_F34,JSON.stringify(cacheVelasF34));return true;}
+ catch(e){estadoF34('No se pudo conservar el historial: almacenamiento lleno o restringido. Exporta tu copia JSON.');return false;}
+}
+function estadoF34(t){const e=document.getElementById('estadoVelasF34');if(e)e.textContent=t;}
+function combinarVelasF34(anterior,recientes){
+ const m=new Map();
+ for(const v of [...anterior,...recientes]){
+  if(!v||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(v.fecha))continue;
+  const open=Number(v.open),high=Number(v.high),low=Number(v.low),close=Number(v.close),volume=Number(v.volume);
+  if(![open,high,low,close,volume].every(Number.isFinite)||Math.min(open,high,low,close)<=0||volume<0||high<Math.max(open,close)||low>Math.min(open,close))continue;
+  m.set(v.fecha,{fecha:v.fecha,open,high,low,close,volume});
+ }
+ return [...m.values()].sort((a,b)=>a.fecha.localeCompare(b.fecha)).slice(-750);
+}
+function renderF34(){
+ const lista=tickersF34.map(t=>{
+   const x=cacheVelasF34[t],n=x?.velas?.length||0,ultima=x?.velas?.at(-1)?.fecha||'sin datos';
+   const nuevas=(x?.velas||[]).filter(v=>v.fecha>='2026-11-12').length;
+   return t+': '+n+' velas conservadas · última '+ultima+' · posteriores al corte '+nuevas;
+ });
+ const detalles=lista.length?lista.join(' | '):'Sin tickers: introduce acciones nuevas y guárdalas.';
+ estadoF34(detalles+' · Los resultados se conservan en este navegador, no se sincronizan.');
+ const box=document.getElementById('comparacionVelasF34');if(!box)return;
+ box.replaceChildren();
+ const datos=tickersF34.filter(t=>cacheVelasF34[t]?.velas?.length>=100).map(t=>({nombre:t+'_1d_auto.csv',velas:cacheVelasF34[t].velas}));
+ const coste=Number(document.getElementById('costeF19')?.value||0.3);
+ box.append(panelProspectivoF33(datos,coste,n=>Number(n).toFixed(2).replace('.',',')));
+ if(!datos.length){const msg=document.createElement('p');msg.textContent='Todavía no hay series completas para comparar. Hasta contar con diez sesiones posteriores a cada señal no se podrá calcular su resultado.';box.prepend(msg);}
+}
+function guardarTickersF34(){
+ try{const v=normalizarTickersF34(document.getElementById('tickersAutoF34').value);tickersF34=v;localStorage.setItem(CLAVE_TICKERS_F34,JSON.stringify(v));renderF34();}
+ catch(e){estadoF34('No se han guardado los tickers: '+e.message);}
+}
+async function actualizarF34(){
+ if(actualizandoF34||!tickersF34.length){if(!tickersF34.length)estadoF34('Primero guarda uno o más tickers de acciones nuevas.');return;}
+ actualizandoF34=true;
+ const boton=document.getElementById('actualizarVelasF34');if(boton)boton.disabled=true;
+ const resultados=[];
+ for(const t of tickersF34){
+  estadoF34('Consultando '+t+'... ('+(resultados.length+1)+'/'+tickersF34.length+')');
+  try{
+   const res=await fetch('/api/history?symbol='+encodeURIComponent(t),{cache:'no-store'});
+   if(!res.ok)throw Error('HTTP '+res.status+(res.status===404?' · falta publicar functions/api/history.js':''));
+   const json=await res.json();
+   if(!Array.isArray(json.candles))throw Error(json.error||'respuesta sin velas');
+   if(json.symbol&&json.symbol!==t)throw Error('el símbolo recibido no coincide');
+   const unidas=combinarVelasF34(cacheVelasF34[t]?.velas||[],json.candles.map(v=>({...v,fecha:v.date||v.fecha})));
+   if(unidas.length<100)throw Error('el proveedor entregó menos de 100 velas válidas');
+   cacheVelasF34[t]={velas:unidas,actualizadoEn:new Date().toISOString(),fuente:String(json.source||'fuente externa')};
+   resultados.push(t+': '+unidas.length+' velas');
+  }catch(e){resultados.push(t+': error '+e.message);}
+ }
+ const ok=guardarCacheF34();
+ renderF34();estadoF34(resultados.join(' | ')+(ok?' · Guardado localmente.':' · No se pudo guardar en este navegador.'));
+ actualizandoF34=false;if(boton)boton.disabled=false;
+}
+function iniciarF34(){
+ try{
+  const a=JSON.parse(localStorage.getItem(CLAVE_TICKERS_F34)||'[]');tickersF34=normalizarTickersF34(Array.isArray(a)?a.join(','):'');
+  const b=JSON.parse(localStorage.getItem(CLAVE_VELAS_F34)||'{}');if(b&&typeof b==='object'&&!Array.isArray(b))cacheVelasF34=b;
+ }catch(e){tickersF34=[];cacheVelasF34={};}
+ const input=document.getElementById('tickersAutoF34');if(input)input.value=tickersF34.join(',');
+ document.getElementById('guardarTickersF34')?.addEventListener('click',guardarTickersF34);
+ document.getElementById('actualizarVelasF34')?.addEventListener('click',actualizarF34);
+ document.getElementById('exportarVelasF34')?.addEventListener('click',()=>{
+  const contenido=JSON.stringify({tipo:'InversionIA Fase 34 · historial local',exportadoEn:new Date().toISOString(),tickers:tickersF34,datos:cacheVelasF34},null,2);
+  const url=URL.createObjectURL(new Blob([contenido],{type:'application/json'}));
+  const a=document.createElement('a');a.href=url;a.download='InversionIA_F34_velas_respaldo.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);
+ });
+ document.getElementById('costeF19')?.addEventListener('change',renderF34);
+ renderF34();
+ // Una consulta al abrir, nunca en segundo plano con la web cerrada.
+ if(tickersF34.length)actualizarF34();
+}
+
 cargarNoticias();
-window.addEventListener("DOMContentLoaded", ()=>{iniciarControlesMemoriaF16();iniciarF19();iniciarF22();cargarDatos();});
+window.addEventListener("DOMContentLoaded", ()=>{iniciarControlesMemoriaF16();iniciarF19();iniciarF22();iniciarF34();cargarDatos();});
 </script>
 
 <div class="wrap">
