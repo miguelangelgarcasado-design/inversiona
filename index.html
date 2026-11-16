@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InversiónIA · Fase 32</title>
+  <title>InversiónIA · Fase 33</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a5cff">
 
@@ -135,14 +135,14 @@
     <div id="laboratorioF18" style="margin-top:12px;padding:13px;background:#102b3b;border:1px solid #477589;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando laboratorio de simulación...</div>
 
     <section id="laboratorioHistoricoF19" style="margin-top:14px;padding:13px;border:1px solid #527c93;border-radius:11px;background:#112c3c;line-height:1.55;">
-      <strong>📈 Simulación histórica · Fase 32: comprobación temporal</strong>
+      <strong>📈 Simulación histórica · Fase 33: prueba futura con reglas congeladas</strong>
       <p style="font-size:12px;color:#c4d8e6">Selecciona un CSV de velas diarias de UNA acción (Date, Open, High, Low, Close, Volume), ordenadas o no. Se calcula cada señal al cierre y se simula la entrada en la apertura siguiente. Salida tras 10 sesiones, en la apertura siguiente. Incluye costes configurables. No ejecuta órdenes ni utiliza velas futuras para generar señales.</p>
       <label for="archivoVelasF19" style="display:block;margin-bottom:5px">CSV histórico</label>
       <input type="file" id="archivoVelasF19" accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
       <div style="margin-top:14px;padding:11px;border:1px solid #52849c;border-radius:9px;background:#123148">
-        <strong>🧪 Validación con otras acciones · Fase 32</strong>
+        <strong>🧪 Validación con otras acciones · Fase 33</strong>
         <p style="font-size:12px;color:#cbdbea">Selecciona hasta 8 archivos CSV diarios de acciones distintas de IREN (puedes seleccionar varios a la vez). Este laboratorio no guarda ni altera la cartera.</p>
-        <label for="archivosValidacionF22" style="display:block;margin:5px 0">CSV de validación independientes</label>
+        <label for="archivosValidacionF22" style="display:block;margin:5px 0">CSV de estudio y candidatos a validación</label>
         <input type="file" id="archivosValidacionF22" multiple accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
         <label for="ventanaEstudioF25" style="display:block;margin-top:12px;font-size:13px">🗓️ Periodo de estudio histórico</label>
         <select id="ventanaEstudioF25" style="margin-top:5px;padding:9px;width:100%;max-width:100%;background:#183c54;color:white;border:1px solid #6b9cba;border-radius:7px;font-size:13px">
@@ -1561,8 +1561,13 @@ function simularPrioridadesF29(archivos,coste,limite,modo,umbral=0,segmentoF32="
   // El tramo posterior conserva indicadores construidos con datos PREVIOS;
   // nunca consulta velas posteriores para producir una señal al cierre i.
   const corte=Math.floor(v.length*0.70);
+  // Fase 33: la señal debe ser posterior al 11/11/2026. Se permite
+  // usar velas anteriores SOLO para calcular indicadores, nunca entradas.
+  const primeraNueva=v.findIndex(x=>x.fecha>='2026-11-12');
   const desde=segmentoF32==='formacion'?55:
-      segmentoF32==='posterior'?Math.max(55,corte):inicioEstudioF25(v);
+      segmentoF32==='posterior'?Math.max(55,corte):
+      segmentoF32==='prospectivaF33'?(primeraNueva<0?v.length:Math.max(55,primeraNueva)):
+      inicioEstudioF25(v);
   const limiteDatos=segmentoF32==='formacion'?corte:v.length;
   const entradas=new Map(),cierres=new Map();
   for(let i=Math.max(55,desde);i+11<limiteDatos;i++){
@@ -1834,14 +1839,80 @@ function panelComprobacionF32(archivos,coste,fmt){
  return panel;
 }
 
+
+// Fase 33: protocolo congelado. Todas las fechas anteriores al 12-11-2026
+// están fuera de la evaluación futura. Bloqueamos tickers ya vistos.
+// Es una barrera de integridad EXPLORATORIA, no verifica la procedencia.
+function panelProspectivoF33(archivos,coste,fmt){
+ const panel=document.createElement('details');
+ panel.style.cssText='padding:12px;margin:14px 0;border:1px solid #b8c88d;border-radius:11px;background:#1b3340;line-height:1.6';
+ const el=(tag,t,style='')=>{const n=document.createElement(tag);n.textContent=t;if(style)n.style.cssText=style;return n;};
+ panel.append(el('summary','🧪 Fase 33 · Prueba nueva: reglas 0 y 60 congeladas','cursor:pointer;font-size:14px;font-weight:700;color:#efffc7'));
+ panel.append(el('p','Protocolo fijado: comparar SIN mínimo (0) y MÍNIMO 60, con prioridad técnica, una posición por empresa, 1, 2 o 3 posiciones totales, capital virtual compartido inicial de 10.000 y los mismos costes configurados arriba. Se requieren señales fechadas a partir del 12/11/2026. Los datos anteriores sirven solo para calcular medias, RSI y MACD. Salida simulada tras 10 sesiones.','font-size:12px'));
+ panel.append(el('p','REGLAS CONGELADAS. No elegir el umbral según los resultados; no reajustar pesos ni criterios. Es un seguimiento experimental y NO una recomendación de inversión. La prueba no modifica cartera, alertas ni memoria.','font-size:12px;font-weight:bold;color:#f1dcac'));
+ const usados=new Set(['IREN','JPM','AAPL','TSLA','RKLB','RXRX','ASTS']);
+ const identificador=nombre=>{
+  const m=String(nombre).toUpperCase().match(/^([A-Z0-9.\-^]+)_1D_/);
+  return m?m[1]:null;
+ };
+ const vistos=new Set(),admitidos=[];
+ const lista=el('div','','font-size:12px;margin:10px 0');
+ let nuevosConFecha=0;
+ for(const a of archivos){
+   const ticker=identificador(a.nombre),fin=a.velas.at(-1)?.fecha||'desconocida';
+   const futuras=a.velas.filter(v=>v.fecha>='2026-11-12').length;
+   let estado='',valido=false;
+   if(!ticker)estado='SIN VERIFICAR: no se puede deducir un ticker del nombre';
+   else if(usados.has(ticker))estado='EXCLUIDO: acción usada en fases anteriores';
+   else if(vistos.has(ticker))estado='EXCLUIDO: ticker duplicado en esta carga';
+   else if(!futuras)estado='SIN DATOS NUEVOS: última vela '+fin;
+   else if(a.velas.length<67)estado='INSUFICIENTE: hacen falta velas de contexto y salida simulable';
+   else {estado='CANDIDATO: ticker nuevo por nombre y '+futuras+' velas posteriores al corte';valido=true;}
+   if(ticker)vistos.add(ticker);
+   const item=el('div',(ticker||a.nombre)+' · '+estado,'padding:7px;border-left:3px solid '+(valido?'#91d5ab':'#d4a67c')+';background:#153041;margin:6px 0;border-radius:5px;overflow-wrap:anywhere');
+   lista.append(item);
+   if(valido){admitidos.push(a);nuevosConFecha+=futuras;}
+ }
+ panel.append(el('strong','Auditoría de archivos ('+archivos.length+' cargados; '+admitidos.length+' candidatos)','font-size:12px;color:#e7f3df'));panel.append(lista);
+ if(!archivos.length||!admitidos.length){
+   panel.append(el('p','NO HAY PRUEBA FUTURA DISPONIBLE. Los CSV anteriores terminaban el 11/11/2026 o ya se utilizaron para diseñar la estrategia. Necesitamos CSV de nuevos valores con velas posteriores al 11/11/2026 y suficiente historial anterior. No se puede deducir un resultado con datos aún inexistentes.','font-size:12px;color:#ffe1a8;font-weight:bold'));
+   return panel;
+ }
+ panel.append(el('p','AVISO: el nombre del archivo NO certifica la identidad, ajustes corporativos ni procedencia de los datos. Verifica los tickers y utiliza fuentes fiables. Para una prueba sólida hacen falta operaciones completas y nuevos períodos; no es una validación definitiva.','font-size:11px;color:#ffe0ad'));
+ function fila(box,n,v){const x=el('div','','display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid #46616c;font-size:12px');x.append(el('span',n),el('strong',v,'white-space:nowrap'));box.append(x);}
+ for(const n of [1,2,3]){
+   const section=document.createElement('details');section.style.cssText='margin:10px 0;padding:10px;border:1px solid #7ba890;border-radius:9px';
+   section.append(el('summary','Máximo '+n+' posición'+(n>1?'es':'')+' · comparación futura congelada','cursor:pointer;font-size:13px;font-weight:bold;color:#e2f3ce'));
+   const base=simularPrioridadesF29(admitidos,coste,n,'tecnica',0,'prospectivaF33');
+   const umbral=simularPrioridadesF29(admitidos,coste,n,'tecnica',60,'prospectivaF33');
+   for(const [name,r] of [['Sin puntuación mínima (0)',base],['Mínimo congelado 60',umbral]]){
+     const box=el('div','','padding:9px;margin:9px 0;background:#173746;border:1px solid #567b75;border-radius:8px');box.append(el('strong',name,'font-size:12px'));
+     fila(box,'Rentabilidad virtual',(r.neto>=0?'+':'')+fmt(r.neto)+' %');
+     fila(box,'Máxima caída al cierre',fmt(r.dd)+' %');
+     fila(box,'Operaciones positivas / cerradas',r.positivas+' / '+r.operaciones);
+     fila(box,'Exposición media',fmt(r.exposicion)+' %');
+     fila(box,'Descartes por mínimo',String(r.omitidasUmbral));
+     fila(box,'Descartes por empresa / cupo',r.omitidasEmpresa+' / '+r.omitidasCupo);
+     section.append(box);
+   }
+   section.append(el('p','Diferencia 60 − 0: '+(umbral.neto-base.neto>=0?'+':'')+fmt(umbral.neto-base.neto)+' puntos porcentuales. Un menor número de operaciones o exposición no demuestra mayor capacidad predictiva.','font-size:12px;color:#f1dcae'));
+   const total=Math.min(base.operaciones,umbral.operaciones);
+   if(total<10)section.append(el('p','MUESTRA INSUFICIENTE: al menos una regla tiene menos de 10 operaciones cerradas. No hay evidencia estadística para decidir; un resultado de 0 % con cero entradas no es rentabilidad demostrada.','font-size:12px;color:#ffcfaa;font-weight:600'));
+   section.append(el('p','No incluye tipo de cambio, deslizamiento, impuestos ni dividendos. Las posiciones se valoran al cierre.','font-size:11px;color:#c5d9cf'));
+   panel.append(section);
+ }
+ panel.append(el('p','Pendiente: repetir con muchas fechas realmente nuevas y acciones diversas, comprobar datos corporativos y costes reales y evaluar los resultados sin cambiar las reglas previamente fijadas.','font-size:11px;color:#edddb9'));
+ return panel;
+}
+
 function renderMultiactivoF22(){
   const panel=document.getElementById("resultadoF22");if(!panel)return;
   const coste=Number(document.getElementById("costeF19")?.value||0.3);
   panel.replaceChildren();
   const p=document.createElement("p");p.style.cssText="font-size:12px;line-height:1.6;color:#c6dbe8";
-  p.textContent="Auditoría exploratoria de descartes con CSV de otros valores distintos de IREN. Umbrales fijos: RSI creciente ≥2 puntos y volumen ≥1× la media. Cada archivo se analiza de forma separada, con señales al cierre y entrada en apertura siguiente. No se incorporan datos al historial de decisiones ni se modifican recomendaciones.";
+  p.textContent="Auditoría exploratoria de descartes con CSV de otros valores distintos de IREN. Umbrales fijos: RSI creciente ≥2 puntos y volumen ≥1× la media. Cada archivo se analiza de forma separada, con señales al cierre y entrada en apertura siguiente. No se incorporan datos al historial de decisiones ni se modifican recomendaciones. La Fase 33 audita por separado fechas nuevas.";
   panel.append(p);
-  if(!F22.archivos.length){const t=document.createElement("p");t.textContent="Sin archivos de validación. Selecciona uno o varios CSV de otras acciones para comparar las mismas reglas.";panel.append(t);return;}
+  if(!F22.archivos.length){const t=document.createElement("p");t.textContent="Sin archivos: carga CSV para el estudio; la Fase 33 requiere tickers nuevos y fechas posteriores al 11/11/2026.";panel.append(t);panel.append(panelProspectivoF33([],coste,n=>Number(n).toFixed(2).replace('.',',')));return;}
   const fmt=n=>Number(n).toFixed(2).replace(".",",");
   const escenarios=[{nombre:"Moderada sin filtro",f:o=>true},{nombre:"Solo RSI ≥2",f:o=>o.variacionRSI>=2},
     {nombre:"Solo volumen ≥1×",f:o=>o.vol>=1},{nombre:"RSI ≥2 y volumen ≥1×",f:o=>o.variacionRSI>=2&&o.vol>=1}];
@@ -1857,6 +1928,7 @@ function renderMultiactivoF22(){
   panel.append(panelAuditoriaF30(F22.archivos,coste,fmt));
   panel.append(panelUmbralesF31(F22.archivos,coste,fmt));
   panel.append(panelComprobacionF32(F22.archivos,coste,fmt));
+  panel.append(panelProspectivoF33(F22.archivos,coste,fmt));
   for(const ar of F22.archivos){
     const v=ar.velas,ind=indicadoresF19(v),division=inicioEstudioF25(v);
     // Un único conjunto de referencia. Los filtros solamente lo reducen.
@@ -1910,7 +1982,7 @@ function renderMultiactivoF22(){
   const informe=document.createElement("section");
   informe.style.cssText="padding:12px;margin-top:12px;background:#102b40;border:1px solid #83a6bf;border-radius:10px;line-height:1.55";
   const encabezado=document.createElement("strong");
-  encabezado.textContent="🧠 Informe de aprendizaje · Fase 32";
+  encabezado.textContent="🧠 Informe de aprendizaje · Fase 33";
   informe.append(encabezado);
   const metod=document.createElement("p");
   metod.style.cssText="font-size:12px;color:#c7dbe8";
