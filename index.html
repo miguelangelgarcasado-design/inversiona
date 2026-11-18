@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InversiónIA · Fase 37</title>
+  <title>InversiónIA · Fase 38</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a5cff">
 
@@ -135,12 +135,12 @@
     <div id="laboratorioF18" style="margin-top:12px;padding:13px;background:#102b3b;border:1px solid #477589;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando laboratorio de simulación...</div>
 
     <section id="laboratorioHistoricoF19" style="margin-top:14px;padding:13px;border:1px solid #527c93;border-radius:11px;background:#112c3c;line-height:1.55;">
-      <strong>📈 Simulación histórica · Fase 37: nuevas velas y reglas congeladas</strong>
+      <strong>📈 Simulación histórica · Fase 38: nuevas velas y reglas congeladas</strong>
       <p style="font-size:12px;color:#c4d8e6">Selecciona un CSV de velas diarias de UNA acción (Date, Open, High, Low, Close, Volume), ordenadas o no. Se calcula cada señal al cierre y se simula la entrada en la apertura siguiente. Salida tras 10 sesiones, en la apertura siguiente. Incluye costes configurables. No ejecuta órdenes ni utiliza velas futuras para generar señales.</p>
       <label for="archivoVelasF19" style="display:block;margin-bottom:5px">CSV histórico</label>
       <input type="file" id="archivoVelasF19" accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
       <div style="margin-top:14px;padding:11px;border:1px solid #52849c;border-radius:9px;background:#123148">
-        <strong>🧪 Validación con otras acciones · Fase 37</strong>
+        <strong>🧪 Validación con otras acciones · Fase 38</strong>
         <p style="font-size:12px;color:#cbdbea">Selecciona hasta 8 archivos CSV diarios de acciones distintas de IREN (puedes seleccionar varios a la vez). Este laboratorio no guarda ni altera la cartera.</p>
         <label for="archivosValidacionF22" style="display:block;margin:5px 0">CSV de estudio y candidatos a validación</label>
         <input type="file" id="archivosValidacionF22" multiple accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
@@ -154,7 +154,7 @@
         <p style="font-size:11px;color:#f0d7ad;margin:6px 0 2px">El periodo se calcula sobre las velas que contenga el CSV. Para analizar varios años hay que cargar un CSV de varios años. Ampliar la ventana reutiliza datos históricos; NO equivale a una validación independiente.</p>
         <div id="resultadoF22" style="font-size:12px;margin-top:9px">Sin archivos de validación.</div>
         <section id="autoHistoricoF34" style="margin-top:14px;padding:12px;border:1px solid #78aaa5;border-radius:10px;background:#123a42;line-height:1.6">
-          <strong>📡 Fase 37 · Velas automáticas y seguimiento de resultados</strong>
+          <strong>📡 Fase 38 · Velas automáticas y seguimiento de resultados</strong>
           <p style="font-size:12px;color:#cfe2e2">Indica hasta 8 tickers NUEVOS de EE. UU., separados por comas (por ejemplo MSFT,NVDA). Se descargan velas diarias CERRADAS mediante /api/history, se unen por fecha sin duplicados y se guardan solo en este navegador. Se intentará actualizar al abrir la app con la lista guardada; NO funciona con el iPhone cerrado ni crea alarmas push. No se modifica la cartera.</p>
           <label for="tickersAutoF34" style="display:block;font-size:12px">Acciones nuevas que quieres investigar (no repetir IREN, JPM, AAPL, TSLA, RKLB, RXRX ni ASTS)</label>
           <input id="tickersAutoF34" type="text" placeholder="MSFT,NVDA,AMZN" autocapitalize="characters" spellcheck="false" style="box-sizing:border-box;width:100%;padding:10px;border-radius:7px;border:1px solid #86aebe;background:#0c2538;color:white;font-size:14px" />
@@ -165,13 +165,18 @@
           </div>
           <div id="estadoVelasF34" aria-live="polite" style="font-size:12px;margin-top:10px;color:#cbdfe4">Sin historial automático guardado.</div>
           <section id="seguimientoF35" aria-live="polite" style="margin-top:12px;padding:11px;border:1px solid #8eaed2;border-radius:9px;background:#173b50;font-size:12px;line-height:1.6">
-            <strong>📋 Fase 37 · Seguimiento automático de prueba</strong>
+            <strong>📋 Fase 38 · Seguimiento automático de prueba</strong>
             <div id="estadoSeguimientoF35">Preparando el historial almacenado...</div>
           </section>
           <section id="alertasF36" aria-live="polite" style="margin-top:12px;padding:11px;border:1px solid #bdab74;border-radius:9px;background:#1a3542;font-size:12px;line-height:1.6">
-            <strong>🔎 Fase 37 · Diagnóstico de recuperación: mejoras y condiciones pendientes</strong>
+            <strong>🔎 Fase 38 · Diagnóstico de recuperación: mejoras y condiciones pendientes</strong>
             <p style="color:#d8e7ee;margin:7px 0">Comparación descriptiva de la última vela cerrada frente a la anterior: identifica mejoras, deterioros y requisitos pendientes. No es una recomendación de compra/venta, ni notificación push. Las reglas de simulación 0 y 60 siguen congeladas.</p>
             <div id="estadoAlertasF36">Esperando historiales guardados...</div>
+          </section>
+          <section id="cambiosF38" aria-live="polite" style="margin-top:12px;padding:11px;border:1px solid #7facc0;border-radius:9px;background:#18394b;font-size:12px;line-height:1.6">
+            <strong>🧭 Fase 38 · Registro de cambios de señal entre cierres</strong>
+            <p style="color:#c9dfe8;margin:7px 0">Reconstruye los cambios con velas diarias cerradas desde el 12/11/2026. Distingue debilidad (0–1 filtros), mejora parcial (2–3) y cuatro filtros alineados (4). Solo seguimiento descriptivo; sin órdenes ni avisos push.</p>
+            <div id="estadoCambiosF38">Preparando cambios históricos...</div>
           </section>
           <details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;color:#f4dfb2">Ver evaluación congelada con las velas acumuladas</summary><div id="comparacionVelasF34" style="margin-top:10px;font-size:12px">Aún no hay velas válidas.</div></details>
           <p style="font-size:11px;color:#f0d6a5;margin-top:9px">Los precios pueden estar sujetos a ajustes, errores o interrupciones del proveedor. Cada resultado es una simulación, no una orden. Copia local: borrar datos del navegador puede eliminarla. Para actualizar automáticamente debe estar publicado también <code>functions/api/history.js</code> en GitHub.</p>
@@ -3392,6 +3397,7 @@ function renderF34(){
  box.append(panelProspectivoF33(datos,coste,n=>Number(n).toFixed(2).replace('.',',')));
  renderSeguimientoF35(datos,coste);
   renderAlertasF36();
+  renderCambiosF38();
  if(!datos.length){const msg=document.createElement('p');msg.textContent='Todavía no hay series completas para comparar. Hasta contar con diez sesiones posteriores a cada señal no se podrá calcular su resultado.';box.prepend(msg);}
 }
 // Fase 36: resumen descriptivo de las reglas YA congeladas (0 / 60).
@@ -3489,6 +3495,52 @@ function renderAlertasF36(){
   destino.append(tarjeta);
  }
  par(destino,'Diagnóstico local con velas cerradas guardadas. Se recalcula al abrir la página o actualizar velas. Sin alertas push, sin cambios de posiciones, precios medios, memoria ni reglas 0/60.','font-size:11px;color:#c6d7e3');
+}
+// Fase 38: registro reconstruido exclusivamente a partir del historial de cierres.
+// NO altera las reglas prospectivas 0/60, almacenamiento, posiciones o alertas reales.
+function renderCambiosF38(){
+ const destino=document.getElementById('estadoCambiosF38');if(!destino)return;
+ destino.replaceChildren();
+ const add=(parent,tag,valor,css='')=>{const e=document.createElement(tag);e.textContent=valor;if(css)e.style.cssText=css;parent.append(e);return e;};
+ if(!tickersF34.length){add(destino,'p','Guarda al menos un ticker para empezar el registro.');return;}
+ const etiquetas=['Tendencia > media de 50','RSI entre 30 y 70 y creciente','MACD > señal','Volumen relativo ≥ 1,20×'];
+ const nivel=p=>p<=1?'DEBILIDAD':p<=3?'MEJORA PARCIAL':'CUATRO FILTROS ALINEADOS';
+ for(const ticker of tickersF34){
+  const serie=cacheVelasF34[ticker]?.velas||[];
+  const card=add(destino,'div','', 'background:#123042;border:1px solid #557e97;border-radius:8px;padding:10px;margin:10px 0');
+  add(card,'strong',ticker+' · evolución de señales');
+  if(serie.length<101){add(card,'p','No hay historial suficiente para comparar indicadores (mínimo 101 velas).');continue;}
+  const ind=indicadoresF19(serie),filas=[];let ultima=null;
+  for(let i=100;i<serie.length;i++){
+   const v=serie[i],anterior=serie[i-1];
+   const nums=[v.close,ind.sma50[i],ind.rsi[i],ind.rsi[i-1],ind.m[i],ind.sig[i],ind.ratio[i]];
+   if(!nums.every(Number.isFinite))continue;
+   const pruebas=[v.close>ind.sma50[i],ind.rsi[i]>=30&&ind.rsi[i]<=70&&ind.rsi[i]>ind.rsi[i-1],ind.m[i]>ind.sig[i],ind.ratio[i]>=1.2];
+   const n=pruebas.filter(Boolean).length, actual={fecha:v.fecha,n,pruebas,cierre:v.close};
+   if(ultima&&v.fecha>='2026-11-12'&&ultima.fecha<v.fecha){
+    const ganadas=etiquetas.filter((_,k)=>pruebas[k]&&!ultima.pruebas[k]);
+    const perdidas=etiquetas.filter((_,k)=>!pruebas[k]&&ultima.pruebas[k]);
+    if(n!==ultima.n||ganadas.length||perdidas.length){
+     filas.push({prev:ultima,actual,ganadas,perdidas});
+    }
+   }
+   ultima=actual;
+  }
+  const ultimoCierre=serie.at(-1)?.fecha||'desconocido';
+  add(card,'p','Última vela conservada: '+ultimoCierre+'. '+filas.length+' cambios de filtros detectados desde el 12/11/2026.','color:#c6dce8;margin:6px 0');
+  if(!filas.length){add(card,'p','Todavía no se detectan cambios de filtros con las velas disponibles. Esto no equivale a ausencia de riesgo.','color:#f0dbb3');continue;}
+  const recent=filas.slice(-10).reverse();
+  for(const e of recent){
+   const b=add(card,'div','', 'border-top:1px solid #527086;padding:8px 0');
+   const antes=nivel(e.prev.n),despues=nivel(e.actual.n);
+   add(b,'strong',e.actual.fecha+' · '+e.prev.n+'/4 → '+e.actual.n+'/4'+' · '+despues,'color:'+(e.actual.n>e.prev.n?'#b9e9c8':e.actual.n<e.prev.n?'#ffd0b8':'#e8dfbc'));
+   if(antes!==despues)add(b,'p','Cambio de estado: '+antes+' → '+despues+'.','margin:3px 0');
+   if(e.ganadas.length)add(b,'p','✓ Mejora: '+e.ganadas.join('; ')+'.','color:#b9e9c8;margin:3px 0');
+   if(e.perdidas.length)add(b,'p','○ Se pierde: '+e.perdidas.join('; ')+'.','color:#f2c3b5;margin:3px 0');
+  }
+  if(filas.length>recent.length)add(card,'p','Se muestran los 10 cambios más recientes.','font-size:11px;color:#bdd1da');
+ }
+ add(destino,'p','Las etiquetas se reconstruyen a partir de datos diarios guardados; no constituyen predicciones ni señales operativas. Si se corrigen velas históricas, el registro puede cambiar. Las reglas 0 y 60 permanecen intactas.','font-size:11px;color:#c9dbe5');
 }
 function guardarTickersF34(){
  try{const v=normalizarTickersF34(document.getElementById('tickersAutoF34').value);tickersF34=v;localStorage.setItem(CLAVE_TICKERS_F34,JSON.stringify(v));renderF34();}
