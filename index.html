@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InversiónIA · Fase 38</title>
+  <title>InversiónIA · Fase 39</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a5cff">
 
@@ -70,12 +70,64 @@
     .muted {
       opacity: .7;
     }
+
+    /* Fase 39: navegación visual, sin tocar cálculos ni almacenamiento */
+    .f39-shell{position:sticky;top:0;z-index:50;background:#0d1932;border-bottom:1px solid #35577e;padding:12px 15px;box-shadow:0 4px 15px #0007}
+    .f39-inner{max-width:900px;margin:auto}
+    .f39-top{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:9px}
+    .f39-search{display:flex;gap:7px;align-items:center}
+    .f39-search input{flex:1;min-width:0;padding:12px;border:1px solid #719ab6;border-radius:10px;color:#fff;background:#132b47;font-size:16px}
+    .f39-search button,.f39-tab,.f39-action{border:1px solid #5d85a7;border-radius:9px;padding:10px 13px;background:#1c4266;color:#fff;cursor:pointer;font-size:14px}
+    .f39-tabs{display:flex;gap:7px;overflow-x:auto;padding-top:9px;padding-bottom:3px;scrollbar-width:thin}
+    .f39-tab{white-space:nowrap;padding:9px 12px;background:#183552}
+    .f39-tab[aria-current="page"]{background:#23658a;border-color:#98d9ec;font-weight:700}
+    .f39-result{max-width:900px;margin:15px auto 0;padding:15px;background:#12314c;border:1px solid #6798b9;border-radius:13px;line-height:1.65}
+    .f39-result[hidden],.f39-screen[hidden],.f39-hide{display:none!important}
+    .f39-screencard{max-width:900px;margin:16px auto;padding:20px;border-radius:15px;background:#10253e;border:1px solid #3d6d91;line-height:1.7}
+    .f39-small{color:#b9cfde;font-size:13px}
+    .f39-pills{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+    .f39-pill{padding:6px 10px;background:#1d415b;border-radius:100px;color:#cde6f3;font-size:12px}
+    @media(max-width:520px){.f39-shell{padding:10px}.f39-top{font-size:14px}.f39-search button{padding:11px}.f39-tab{font-size:13px}}
   </style>
 </head>
 
 <body>
 
 <header>InversiónIA</header>
+
+<!-- Fase 39: las secciones originales permanecen completas bajo esta navegación. -->
+<div class="f39-shell" id="navegacionF39">
+  <div class="f39-inner">
+    <div class="f39-top"><strong>📊 InversiónIA 2026</strong><span class="f39-small">Panel simplificado · Fase 39</span></div>
+    <div class="f39-search">
+      <input type="search" id="buscarAccionF39" placeholder="Buscar IREN, OHL, NVDA…" autocomplete="off" aria-label="Buscar una acción o ticker" />
+      <button type="button" id="buscarAccionBotonF39">Buscar</button>
+    </div>
+    <nav class="f39-tabs" aria-label="Secciones de InversiónIA">
+      <button type="button" class="f39-tab" data-f39-tab="inicio" aria-current="page">🏠 Inicio</button>
+      <button type="button" class="f39-tab" data-f39-tab="cartera">💼 Mi cartera</button>
+      <button type="button" class="f39-tab" data-f39-tab="mercado">📰 Noticias y alertas</button>
+      <button type="button" class="f39-tab" data-f39-tab="radar">🎯 Radar</button>
+      <button type="button" class="f39-tab" data-f39-tab="laboratorio">🧪 Laboratorio</button>
+      <button type="button" class="f39-tab" data-f39-tab="grafico">📈 Gráfico</button>
+    </nav>
+  </div>
+</div>
+<div id="resultadoBuscadorF39" class="f39-result" aria-live="polite" hidden></div>
+<div id="pantallaRadarF39" class="f39-screencard f39-screen" hidden>
+  <h2>🎯 Radar de oportunidades</h2>
+  <p><strong>Objetivo previsto:</strong> estudiar hasta 2 empresas cotizadas en NASDAQ o NYSE con precio máximo de 5 USD.</p>
+  <div class="f39-pills"><span class="f39-pill">Precio ≤ 5 USD</span><span class="f39-pill">2 candidatos</span><span class="f39-pill">USA</span><span class="f39-pill">Análisis técnico + riesgos</span></div>
+  <p class="f39-small">El cribado de todo el mercado todavía no está conectado. No presentamos candidatos ficticios ni utilizamos las acciones de tu cartera como si fueran un rastreo exhaustivo. Requerirá una fuente de datos de mercado, filtros de liquidez y comprobaciones de dilución, deuda y noticias.</p>
+  <p class="f39-small">Ninguna búsqueda ejecutará órdenes ni modificará tu cartera o el laboratorio de reglas 0/60.</p>
+</div>
+<div id="pantallaInicioF39" class="f39-screencard f39-screen">
+  <h2>👋 Tu centro de inversión</h2>
+  <p>Busca una empresa arriba para abrir su ficha completa, con posiciones, precio medio, objetivos, análisis y recomendaciones existentes.</p>
+  <p>También puedes entrar en <strong>Mi cartera</strong>, consultar <strong>Noticias y alertas</strong> o abrir el <strong>Laboratorio</strong> cuando quieras revisar las fases históricas.</p>
+  <p class="f39-small">Las cotizaciones muestran la última consulta disponible, no garantizan tiempo real. Tus posiciones y reglas permanecen intactas.</p>
+</div>
+
 
 <div class="wrap">
   <div style="background:#0d1932;color:white;padding:20px;border-radius:18px;margin-bottom:20px;">
@@ -135,12 +187,12 @@
     <div id="laboratorioF18" style="margin-top:12px;padding:13px;background:#102b3b;border:1px solid #477589;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando laboratorio de simulación...</div>
 
     <section id="laboratorioHistoricoF19" style="margin-top:14px;padding:13px;border:1px solid #527c93;border-radius:11px;background:#112c3c;line-height:1.55;">
-      <strong>📈 Simulación histórica · Fase 38: nuevas velas y reglas congeladas</strong>
+      <strong>📈 Simulación histórica · Fase 39: nuevas velas y reglas congeladas</strong>
       <p style="font-size:12px;color:#c4d8e6">Selecciona un CSV de velas diarias de UNA acción (Date, Open, High, Low, Close, Volume), ordenadas o no. Se calcula cada señal al cierre y se simula la entrada en la apertura siguiente. Salida tras 10 sesiones, en la apertura siguiente. Incluye costes configurables. No ejecuta órdenes ni utiliza velas futuras para generar señales.</p>
       <label for="archivoVelasF19" style="display:block;margin-bottom:5px">CSV histórico</label>
       <input type="file" id="archivoVelasF19" accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
       <div style="margin-top:14px;padding:11px;border:1px solid #52849c;border-radius:9px;background:#123148">
-        <strong>🧪 Validación con otras acciones · Fase 38</strong>
+        <strong>🧪 Validación con otras acciones · Fase 39</strong>
         <p style="font-size:12px;color:#cbdbea">Selecciona hasta 8 archivos CSV diarios de acciones distintas de IREN (puedes seleccionar varios a la vez). Este laboratorio no guarda ni altera la cartera.</p>
         <label for="archivosValidacionF22" style="display:block;margin:5px 0">CSV de estudio y candidatos a validación</label>
         <input type="file" id="archivosValidacionF22" multiple accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
@@ -154,7 +206,7 @@
         <p style="font-size:11px;color:#f0d7ad;margin:6px 0 2px">El periodo se calcula sobre las velas que contenga el CSV. Para analizar varios años hay que cargar un CSV de varios años. Ampliar la ventana reutiliza datos históricos; NO equivale a una validación independiente.</p>
         <div id="resultadoF22" style="font-size:12px;margin-top:9px">Sin archivos de validación.</div>
         <section id="autoHistoricoF34" style="margin-top:14px;padding:12px;border:1px solid #78aaa5;border-radius:10px;background:#123a42;line-height:1.6">
-          <strong>📡 Fase 38 · Velas automáticas y seguimiento de resultados</strong>
+          <strong>📡 Fase 39 · Velas automáticas y seguimiento de resultados</strong>
           <p style="font-size:12px;color:#cfe2e2">Indica hasta 8 tickers NUEVOS de EE. UU., separados por comas (por ejemplo MSFT,NVDA). Se descargan velas diarias CERRADAS mediante /api/history, se unen por fecha sin duplicados y se guardan solo en este navegador. Se intentará actualizar al abrir la app con la lista guardada; NO funciona con el iPhone cerrado ni crea alarmas push. No se modifica la cartera.</p>
           <label for="tickersAutoF34" style="display:block;font-size:12px">Acciones nuevas que quieres investigar (no repetir IREN, JPM, AAPL, TSLA, RKLB, RXRX ni ASTS)</label>
           <input id="tickersAutoF34" type="text" placeholder="MSFT,NVDA,AMZN" autocapitalize="characters" spellcheck="false" style="box-sizing:border-box;width:100%;padding:10px;border-radius:7px;border:1px solid #86aebe;background:#0c2538;color:white;font-size:14px" />
@@ -165,16 +217,16 @@
           </div>
           <div id="estadoVelasF34" aria-live="polite" style="font-size:12px;margin-top:10px;color:#cbdfe4">Sin historial automático guardado.</div>
           <section id="seguimientoF35" aria-live="polite" style="margin-top:12px;padding:11px;border:1px solid #8eaed2;border-radius:9px;background:#173b50;font-size:12px;line-height:1.6">
-            <strong>📋 Fase 38 · Seguimiento automático de prueba</strong>
+            <strong>📋 Fase 39 · Seguimiento automático de prueba</strong>
             <div id="estadoSeguimientoF35">Preparando el historial almacenado...</div>
           </section>
           <section id="alertasF36" aria-live="polite" style="margin-top:12px;padding:11px;border:1px solid #bdab74;border-radius:9px;background:#1a3542;font-size:12px;line-height:1.6">
-            <strong>🔎 Fase 38 · Diagnóstico de recuperación: mejoras y condiciones pendientes</strong>
+            <strong>🔎 Fase 39 · Diagnóstico de recuperación: mejoras y condiciones pendientes</strong>
             <p style="color:#d8e7ee;margin:7px 0">Comparación descriptiva de la última vela cerrada frente a la anterior: identifica mejoras, deterioros y requisitos pendientes. No es una recomendación de compra/venta, ni notificación push. Las reglas de simulación 0 y 60 siguen congeladas.</p>
             <div id="estadoAlertasF36">Esperando historiales guardados...</div>
           </section>
           <section id="cambiosF38" aria-live="polite" style="margin-top:12px;padding:11px;border:1px solid #7facc0;border-radius:9px;background:#18394b;font-size:12px;line-height:1.6">
-            <strong>🧭 Fase 38 · Registro de cambios de señal entre cierres</strong>
+            <strong>🧭 Fase 39 · Registro de cambios de señal entre cierres</strong>
             <p style="color:#c9dfe8;margin:7px 0">Reconstruye los cambios con velas diarias cerradas desde el 12/11/2026. Distingue debilidad (0–1 filtros), mejora parcial (2–3) y cuatro filtros alineados (4). Solo seguimiento descriptivo; sin órdenes ni avisos push.</p>
             <div id="estadoCambiosF38">Preparando cambios históricos...</div>
           </section>
@@ -2214,6 +2266,7 @@ async function cargarDatos() {
   for (const activo of activos) {
     const div = document.createElement("div");
     div.className = "activo";
+    div.dataset.f39Ticker = activo.ticker;
 
     try {
      const alertasAntes = alertas.length;
@@ -3496,7 +3549,7 @@ function renderAlertasF36(){
  }
  par(destino,'Diagnóstico local con velas cerradas guardadas. Se recalcula al abrir la página o actualizar velas. Sin alertas push, sin cambios de posiciones, precios medios, memoria ni reglas 0/60.','font-size:11px;color:#c6d7e3');
 }
-// Fase 38: registro reconstruido exclusivamente a partir del historial de cierres.
+// Fase 39: registro reconstruido exclusivamente a partir del historial de cierres.
 // NO altera las reglas prospectivas 0/60, almacenamiento, posiciones o alertas reales.
 function renderCambiosF38(){
  const destino=document.getElementById('estadoCambiosF38');if(!destino)return;
@@ -3588,8 +3641,103 @@ function iniciarF34(){
  if(tickersF34.length)actualizarF34();
 }
 
+
+// Fase 39: capa de presentación. No lee ni escribe las claves existentes de localStorage.
+function iniciarInterfazF39(){
+  const envolturas=[...document.querySelectorAll('body > .wrap')];
+  const primera=envolturas[0], grafico=envolturas[1];
+  if(!primera)return;
+  const hero=primera.firstElementChild;
+  const memoria=document.getElementById('memoriaDecisionesCard');
+  const cartera=document.getElementById('panelPrincipal');
+  const posiciones=document.getElementById('carteraTiempoReal');
+  const noticias=document.getElementById('noticiasDinamicas')?.closest('.card');
+  const alertas=document.getElementById('alertasDinamicas')?.closest('.card');
+  const inicio=document.getElementById('pantallaInicioF39');
+  const radar=document.getElementById('pantallaRadarF39');
+  const resultado=document.getElementById('resultadoBuscadorF39');
+  const entrada=document.getElementById('buscarAccionF39');
+  let tabActual='inicio';
+  function visible(elemento,mostrar){if(elemento)elemento.classList.toggle('f39-hide',!mostrar);}
+  function cambiar(tab){
+    tabActual=tab;
+    visible(hero,tab==='inicio');
+    visible(cartera,tab==='inicio'||tab==='cartera');
+    visible(posiciones,tab==='cartera');
+    visible(noticias,tab==='mercado');
+    visible(alertas,tab==='mercado');
+    visible(memoria,tab==='laboratorio');
+    visible(grafico,tab==='grafico');
+    if(inicio)inicio.hidden=tab!=='inicio';
+    if(radar)radar.hidden=tab!=='radar';
+    document.querySelectorAll('.f39-tab').forEach(b=>{
+      if(b.dataset.f39Tab===tab)b.setAttribute('aria-current','page');
+      else b.removeAttribute('aria-current');
+    });
+    if(tab!=='cartera'){
+      const lista=document.getElementById('listaActivos');
+      if(lista)[...lista.children].forEach(n=>visible(n,true));
+    }
+  }
+  document.querySelectorAll('.f39-tab').forEach(b=>b.addEventListener('click',()=>{
+    resultado.hidden=true;entrada.value='';cambiar(b.dataset.f39Tab);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }));
+  function escapeHTML(t){return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function buscar(){
+    const q=entrada.value.trim().toLocaleUpperCase('es-ES');
+    if(!q){resultado.hidden=false;resultado.textContent='Escribe el nombre o símbolo de una empresa (por ejemplo, IREN).';return;}
+    const hallados=activos.filter(a=>a.ticker.toLocaleUpperCase('es-ES').includes(q)||a.nombre.toLocaleUpperCase('es-ES').includes(q));
+    const extra=typeof tickersF34!=='undefined'?tickersF34.filter(t=>t.includes(q)&&!hallados.some(a=>a.ticker===t)):[];
+    resultado.hidden=false;
+    if(!hallados.length&&!extra.length){
+      resultado.textContent='No encuentro esa acción en la cartera ni en las acciones de prueba guardadas. Este buscador local aún no es un buscador de todas las empresas del mercado.';
+      return;
+    }
+    resultado.innerHTML='<strong>🔎 Resultados de búsqueda</strong><div class="f39-small">Selecciona una empresa para abrir su ficha de cartera, o su seguimiento experimental si existe.</div>'+
+      hallados.map(a=>{
+        const regla=reglas[a.ticker];
+        const n=a.titulos??a.cantidad;
+        return '<div style="margin:12px 0;padding:12px;background:#193e59;border-radius:10px">'+
+        '<strong>'+escapeHTML(a.nombre)+' ('+escapeHTML(a.ticker)+')</strong><div class="f39-small">'+
+        'Cantidad: '+escapeHTML(n.toLocaleString('es-ES'))+' · Precio medio base: '+escapeHTML(formatoNumero(a.compra))+' '+escapeHTML(a.moneda)+
+        (a.ticker==='IREN'?' · El coste exacto de las 45 acciones nuevas puede seguir provisional.':'')+
+        '</div><div class="f39-small">'+(regla?'Referencia compra: '+escapeHTML(regla.compra)+' · objetivo de venta: '+escapeHTML(regla.venta)+' ('+escapeHTML(a.moneda==='€'&&!a.cotizaUSD?'EUR':'USD')+')':'Sin objetivo registrado')+
+        '</div><div class="f39-small">'+escapeHTML(regla?.accion||'Sin recomendación predefinida')+'</div>'+
+        '<button class="f39-action" type="button" data-f39-abrir="'+escapeHTML(a.ticker)+'" style="margin-top:8px">Ver ficha completa y precio consultado</button></div>';
+      }).join('')+extra.map(t=>'<div style="padding:10px">'+escapeHTML(t)+' · En seguimiento técnico experimental <button class="f39-action" type="button" data-f39-lab="1">Abrir laboratorio</button></div>').join('');
+    resultado.querySelectorAll('[data-f39-abrir]').forEach(b=>b.addEventListener('click',()=>{
+      const ticker=b.dataset.f39Abrir;
+      cambiar('cartera');
+      const lista=document.getElementById('listaActivos');
+      if(lista){[...lista.children].forEach(n=>visible(n,n.dataset.f39Ticker===ticker));}
+      resultado.hidden=true;
+      posiciones?.scrollIntoView({behavior:'smooth',block:'start'});
+    }));
+    resultado.querySelectorAll('[data-f39-lab]').forEach(b=>b.addEventListener('click',()=>{
+      cambiar('laboratorio');resultado.hidden=true;
+      document.getElementById('autoHistoricoF34')?.scrollIntoView({behavior:'smooth',block:'start'});
+    }));
+  }
+  document.getElementById('buscarAccionBotonF39')?.addEventListener('click',buscar);
+  entrada?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();buscar();}});
+  // Los datos se dibujan de forma asíncrona; aplica el filtro cuando llega cada acción.
+  const lista=document.getElementById('listaActivos');
+  if(lista){
+    new MutationObserver(()=>{
+      if(tabActual!=='cartera')return;
+      const q=entrada.value.trim().toLocaleUpperCase('es-ES');
+      if(!q)return;
+      const exacto=activos.find(a=>a.ticker.toLocaleUpperCase('es-ES')===q);
+      if(!exacto)return;
+      [...lista.children].forEach(n=>visible(n,n.dataset.f39Ticker===exacto.ticker));
+    }).observe(lista,{childList:true});
+  }
+  cambiar('inicio');
+}
+
 cargarNoticias();
-window.addEventListener("DOMContentLoaded", ()=>{iniciarControlesMemoriaF16();iniciarF19();iniciarF22();iniciarF34();cargarDatos();});
+window.addEventListener("DOMContentLoaded", ()=>{iniciarInterfazF39();iniciarControlesMemoriaF16();iniciarF19();iniciarF22();iniciarF34();cargarDatos();});
 </script>
 
 <div class="wrap">
