@@ -27,6 +27,62 @@ function ultimoConcepto(facts,tags,units=['USD']){
   }
   return null;
 }
+
+// Fase 44: únicamente hechos XBRL con "frame" explícito y la misma base temporal.
+// Q=flujo de ~3 meses; FY=flujo anual; QI=saldo puntual a fin de trimestre.
+// No comparar acumulados YTD como trimestrales. No derivar riesgo de dilución de solo dos saldos.
+function comparacionHomogenea(companyfacts, tags, unidad, naturaleza){
+  const gaap=companyfacts?.facts?.['us-gaap']||{};
+  const prefijos=naturaleza==='saldo'?['I']:['Q','FY'];
+  const candidatos=[];
+  for(const tag of tags){
+    const lista=gaap[tag]?.units?.[unidad]||[];
+    for(const x of lista){
+      if(!x||!Number.isFinite(x.val)||!x.filed||!x.end||!['10-K','10-Q'].includes(x.form))continue;
+      const frame=String(x.frame||'');
+      let tipo='',anio=0,trim=0;
+      let m=frame.match(/^CY(20\d{2})Q([1-4])I$/);
+      if(m && naturaleza==='saldo'){tipo='Q';anio=Number(m[1]);trim=Number(m[2]);}
+      m=frame.match(/^CY(20\d{2})Q([1-4])$/);
+      if(m && naturaleza==='flujo'){tipo='Q';anio=Number(m[1]);trim=Number(m[2]);
+        const dias=x.start?(Date.parse(x.end)-Date.parse(x.start))/86400000:NaN;
+        if(!Number.isFinite(dias)||dias<65||dias>105)continue;
+      }
+      m=frame.match(/^CY(20\d{2})$/);
+      if(m && naturaleza==='flujo'){tipo='FY';anio=Number(m[1]);
+        const dias=x.start?(Date.parse(x.end)-Date.parse(x.start))/86400000:NaN;
+        if(!Number.isFinite(dias)||dias<330||dias>380)continue;
+      }
+      if(!tipo)continue;
+      candidatos.push({value:x.val,frame,end:x.end,start:x.start||null,filed:x.filed,form:x.form,tag,tipo,anio,trim,accn:x.accn||''});
+    }
+  }
+  // Mantener la misma definición XBRL para cada par; preferir observaciones recientes,
+  // y revisiones publicadas más tarde SOLO si existen datos comparables del año previo.
+  candidatos.sort((a,b)=>b.anio-a.anio||((b.tipo==='Q')-(a.tipo==='Q'))||b.trim-a.trim||b.filed.localeCompare(a.filed));
+  for(const actual of candidatos){
+    const anteriores=candidatos.filter(a=>a.tag===actual.tag&&a.tipo===actual.tipo&&a.trim===actual.trim&&a.anio===actual.anio-1);
+    anteriores.sort((a,b)=>b.filed.localeCompare(a.filed));
+    if(!anteriores.length)continue;
+    const anterior=anteriores[0];
+    return {unit:unidad,concept:actual.tag,kind:actual.tipo==='FY'?'anual':(naturaleza==='saldo'?'saldo trimestral':'trimestre'),current:actual,previous:anterior,
+      change:actual.value-anterior.value,
+      changePct:anterior.value!==0?((actual.value-anterior.value)/Math.abs(anterior.value))*100:null};
+  }
+  return null;
+}
+function crearComparaciones(f){
+ const campos=[
+  ['Efectivo y equivalentes',['CashAndCashEquivalentsAtCarryingValue'],'USD','saldo'],
+  ['Deuda a largo plazo',['LongTermDebtNoncurrent','LongTermDebt'],'USD','saldo'],
+  ['Parte corriente de deuda a largo plazo',['LongTermDebtCurrent'],'USD','saldo'],
+  ['Ingresos',['RevenueFromContractWithCustomerExcludingAssessedTax','Revenues','SalesRevenueNet'],'USD','flujo'],
+  ['Beneficio o pérdida neta',['NetIncomeLoss'],'USD','flujo'],
+  ['Acciones ordinarias en circulación',['CommonStockSharesOutstanding'],'shares','saldo']
+ ];
+ return campos.map(([label,tags,unit,kind])=>({label,comparison:comparacionHomogenea(f,tags,unit,kind)}));
+}
+
 export async function onRequestGet({request,env}){
   const sym=(new URL(request.url)).searchParams.get('symbol')?.toUpperCase().trim()||'';
   if(!/^[A-Z][A-Z0-9.\-]{0,9}$/.test(sym))return json({error:'Símbolo no válido'},400);
@@ -66,6 +122,6 @@ export async function onRequestGet({request,env}){
       const units=label.startsWith('Acciones')?['shares']:['USD'];
       const v=ultimoConcepto(f,tags,units);if(v)financials.push({label,...v});
     }
-    return json({symbol:sym,cik,company:s?.name||registro.title,checkedAt:new Date().toISOString(),financials,filings,source:'SEC EDGAR; conceptos XBRL de periodos heterogéneos; sin juicio automático de riesgo'},200);
+    return json({symbol:sym,cik,company:s?.name||registro.title,checkedAt:new Date().toISOString(),financials,comparisons:crearComparaciones(f),filings,source:'SEC EDGAR; conceptos XBRL de periodos heterogéneos; sin juicio automático de riesgo'},200);
   }catch(e){return json({error:'No se pudieron recuperar los registros oficiales SEC: '+(e?.message||'error')+'. No se mostrarán valores estimados.'},502);}
 }
