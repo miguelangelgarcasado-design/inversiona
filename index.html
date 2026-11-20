@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InversiónIA · Fase 45</title>
+  <title>InversiónIA · Fase 46</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a5cff">
 
@@ -71,7 +71,7 @@
       opacity: .7;
     }
 
-    /* Fase 45: navegación, sin tocar cálculos ni almacenamiento */
+    /* Fase 46: navegación, sin tocar cálculos ni almacenamiento */
     .f39-shell{position:sticky;top:0;z-index:50;background:#0d1932;border-bottom:1px solid #35577e;padding:12px 15px;box-shadow:0 4px 15px #0007}
     .f39-inner{max-width:900px;margin:auto}
     .f39-top{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:9px}
@@ -89,6 +89,7 @@
     .f42-panel ul{padding-left:21px;margin:7px 0}
     .f42-panel summary{cursor:pointer;color:#b9e5ff}
     .f40-radar-result{padding:12px;border:1px solid #466c89;border-radius:10px;background:#173651;margin:10px 0;line-height:1.65}
+    .f46-rank{margin-top:10px;padding:10px;border:1px solid #7899ae;border-radius:9px;background:#102d43;font-size:13px;line-height:1.6}.f46-rank ul{padding-left:20px;margin:5px 0}
     .f45-risk{margin:15px 0;padding:14px;border:1px solid #7492b0;border-radius:11px;background:#112d44}
     .f45-risk[data-status="deterioro"]{border-color:#ec8888}
     .f45-risk[data-status="vigilancia"]{border-color:#edc176}
@@ -108,10 +109,10 @@
 
 <header>InversiónIA</header>
 
-<!-- Fase 45: las secciones originales permanecen completas bajo esta navegación. -->
+<!-- Fase 46: las secciones originales permanecen completas bajo esta navegación. -->
 <div class="f39-shell" id="navegacionF39">
   <div class="f39-inner">
-    <div class="f39-top"><strong>📊 InversiónIA 2026</strong><span class="f39-small">Panel simplificado · Fase 45</span></div>
+    <div class="f39-top"><strong>📊 InversiónIA 2026</strong><span class="f39-small">Panel simplificado · Fase 46</span></div>
     <div class="f39-search">
       <input type="search" id="buscarAccionF39" placeholder="Buscar IREN, OHL, NVDA…" autocomplete="off" aria-label="Buscar una acción o ticker" />
       <button type="button" id="buscarAccionBotonF39">Buscar</button>
@@ -128,7 +129,7 @@
 </div>
 <div id="resultadoBuscadorF39" class="f39-result" aria-live="polite" hidden></div>
 <div id="pantallaRadarF39" class="f39-screencard f39-screen" hidden>
-  <h2>🎯 Radar de oportunidades · Fase 45</h2>
+  <h2>🎯 Radar de oportunidades · Fase 46</h2>
   <p><strong>Preselección técnica:</strong> analiza hasta ocho símbolos que indiques <em>o</em> revisa automáticamente una lista inicial de 24 empresas. Selecciona hasta dos candidatos cuyo último cierre diario no supere 5 USD.</p>
   <label for="radarListaF40">Símbolos de empresas estadounidenses a estudiar, separados por comas</label>
   <input class="f40-radar-input" id="radarListaF40" type="text" placeholder="Ejemplo: introduzca 2–8 tickers" autocomplete="off" />
@@ -136,11 +137,11 @@
   <input class="f40-radar-input" id="radarMaxF40" type="number" value="5" min="0.01" max="5" step="0.01" inputmode="decimal" />
   <button id="radarEjecutarF40" type="button" class="f39-action">Analizar mis símbolos (hasta 8)</button>
   <button id="radarAutoF41" type="button" class="f39-action" style="margin-left:7px;background:#27644d">🔎 Buscar candidatos automáticamente</button>
-  <p class="f39-small">La Fase 45 añade a las comparaciones SEC un <strong>semáforo de riesgo financiero explicativo</strong> (sin compra validada ni predicción de dilución). Si faltan datos comparables se indicará expresamente; no se estima la dilución futura. No son señales ni precios garantizados.</p>
+  <p class="f39-small">La Fase 46 considera <strong>también el semáforo financiero SEC</strong> al priorizar candidatos, después de la criba técnica: comprueba hasta ocho finalistas y muestra los no verificados. No valida compras ni predice dilución. Si faltan datos comparables se indicará expresamente; no se estima la dilución futura. No son señales ni precios garantizados.</p>
   <p class="f39-small">La búsqueda automática revisa <strong>24 símbolos de una lista inicial predefinida</strong>, no todas las empresas del mercado. No necesitas escribir ningún ticker. Muestra cuántos ha consultado y los descartes. Los precios son de la última vela cerrada, no necesariamente actuales.</p>
   <div id="radarSalidaF40" aria-live="polite" style="margin-top:15px">Introduce símbolos para comenzar.</div>
   <p class="f39-small">Fuente: velas diarias cerradas del endpoint /api/history, cuya disponibilidad depende de Yahoo Finance. La evaluación usa precio, RSI(14), medias móviles de 20 y 50 sesiones, MACD y volumen. Se exige liquidez estimada (volumen negociado en dólares) para la preselección.</p>
-  <p class="f39-small"><strong>Limitación importante:</strong> la exploración automática utiliza únicamente una lista inicial predefinida, NO todas las empresas de NASDAQ y NYSE. También admite símbolos indicados por ti; el proveedor de velas tampoco verifica de forma suficiente su bolsa, valoración, resultados, deuda o futuras emisiones. La Fase 45 añade un semáforo prudente a las comparaciones de datos oficiales de la SEC. No sustituye una auditoría financiera ni valida una compra. Si la función no está publicada o falla, los indicadores permanecerán pendientes; presentar documentos no equivale a validar una compra. Toda candidata queda <strong>pendiente de revisión fundamental, noticias y dilución</strong> antes de plantear una compra. Una cotización baja no equivale a una empresa barata. No emite órdenes, no altera posiciones ni las reglas 0/60 y no guarda estas búsquedas.</p>
+  <p class="f39-small"><strong>Limitación importante:</strong> la exploración automática utiliza únicamente una lista inicial predefinida, NO todas las empresas de NASDAQ y NYSE. También admite símbolos indicados por ti; el proveedor de velas tampoco verifica de forma suficiente su bolsa, valoración, resultados, deuda o futuras emisiones. La Fase 46 ordena una lista corta de candidatos según el semáforo SEC y su evidencia disponible; no asegura que el resto no tenga riesgos. No sustituye una auditoría financiera ni valida una compra. Si la función no está publicada o falla, los indicadores permanecerán pendientes; presentar documentos no equivale a validar una compra. Toda candidata queda <strong>pendiente de revisión fundamental, noticias y dilución</strong> antes de plantear una compra. Una cotización baja no equivale a una empresa barata. No emite órdenes, no altera posiciones ni las reglas 0/60 y no guarda estas búsquedas.</p>
 </div>
 <div id="pantallaInicioF39" class="f39-screencard f39-screen">
   <h2>👋 Tu centro de inversión</h2>
@@ -208,12 +209,12 @@
     <div id="laboratorioF18" style="margin-top:12px;padding:13px;background:#102b3b;border:1px solid #477589;border-radius:10px;font-size:13px;line-height:1.6;" aria-live="polite">Preparando laboratorio de simulación...</div>
 
     <section id="laboratorioHistoricoF19" style="margin-top:14px;padding:13px;border:1px solid #527c93;border-radius:11px;background:#112c3c;line-height:1.55;">
-      <strong>📈 Simulación histórica · Fase 45: nuevas velas y reglas congeladas</strong>
+      <strong>📈 Simulación histórica · Fase 46: nuevas velas y reglas congeladas</strong>
       <p style="font-size:12px;color:#c4d8e6">Selecciona un CSV de velas diarias de UNA acción (Date, Open, High, Low, Close, Volume), ordenadas o no. Se calcula cada señal al cierre y se simula la entrada en la apertura siguiente. Salida tras 10 sesiones, en la apertura siguiente. Incluye costes configurables. No ejecuta órdenes ni utiliza velas futuras para generar señales.</p>
       <label for="archivoVelasF19" style="display:block;margin-bottom:5px">CSV histórico</label>
       <input type="file" id="archivoVelasF19" accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
       <div style="margin-top:14px;padding:11px;border:1px solid #52849c;border-radius:9px;background:#123148">
-        <strong>🧪 Validación con otras acciones · Fase 45</strong>
+        <strong>🧪 Validación con otras acciones · Fase 46</strong>
         <p style="font-size:12px;color:#cbdbea">Selecciona hasta 8 archivos CSV diarios de acciones distintas de IREN (puedes seleccionar varios a la vez). Este laboratorio no guarda ni altera la cartera.</p>
         <label for="archivosValidacionF22" style="display:block;margin:5px 0">CSV de estudio y candidatos a validación</label>
         <input type="file" id="archivosValidacionF22" multiple accept=".csv,text/csv,text/plain" style="max-width:100%;font-size:13px" />
@@ -227,7 +228,7 @@
         <p style="font-size:11px;color:#f0d7ad;margin:6px 0 2px">El periodo se calcula sobre las velas que contenga el CSV. Para analizar varios años hay que cargar un CSV de varios años. Ampliar la ventana reutiliza datos históricos; NO equivale a una validación independiente.</p>
         <div id="resultadoF22" style="font-size:12px;margin-top:9px">Sin archivos de validación.</div>
         <section id="autoHistoricoF34" style="margin-top:14px;padding:12px;border:1px solid #78aaa5;border-radius:10px;background:#123a42;line-height:1.6">
-          <strong>📡 Fase 45 · Velas automáticas y seguimiento de resultados</strong>
+          <strong>📡 Fase 46 · Velas automáticas y seguimiento de resultados</strong>
           <p style="font-size:12px;color:#cfe2e2">Indica hasta 8 tickers NUEVOS de EE. UU., separados por comas (por ejemplo MSFT,NVDA). Se descargan velas diarias CERRADAS mediante /api/history, se unen por fecha sin duplicados y se guardan solo en este navegador. Se intentará actualizar al abrir la app con la lista guardada; NO funciona con el iPhone cerrado ni crea alarmas push. No se modifica la cartera.</p>
           <label for="tickersAutoF34" style="display:block;font-size:12px">Acciones nuevas que quieres investigar (no repetir IREN, JPM, AAPL, TSLA, RKLB, RXRX ni ASTS)</label>
           <input id="tickersAutoF34" type="text" placeholder="MSFT,NVDA,AMZN" autocapitalize="characters" spellcheck="false" style="box-sizing:border-box;width:100%;padding:10px;border-radius:7px;border:1px solid #86aebe;background:#0c2538;color:white;font-size:14px" />
@@ -238,16 +239,16 @@
           </div>
           <div id="estadoVelasF34" aria-live="polite" style="font-size:12px;margin-top:10px;color:#cbdfe4">Sin historial automático guardado.</div>
           <section id="seguimientoF35" aria-live="polite" style="margin-top:12px;padding:11px;border:1px solid #8eaed2;border-radius:9px;background:#173b50;font-size:12px;line-height:1.6">
-            <strong>📋 Fase 45 · Seguimiento automático de prueba</strong>
+            <strong>📋 Fase 46 · Seguimiento automático de prueba</strong>
             <div id="estadoSeguimientoF35">Preparando el historial almacenado...</div>
           </section>
           <section id="alertasF36" aria-live="polite" style="margin-top:12px;padding:11px;border:1px solid #bdab74;border-radius:9px;background:#1a3542;font-size:12px;line-height:1.6">
-            <strong>🔎 Fase 45 · Diagnóstico de recuperación: mejoras y condiciones pendientes</strong>
+            <strong>🔎 Fase 46 · Diagnóstico de recuperación: mejoras y condiciones pendientes</strong>
             <p style="color:#d8e7ee;margin:7px 0">Comparación descriptiva de la última vela cerrada frente a la anterior: identifica mejoras, deterioros y requisitos pendientes. No es una recomendación de compra/venta, ni notificación push. Las reglas de simulación 0 y 60 siguen congeladas.</p>
             <div id="estadoAlertasF36">Esperando historiales guardados...</div>
           </section>
           <section id="cambiosF38" aria-live="polite" style="margin-top:12px;padding:11px;border:1px solid #7facc0;border-radius:9px;background:#18394b;font-size:12px;line-height:1.6">
-            <strong>🧭 Fase 45 · Registro de cambios de señal entre cierres</strong>
+            <strong>🧭 Fase 46 · Registro de cambios de señal entre cierres</strong>
             <p style="color:#c9dfe8;margin:7px 0">Reconstruye los cambios con velas diarias cerradas desde el 12/11/2026. Distingue debilidad (0–1 filtros), mejora parcial (2–3) y cuatro filtros alineados (4). Solo seguimiento descriptivo; sin órdenes ni avisos push.</p>
             <div id="estadoCambiosF38">Preparando cambios históricos...</div>
           </section>
@@ -2236,7 +2237,7 @@ function iniciarControlesMemoriaF16(){
   pintarMemoriaF16(leerMemoriaF16());
 }
 
-// Fase 45: vista de precio medio calculado, solo en memoria (sin nueva persistencia).
+// Fase 46: vista de precio medio calculado, solo en memoria (sin nueva persistencia).
 const resumenCostesF40 = new Map();
 async function cargarDatos() {
   const lista = document.getElementById("listaActivos");
@@ -3574,7 +3575,7 @@ function renderAlertasF36(){
  }
  par(destino,'Diagnóstico local con velas cerradas guardadas. Se recalcula al abrir la página o actualizar velas. Sin alertas push, sin cambios de posiciones, precios medios, memoria ni reglas 0/60.','font-size:11px;color:#c6d7e3');
 }
-// Fase 45: registro reconstruido exclusivamente a partir del historial de cierres.
+// Fase 46: registro reconstruido exclusivamente a partir del historial de cierres.
 // NO altera las reglas prospectivas 0/60, almacenamiento, posiciones o alertas reales.
 function renderCambiosF38(){
  const destino=document.getElementById('estadoCambiosF38');if(!destino)return;
@@ -3667,7 +3668,7 @@ function iniciarF34(){
 }
 
 
-// Fase 45: capa de presentación. No lee ni escribe las claves existentes de localStorage.
+// Fase 46: capa de presentación. No lee ni escribe las claves existentes de localStorage.
 function iniciarInterfazF39(){
   const envolturas=[...document.querySelectorAll('body > .wrap')];
   const primera=envolturas[0], grafico=envolturas[1];
@@ -3770,9 +3771,9 @@ function iniciarInterfazF39(){
   cambiar('inicio');
 }
 
-// Fase 45: cribado de un conjunto de símbolos suministrado por el usuario.
+// Fase 46: cribado de un conjunto de símbolos suministrado por el usuario.
 // Solo red, sin persistencia, sin alterar cartera ni el laboratorio de simulación.
-// Fase 45: interpretación DESCRIPTIVA, sin persistencia ni operaciones.
+// Fase 46: interpretación DESCRIPTIVA, sin persistencia ni operaciones.
 // Solo se usan pares XBRL ya comprobados por el backend de la Fase 44.
 function resumenRiesgoFundamentalF45(items){
  const dict=new Map((Array.isArray(items)?items:[]).filter(x=>x&&x.label).map(x=>[x.label,x.comparison]));
@@ -3824,7 +3825,7 @@ function resumenRiesgoFundamentalF45(items){
 function mostrarRiesgoFundamentalF45(parent,comparaciones){
  const r=resumenRiesgoFundamentalF45(comparaciones);
  const caja=document.createElement('section');caja.className='f45-risk';caja.dataset.status=r.status;
- const h=document.createElement('strong');h.textContent='🛡️ Semáforo fundamental · Fase 45: '+r.title;caja.append(h);
+ const h=document.createElement('strong');h.textContent='🛡️ Semáforo fundamental · Fase 46: '+r.title;caja.append(h);
  const subt=document.createElement('p');subt.textContent='Cobertura: '+r.itemsEvaluados+'/6 conceptos con comparación homogénea. Reglas descriptivas predefinidas; no equivalen a una calificación crediticia ni recomendación de inversión.';caja.append(subt);
  const mostrar=(titulo,datos)=>{if(!datos.length)return;const s=document.createElement('strong');s.textContent=titulo;caja.append(s);const u=document.createElement('ul');datos.forEach(t=>{const li=document.createElement('li');li.textContent=t;u.append(li);});caja.append(u);};
  mostrar('Señales de deterioro:',r.advertencias);mostrar('Señales favorables:',r.favorables);mostrar('Pendiente o sin umbral:',r.pruebas);
@@ -3861,7 +3862,7 @@ function iniciarRadarF40(){
   }
   return e12-e26-senal;
  }
- // Fase 45: niveles matemáticos a partir de OHLC, no objetivos de analistas.
+ // Fase 46: niveles matemáticos a partir de OHLC, no objetivos de analistas.
  function fichaEscenarioF42(x){
    if(!(Number.isFinite(x.max20)&&Number.isFinite(x.min20)&&x.max20>x.min20&&Number.isFinite(x.sma20))){
      return '<div class="f42-panel">Niveles de seguimiento no disponibles: faltan máximos y mínimos históricos válidos.</div>';
@@ -3953,15 +3954,46 @@ function iniciarRadarF40(){
       while(siguiente<lista.length){const simbolo=lista[siguiente++];await examinar(simbolo);}
     }));
     aprobadas.sort((a,b)=>b.puntuacion-a.puntuacion||b.liquidez-a.liquidez||a.simbolo.localeCompare(b.simbolo));
-    const elegidas=aprobadas.slice(0,2);
+    // Fase 46: segunda criba fundamentada exclusivamente en comparaciones SEC disponibles.
+    // Top 8 técnico como máximo; no se afirma haber revisado el universo completo.
+    const prefinalistas=aprobadas.slice(0,8);
+    const grado={mejora:0,vigilancia:1,insuficiente:2,deterioro:3};
+    let revisadasSEC=0,verificadasSEC=0;
+    salida.textContent='Revisando datos financieros SEC de '+prefinalistas.length+' prefinalistas técnicos (máximo 8). Mantén la página abierta...';
+    let siguienteSEC=0;
+    async function revisarSEC(x){
+      const ctrl=new AbortController();
+      const reloj=setTimeout(()=>ctrl.abort(),11000);
+      try{
+        const r=await fetch('/api/sec?symbol='+encodeURIComponent(x.simbolo),{cache:'no-store',signal:ctrl.signal});
+        if(!r.ok)throw Error('HTTP '+r.status);
+        const j=await r.json();
+        if(j.error)throw Error(j.error);
+        if(String(j.symbol||'').toUpperCase()!==x.simbolo)throw Error('símbolo de respuesta no coincide');
+        const comps=Array.isArray(j.comparisons)?j.comparisons:[];
+        const riesgo=resumenRiesgoFundamentalF45(comps);
+        x.sec={estado:riesgo.status,titulo:riesgo.title,cobertura:riesgo.itemsEvaluados,avisos:riesgo.advertencias.slice(0,3),pendientes:riesgo.pruebas.slice(0,2),nota:riesgo.itemsEvaluados===0?'Sin pares XBRL comparables; no se interpreta como situación segura.':'Clasificación descriptiva basada en periodos comparables.'};
+        if(riesgo.itemsEvaluados>0)verificadasSEC++;
+      }catch(e){x.sec={estado:'insuficiente',titulo:'⚪ SEC NO VERIFICADA',cobertura:0,avisos:[],pendientes:[],nota:'No se pudo completar la consulta SEC ('+(e?.name==='AbortError'?'tiempo agotado':e?.message||'sin respuesta')+'). No se supone ausencia de riesgo.'};}
+      finally{clearTimeout(reloj);revisadasSEC++;salida.textContent='Criba SEC: '+revisadasSEC+'/'+prefinalistas.length+' · '+verificadasSEC+' con algún dato financiero comparable...';}
+    }
+    await Promise.all(Array.from({length:Math.min(2,prefinalistas.length)},async()=>{
+       while(siguienteSEC<prefinalistas.length){const x=prefinalistas[siguienteSEC++];await revisarSEC(x);}
+    }));
+    // La prioridad financiera antecede al desempate técnico. No se alteran las reglas del laboratorio.
+    prefinalistas.sort((a,b)=>grado[a.sec.estado]-grado[b.sec.estado]||b.puntuacion-a.puntuacion||b.liquidez-a.liquidez||a.simbolo.localeCompare(b.simbolo));
+    const elegidas=prefinalistas.slice(0,2);
     salida.innerHTML='<strong>'+ (esAuto?'Exploración automática de lista inicial':'Análisis de símbolos introducidos') + ': '+elegidas.length+' seleccionadas (máximo 2)</strong>'+
       '<p class="f39-small">Examinados '+lista.length+' símbolos · cumplen precio y liquidez: '+aprobadas.length+' · descartados o sin datos: '+rechazadas.length+'. '+(esAuto?'Universo predefinido de 24 símbolos, NO barrido completo del mercado.':'Símbolos proporcionados por ti.')+'</p>'+
+      '<p class="f39-small"><strong>Fase 46:</strong> primero se ordena por filtros técnicos y se consulta la SEC de hasta '+prefinalistas.length+' prefinalistas. Después se prioriza mejora parcial → vigilancia → información insuficiente → deterioro, con los filtros técnicos como desempate. '+verificadasSEC+' prefinalistas tienen comparaciones SEC; el resto NO equivale a empresas seguras. No es una revisión integral de sus cuentas, emisiones o noticias.</p>'+
+      '<details><summary>Ver situación SEC de los '+prefinalistas.length+' prefinalistas revisados</summary><ul>'+prefinalistas.map(x=>'<li>'+escapar(x.simbolo)+': '+escapar(x.sec.titulo)+' ('+x.sec.cobertura+'/6 conceptos homogéneos)</li>').join('')+'</ul></details>'+
       (elegidas.length?elegidas.map(x=>'<div class="f40-radar-result"><strong>'+escapar(x.simbolo)+'</strong> · '+x.precio.toFixed(2)+' USD · cierre '+escapar(x.fecha)+
+       '<div class="f46-rank"><strong>Criba financiera: '+escapar(x.sec.titulo)+'</strong> · cobertura '+x.sec.cobertura+'/6<br>'+escapar(x.sec.nota)+(x.sec.avisos.length?'<ul>'+x.sec.avisos.map(v=>'<li>'+escapar(v)+'</li>').join('')+'</ul>':'')+'</div>'+
        '<div>Filtros técnicos '+x.puntuacion+'/5 · RSI14 '+x.rsi.toFixed(1)+' · volumen relativo '+x.volumenRel.toFixed(2)+'×</div>'+
        '<div>Media 50: '+x.sma50.toFixed(2)+' USD · MACD diferencial '+x.macd.toFixed(3)+'</div>'+
        '<div>Liquidez media aproximada: '+Math.round(x.liquidez).toLocaleString('es-ES')+' USD/día</div>'+
-       '<div style="color:#ffdfaa">SOLO PARA ESTUDIO. No hay recomendación de compra.</div>'+fichaEscenarioF42(x)+fichaRiesgosF42(x)+
-       '<div class="f42-panel"><strong>🏛️ Datos oficiales SEC · Fase 45</strong><p class="f39-small">Consulta voluntaria SEC con comparaciones entre periodos equivalentes y semáforo financiero prudente. No implica solvencia ni ausencia de dilución.</p>'+
+       '<div style="color:#ffdfaa">SOLO PARA ESTUDIO. No hay recomendación de compra. La clasificación SEC NO verifica financiación futura, emisiones, mercado ni valoración.</div>'+fichaEscenarioF42(x)+fichaRiesgosF42(x)+
+       '<div class="f42-panel"><strong>🏛️ Datos oficiales SEC · Fase 46</strong><p class="f39-small">Consulta voluntaria SEC con comparaciones entre periodos equivalentes y semáforo financiero prudente. No implica solvencia ni ausencia de dilución.</p>'+
        '<button class="f39-action f43-sec-btn" type="button" data-sec-ticker="'+escapar(x.simbolo)+'">Consultar informes SEC</button><div class="f43-sec-result" aria-live="polite">Sin consulta. Análisis fundamental pendiente.</div></div></div>').join(''):'<p>Ningún símbolo cumple el precio, liquidez e historial requeridos con los datos disponibles.</p>')+
       (rechazadas.length?'<details><summary>Ver descartadas o sin datos ('+rechazadas.length+')</summary><p>'+rechazadas.map(escapar).join('<br>')+'</p></details>':'')+
       (esAuto?'<details><summary>Ver los 24 símbolos del universo inicial</summary><p>'+universoF41.map(escapar).join(', ')+'</p></details>':'')+
@@ -3969,7 +4001,7 @@ function iniciarRadarF40(){
   }catch(e){salida.textContent='No se ha podido completar la exploración: '+(e?.message||'error inesperado');}
   finally{enCurso=false;boton.disabled=false;automatico.disabled=false;}
  }
- // Fase 45: lectura voluntaria de información oficial. Sin persistencia y sin cambios de cartera.
+ // Fase 46: lectura voluntaria de información oficial. Sin persistencia y sin cambios de cartera.
  salida.addEventListener('click',async evento=>{
    const btn=evento.target.closest('.f43-sec-btn');
    if(!btn||!salida.contains(btn))return;
@@ -3990,8 +4022,8 @@ function iniciarRadarF40(){
      if(!financieros.length)add('p','No se han obtenido conceptos XBRL reconocidos para este emisor.');
      const ul=add('ul','');
      financieros.forEach(f=>add('li',f.label+': '+Number(f.value).toLocaleString('es-ES')+' '+f.unit+' · periodo '+f.end+' · presentado '+f.filed+' · '+f.form,ul));
-     // Fase 45: solo compara pares que el backend haya validado por frame, etiqueta XBRL y unidad.
-     add('strong','Comparación financiera entre periodos equivalentes · Fase 45:');
+     // Fase 46: solo compara pares que el backend haya validado por frame, etiqueta XBRL y unidad.
+     add('strong','Comparación financiera entre periodos equivalentes · Fase 46:');
      const comparaciones=Array.isArray(j.comparisons)?j.comparisons:[];
      if(!comparaciones.length)add('p','Esta versión de la función SEC no aporta comparaciones. Actualiza functions/api/sec.js; no se calculan estimaciones.');
      const ul44=add('ul','');
