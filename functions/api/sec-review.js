@@ -23,6 +23,31 @@ const TEMAS=[
  ['emisión / acciones',/\b(?:shares issued|shares sold|issuance of shares|common stock|gross proceeds|net proceeds|shares outstanding)\b/gi],
  ['liquidez / financiación',/\b(?:going concern|liquidity|cash runway|working capital|additional financing|capital requirements)\b/gi]
 ];
+
+// Fase 53: pistas de frases literales, nunca un sumatorio ni confirmación
+// de ejecución. Cada resultado pertenece SOLO al documento consultado.
+function pistasFinanciacionF53(texto){
+ const patrones=[
+  ['Oferta de acciones anunciada', /(?:we are offering|we offered|offering of|public offering of)\s.{0,100}?(?:[\d,]+)\s+shares/gi],
+  ['Acciones declaradas como vendidas', /(?:sale of|sold|sales of)\s+(?:[\d,]+)\s+shares/gi],
+  ['Ventas mediante ATM', /(?:[\d,]+)\s+shares.{0,85}?(?:at.the.market|ATM program)/gi],
+  ['Precio de oferta por acción', /(?:offering price|public offering price|price to public)\s.{0,50}?\$[\d,.]+/gi],
+  ['Importes ATM o capacidad futura', /(?:up to an aggregate of|up to a total of|net proceeds of)\s+\$[\d,.]+\s*(?:million|billion)?/gi]
+ ];
+ const pistas=[],vistos=new Set();
+ for(const [etiqueta,re] of patrones){
+   let m,n=0;
+   while((m=re.exec(texto))&&n<2&&pistas.length<10){
+     const inicio=Math.max(0,m.index-100),fin=Math.min(texto.length,m.index+m[0].length+105);
+     const extr=texto.slice(inicio,fin).trim();
+     const clave=etiqueta+':'+m[0].toLowerCase().replace(/\s+/g,' ');
+     if(vistos.has(clave))continue;
+     vistos.add(clave);pistas.push({etiqueta,texto:(inicio?'…':'')+extr+(fin<texto.length?'…':'')});n++;
+   }
+ }
+ return pistas;
+}
+
 export async function onRequestGet({request,env}){
  const q=new URL(request.url).searchParams;
  const sym=(q.get('symbol')||'').trim().toUpperCase(),raw=q.get('url')||'';
@@ -43,6 +68,6 @@ export async function onRequestGet({request,env}){
    const doc=await textoAcotado(res);if(doc.error)return responder({error:doc.error},doc.status);
    const texto=normalizar(doc.texto);const hallazgos=[];
    for(const [tema,exp] of TEMAS){let match,cnt=0;while((match=exp.exec(texto))&&cnt<3&&hallazgos.length<15){const start=Math.max(0,match.index-140),end=Math.min(texto.length,match.index+match[0].length+230);hallazgos.push({tema,extracto:(start?'…':'')+texto.slice(start,end)+(end<texto.length?'…':'')});cnt++;}}
-   return responder({symbol:sym,url:u.href,formato:/\.txt$/i.test(m[3])?'TXT':'HTML',consultado:new Date().toISOString(),bytesAnalizados:doc.bytesAnalizados,truncado:false,hallazgos,advertencia:'Búsqueda literal de términos en un único documento SEC, sin interpretación financiera ni revisión de anexos. Un resultado positivo no confirma acciones emitidas; uno negativo no descarta dilución. Abrir y contrastar el original.'});
+   return responder({symbol:sym,url:u.href,formato:/\.txt$/i.test(m[3])?'TXT':'HTML',consultado:new Date().toISOString(),bytesAnalizados:doc.bytesAnalizados,truncado:false,hallazgos,pistasF53:pistasFinanciacionF53(texto),advertencia:'Búsqueda literal de términos en un único documento SEC, sin interpretación financiera ni revisión de anexos. Un resultado positivo no confirma acciones emitidas; uno negativo no descarta dilución. Abrir y contrastar el original.'});
  }catch(e){return responder({error:'Lectura SEC no disponible: '+String(e?.message||'fallo de conexión')},502);}
 }
