@@ -4198,7 +4198,7 @@ function iniciarRadarF40(){
     const pendientes=prefinalistas.filter(x=>!x.confianza.candidato);
     // Fase 54: clasificación EXCLUSIVAMENTE visual; la lista corta no cambia.
     // En observación nunca equivale a recomendación o a aprobación financiera.
-    const observacion=pendingientesF54(pendientes);
+    const observacion=pendientesF54(pendientes);
     const excluidasRiesgo=pendientes.filter(x=>!observacion.includes(x));
     function etiquetaMotivoF54(x){
       if(x.ofertaF53?.pendiente)return 'Oferta/registro reciente sin verificar ('+x.ofertaF53.numero+' formulario(s)); revisar si hubo emisión y posibles documentos duplicados.';
