@@ -1,4 +1,4 @@
-// Fase 57: revisión documental SEC bajo demanda. Devuelve fragmentos SIN interpretar
+// Fase 58: revisión documental SEC bajo demanda. Devuelve fragmentos SIN interpretar
 // como emisiones ejecutadas. No guarda datos, no cambia cartera ni reglas del radar.
 const responder=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
 const MAX_BYTES=850000;
@@ -67,6 +67,31 @@ function cifrasF57(texto){
  }}return encontrados;
 }
 
+
+// Fase 58: detecta coincidencias textuales de importes dentro del documento
+// consultado. No compara documentos diferentes ni infiere identidad de operaciones.
+function avisosRepeticionF58(cifras){
+ const grupos=new Map();
+ const claveValor=c=>String(c.valor||'').toLowerCase().replace(/\s+/g,' ').trim();
+ for(let i=0;i<cifras.length;i++){
+   const c=cifras[i];const v=claveValor(c);
+   if(!v)continue;
+   const unidades=/acciones/.test(v)?'acciones':/\//.test(v)?'precio':'importe';
+   const k=unidades+'|'+v;
+   if(!grupos.has(k))grupos.set(k,[]);
+   grupos.get(k).push({indice:i+1,tipo:c.tipo});
+ }
+ const repetidos=[...grupos.entries()].filter(([,g])=>g.length>1).map(([k,g])=>({
+   valor:k.split('|').slice(1).join('|'),apariciones:g.length,
+   referencias:g.map(x=>x.indice),tipos:[...new Set(g.map(x=>x.tipo))],
+   interpretacion:'Posible repetición de una cuantía en este documento. NO sumar ni suponer que sean operaciones diferentes o iguales.'
+ }));
+ return {repetidos,
+   alcance:'Solo este documento SEC, con un máximo de ocho referencias extraídas; no identifica solapamientos entre documentos.',
+   periodos:'No verificado: las fechas de operaciones y los periodos de venta no se validan automáticamente. La fecha de presentación NO equivale a la fecha de ejecución.',
+   regla:'No agregar acciones ofrecidas, ventas declaradas ni capacidad financiera; comprobar expedientes originales y anexos.'};
+}
+
 export async function onRequestGet({request,env}){
  const q=new URL(request.url).searchParams;
  const sym=(q.get('symbol')||'').trim().toUpperCase(),raw=q.get('url')||'';
@@ -87,6 +112,6 @@ export async function onRequestGet({request,env}){
    const doc=await textoAcotado(res);if(doc.error)return responder({error:doc.error},doc.status);
    const texto=normalizar(doc.texto);const hallazgos=[];
    for(const [tema,exp] of TEMAS){let match,cnt=0;while((match=exp.exec(texto))&&cnt<3&&hallazgos.length<15){const start=Math.max(0,match.index-140),end=Math.min(texto.length,match.index+match[0].length+230);hallazgos.push({tema,extracto:(start?'…':'')+texto.slice(start,end)+(end<texto.length?'…':'')});cnt++;}}
-   return responder({symbol:sym,url:u.href,formato:/\.txt$/i.test(m[3])?'TXT':'HTML',consultado:new Date().toISOString(),bytesAnalizados:doc.bytesAnalizados,truncado:false,hallazgos,pistasF53:pistasFinanciacionF53(texto),cifrasF57:cifrasF57(texto),advertencia:'Búsqueda literal de términos en un único documento SEC, sin interpretación financiera ni revisión de anexos. Un resultado positivo no confirma acciones emitidas; uno negativo no descarta dilución. Abrir y contrastar el original.'});
+   return responder({symbol:sym,url:u.href,formato:/\.txt$/i.test(m[3])?'TXT':'HTML',consultado:new Date().toISOString(),bytesAnalizados:doc.bytesAnalizados,truncado:false,hallazgos,pistasF53:pistasFinanciacionF53(texto),cifrasF57:cifrasF57(texto),revisionF58:avisosRepeticionF58(cifrasF57(texto)),advertencia:'Búsqueda literal de términos en un único documento SEC, sin interpretación financiera ni revisión de anexos. Un resultado positivo no confirma acciones emitidas; uno negativo no descarta dilución. Abrir y contrastar el original.'});
  }catch(e){return responder({error:'Lectura SEC no disponible: '+String(e?.message||'fallo de conexión')},502);}
 }
