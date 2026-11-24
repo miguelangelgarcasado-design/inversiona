@@ -1,4 +1,4 @@
-// Fase 52: revisión documental SEC bajo demanda. Devuelve fragmentos SIN interpretar
+// Fase 57: revisión documental SEC bajo demanda. Devuelve fragmentos SIN interpretar
 // como emisiones ejecutadas. No guarda datos, no cambia cartera ni reglas del radar.
 const responder=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
 const MAX_BYTES=850000;
@@ -48,6 +48,25 @@ function pistasFinanciacionF53(texto){
  return pistas;
 }
 
+// Fase 57: se extraen hasta 8 referencias cuantitativas POR DOCUMENTO. No se
+// agregan ni convierten en una cifra de dilución. Los patrones son incompletos.
+function cifrasF57(texto){
+ const reglas=[
+  {tipo:'Oferta anunciada',estado:'Presentación/oferta; ejecución no acreditada',re:/(?:we are offering|we propose to offer|public offering of)\s+([\d,]{3,})\s+shares\b/gi,valor:m=>m[1]+' acciones'},
+  {tipo:'Venta declarada en texto',estado:'El texto afirma una venta; cotejar periodo, cierre y anexos',re:/(?:sold|sale of|sales of)\s+([\d,]{3,})\s+shares\b/gi,valor:m=>m[1]+' acciones'},
+  {tipo:'Importe obtenido declarado',estado:'El texto menciona ingresos; verificar si son netos, brutos o estimados',re:/(?:net proceeds (?:from|of)|gross proceeds (?:from|of))\s+.{0,35}?\$([\d,.]+)\s*(million|billion)?\b/gi,valor:m=>'$'+m[1]+' '+(m[2]||'USD (escala no indicada)')},
+  {tipo:'Capacidad o importe máximo',estado:'Límite o capacidad anunciada; no es financiación ejecutada',re:/up to (?:an aggregate of|a total of|approximately)\s+\$([\d,.]+)\s*(million|billion)?\b/gi,valor:m=>'$'+m[1]+' '+(m[2]||'USD (escala no indicada)')},
+  {tipo:'Precio público de oferta',estado:'Precio citado; no valida suscripción ni ejecución',re:/(?:public offering price|offering price|price to public)\s*(?:of|at|:)??\s*\$([\d,.]+)/gi,valor:m=>'$'+m[1]+' / acción (contexto pendiente)'}
+ ];
+ const encontrados=[],vistos=new Set();
+ for(const r of reglas){let m,n=0;while((m=r.re.exec(texto))&&n<2&&encontrados.length<8){
+   const key=r.tipo+':'+m[0].toLowerCase().replace(/\s+/g,' ');
+   if(vistos.has(key))continue;vistos.add(key);n++;
+   const desde=Math.max(0,m.index-85),hasta=Math.min(texto.length,m.index+m[0].length+115);
+   encontrados.push({tipo:r.tipo,estado:r.estado,valor:r.valor(m),fragmento:(desde?'…':'')+texto.slice(desde,hasta)+(hasta<texto.length?'…':'')});
+ }}return encontrados;
+}
+
 export async function onRequestGet({request,env}){
  const q=new URL(request.url).searchParams;
  const sym=(q.get('symbol')||'').trim().toUpperCase(),raw=q.get('url')||'';
@@ -68,6 +87,6 @@ export async function onRequestGet({request,env}){
    const doc=await textoAcotado(res);if(doc.error)return responder({error:doc.error},doc.status);
    const texto=normalizar(doc.texto);const hallazgos=[];
    for(const [tema,exp] of TEMAS){let match,cnt=0;while((match=exp.exec(texto))&&cnt<3&&hallazgos.length<15){const start=Math.max(0,match.index-140),end=Math.min(texto.length,match.index+match[0].length+230);hallazgos.push({tema,extracto:(start?'…':'')+texto.slice(start,end)+(end<texto.length?'…':'')});cnt++;}}
-   return responder({symbol:sym,url:u.href,formato:/\.txt$/i.test(m[3])?'TXT':'HTML',consultado:new Date().toISOString(),bytesAnalizados:doc.bytesAnalizados,truncado:false,hallazgos,pistasF53:pistasFinanciacionF53(texto),advertencia:'Búsqueda literal de términos en un único documento SEC, sin interpretación financiera ni revisión de anexos. Un resultado positivo no confirma acciones emitidas; uno negativo no descarta dilución. Abrir y contrastar el original.'});
+   return responder({symbol:sym,url:u.href,formato:/\.txt$/i.test(m[3])?'TXT':'HTML',consultado:new Date().toISOString(),bytesAnalizados:doc.bytesAnalizados,truncado:false,hallazgos,pistasF53:pistasFinanciacionF53(texto),cifrasF57:cifrasF57(texto),advertencia:'Búsqueda literal de términos en un único documento SEC, sin interpretación financiera ni revisión de anexos. Un resultado positivo no confirma acciones emitidas; uno negativo no descarta dilución. Abrir y contrastar el original.'});
  }catch(e){return responder({error:'Lectura SEC no disponible: '+String(e?.message||'fallo de conexión')},502);}
 }
