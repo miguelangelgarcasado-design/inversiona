@@ -32,11 +32,11 @@ export async function onRequestGet({request,env}){
  if(u.protocol!=='https:'||u.hostname!=='www.sec.gov'||u.port||u.username||u.password||u.search||u.hash||!m||!/^.+\.(?:htm|html|txt)$/i.test(m[3]))return responder({error:'Solo se permiten documentos SEC HTML/TXT con ruta validada.'},400);
  const ua=String(env.SEC_USER_AGENT||'').trim();if(ua.length<12||!ua.includes('@'))return responder({error:'Falta configurar SEC_USER_AGENT en Cloudflare.'},503);
  try{
-   const mapRes=await fetch('https://www.sec.gov/files/company_tickers.json',{headers:{'User-Agent':ua,'Accept':'application/json'},redirect:'error'});
+   const mapRes=await fetch('https://www.sec.gov/files/company_tickers.json',{headers:{'User-Agent':ua,'Accept':'application/json'},redirect:'manual'});
    if(!mapRes.ok)return responder({error:'No se pudo validar el ticker frente a SEC.'},502);
    const mapa=await mapRes.json();const reg=Object.values(mapa).find(v=>String(v?.ticker||'').toUpperCase()===sym);
    if(!reg||String(Number(m[1]))!==String(reg.cik_str))return responder({error:'El documento no coincide con el emisor consultado.'},400);
-   const res=await fetch(u.href,{headers:{'User-Agent':ua,'Accept':'text/html,text/plain;q=0.9'},redirect:'error'});
+   const res=await fetch(u.href,{headers:{'User-Agent':ua,'Accept':'text/html,text/plain;q=0.9'},redirect:'manual'});
    if(!res.ok)return responder({error:'SEC no permite recuperar este documento ahora (HTTP '+res.status+'). Abrir enlace original.'},502);
    const ct=res.headers.get('content-type')||'';
    if(!/text\/|application\/octet-stream/i.test(ct))return responder({error:'El documento no es HTML ni texto; ábrelo en la SEC.'},415);
