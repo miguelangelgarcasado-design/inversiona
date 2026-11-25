@@ -1,5 +1,6 @@
-// Fase 59: revisión documental SEC bajo demanda. Devuelve fragmentos SIN interpretar
-// como emisiones ejecutadas. No guarda datos, no cambia cartera ni reglas del radar.
+// Fase 61: lectura documental SEC bajo demanda (compatible con cronologia F61).
+// La clasificacion prudente de ofertas y ventas se realiza en index.html.
+// No confirma ejecuciones, no guarda datos ni cambia cartera o reglas del radar.
 const responder=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
 const MAX_BYTES=850000;
 function entidades(s){return s.replace(/&#(x[0-9a-f]+|\d+);/gi,(_,n)=>{const c=n[0].toLowerCase()==='x'?parseInt(n.slice(1),16):parseInt(n,10);return c>=32&&c<=0x10ffff?String.fromCodePoint(c):' ';}).replace(/&(?:nbsp|amp|lt|gt|quot|apos|ndash|mdash);/gi,m=>({'&nbsp;':' ','&amp;':'&','&lt;':'<','&gt;':'>','&quot;':'"','&apos;':"'",'&ndash;':'-','&mdash;':'-'}[m.toLowerCase()]||' '));}
