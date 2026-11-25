@@ -1,4 +1,4 @@
-// Fase 61: lectura documental SEC bajo demanda (compatible con cronologia F61).
+// Fase 63: lectura documental SEC bajo demanda (compatible con cronologia F63).
 // La clasificacion prudente de ofertas y ventas se realiza en index.html.
 // No confirma ejecuciones, no guarda datos ni cambia cartera o reglas del radar.
 const responder=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
@@ -47,6 +47,24 @@ function pistasFinanciacionF53(texto){
    }
  }
  return pistas;
+}
+
+// Fase 63: busqueda independiente y acotada de menciones de oferta
+// en el texto normalizado del documento SEC leido. No reutiliza el limite
+// de 8 cifras de cifrasF57. Un resultado es una mencion, NO ejecucion.
+function ofertasF63(texto){
+ const patrones=[
+  {tipo:'Oferta anunciada',re:/\b(?:we are offering|we propose to offer|we offer|public offering of|underwritten offering of)\s+(\d[\d,]{2,})\s+shares\b/gi}
+ ];
+ const r=[],vistos=new Set();
+ for(const p of patrones){let m,n=0;while((m=p.re.exec(texto))&&n<5&&r.length<6){
+   const cantidad=m[1].replace(/,/g,'');
+   if(!/^\d{3,13}$/.test(cantidad)||vistos.has(cantidad))continue;
+   vistos.add(cantidad);n++;
+   const a=Math.max(0,m.index-100),b=Math.min(texto.length,m.index+m[0].length+140);
+   r.push({tipo:p.tipo,cantidad:m[1],fragmento:(a?'…':'')+texto.slice(a,b)+(b<texto.length?'…':'')});
+ }}
+ return r;
 }
 
 // Fase 57: se extraen hasta 8 referencias cuantitativas POR DOCUMENTO. No se
@@ -123,6 +141,6 @@ export async function onRequestGet({request,env}){
    const doc=await textoAcotado(res);if(doc.error)return responder({error:doc.error},doc.status);
    const texto=normalizar(doc.texto);const hallazgos=[];
    for(const [tema,exp] of TEMAS){let match,cnt=0;while((match=exp.exec(texto))&&cnt<3&&hallazgos.length<15){const start=Math.max(0,match.index-140),end=Math.min(texto.length,match.index+match[0].length+230);hallazgos.push({tema,extracto:(start?'…':'')+texto.slice(start,end)+(end<texto.length?'…':'')});cnt++;}}
-   return responder({symbol:sym,url:u.href,formato:/\.txt$/i.test(m[3])?'TXT':'HTML',consultado:new Date().toISOString(),bytesAnalizados:doc.bytesAnalizados,truncado:false,hallazgos,pistasF53:pistasFinanciacionF53(texto),cifrasF57:cifrasF57(texto),revisionF58:avisosRepeticionF58(cifrasF57(texto)),revisionF59:revisionDocumentoF59(texto),advertencia:'Búsqueda literal de términos en un único documento SEC, sin interpretación financiera ni revisión de anexos. Un resultado positivo no confirma acciones emitidas; uno negativo no descarta dilución. Abrir y contrastar el original.'});
+   return responder({symbol:sym,url:u.href,formato:/\.txt$/i.test(m[3])?'TXT':'HTML',consultado:new Date().toISOString(),bytesAnalizados:doc.bytesAnalizados,truncado:false,hallazgos,pistasF53:pistasFinanciacionF53(texto),ofertasF63:ofertasF63(texto),alcanceOfertasF63:'Búsqueda independiente de frases literales en el texto normalizado del documento leído; máximo 6 cantidades únicas. Un patrón puede omitir ofertas o encontrar cantidades de contexto. Contrastar original SEC.',cifrasF57:cifrasF57(texto),revisionF58:avisosRepeticionF58(cifrasF57(texto)),revisionF59:revisionDocumentoF59(texto),advertencia:'Búsqueda literal de términos en un único documento SEC, sin interpretación financiera ni revisión de anexos. Un resultado positivo no confirma acciones emitidas; uno negativo no descarta dilución. Abrir y contrastar el original.'});
  }catch(e){return responder({error:'Lectura SEC no disponible: '+String(e?.message||'fallo de conexión')},502);}
 }
