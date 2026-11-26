@@ -1,4 +1,4 @@
-// Fase 64: lectura documental SEC bajo demanda (compatible con cronologia F63).
+// Fase 65: lectura documental SEC bajo demanda (compatible con cronologia F63).
 // La clasificacion prudente de ofertas y ventas se realiza en index.html.
 // No confirma ejecuciones, no guarda datos ni cambia cartera o reglas del radar.
 const responder=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
@@ -49,7 +49,7 @@ function pistasFinanciacionF53(texto){
  return pistas;
 }
 
-// Fase 64: busqueda independiente y acotada de menciones de oferta
+// Fase 65: busqueda independiente y acotada de menciones de oferta
 // en el texto normalizado del documento SEC leido. No reutiliza el limite
 // de 8 cifras de cifrasF57. Un resultado es una mencion, NO ejecucion.
 function ofertasF63(texto){
@@ -122,7 +122,7 @@ function revisionDocumentoF59(texto){
 }
 
 
-// Fase 64: frases documentales clasificadas; NO verifica el cierre, la fecha
+// Fase 65: frases documentales clasificadas; NO verifica el cierre, la fecha
 // efectiva, las acciones nuevas ni su correspondencia con otros documentos.
 function indiciosOperacionF64(texto){
  const reglas=[
@@ -140,6 +140,40 @@ function indiciosOperacionF64(texto){
   hallazgos.push({tipo:regla.tipo,estado:regla.estado,fragmento});
  }}
  return {hallazgos,limite:'Máximo 12 fragmentos encontrados en un único documento, sin lectura de anexos ni reconciliación de operaciones. La ausencia de frases no demuestra ausencia de ejecución.',confirmacionAutomatica:false};
+}
+
+
+// Fase 65: clasificación conservadora de indicios textuales, no verificación contable.
+// Cada evidencia se refiere a ESTE documento; ninguna se consolida con otro expediente.
+function clasificarContextosF65(texto){
+ const t=String(texto||'');
+ const reglas=[
+  {estado:'Venta pasada declarada',categoria:'Ventas históricas y cobros declarados',
+   patron:/\b(?:net proceeds from the sale of\s+[\d,]+\s+shares|we sold\s+[\d,]+\s+shares|sold an aggregate of\s+[\d,]+\s+shares|received (?:net|gross) proceeds of\s+\$?[\d,.]+\s*(?:million|billion)?|proceeds from (?:shares|sales) (?:sold|completed) during the (?:three|six|nine) months)\b/gi,
+   motivo:'El emisor utiliza lenguaje de venta o ingresos pasados. La fecha, el importe neto y las acciones aún requieren contraste en el informe financiero.'},
+  {estado:'Oferta futura o prevista',categoria:'Ofertas, destino previsto y entrega futura',
+   patron:/\b(?:we are offering\s+[\d,]+\s+shares|we intend to use the net proceeds|we expect to receive (?:net|gross) proceeds|estimated (?:net|gross) proceeds|the underwriters expect to deliver|expect to deliver the shares|subject to (?:customary )?closing conditions|we may offer and sell)\b/gi,
+   motivo:'Lenguaje de oferta o previsión. No demuestra que las acciones se hayan colocado ni que el emisor haya cobrado.'},
+  {estado:'Pendiente de comprobar',categoria:'Menciones económicas sin ejecución acreditada',
+   patron:/\b(?:preliminary cash balance|cash and cash equivalents|gross proceeds|net proceeds|offering price|shares to be issued|up to an aggregate of|closing of the offering)\b/gi,
+   motivo:'La mención aislada no permite establecer si es saldo total, estimación, capacidad o ingreso cobrado.'}
+ ];
+ const evidencias=[],visto=new Set(),zonasClasificadas=[];
+ for(const regla of reglas){
+   let m,cuenta=0;
+   while((m=regla.patron.exec(t))!==null&&cuenta<4&&evidencias.length<12){
+     const antes=t.slice(Math.max(0,m.index-165),m.index);
+     const despues=t.slice(m.index+m[0].length,Math.min(t.length,m.index+m[0].length+240));
+     const fragmento=(m.index>165?'…':'')+antes+m[0]+despues+(m.index+m[0].length+240<t.length?'…':'');
+     const clave=regla.estado+'|'+m[0].replace(/\s+/g,' ').toLowerCase();
+     if(visto.has(clave))continue;
+     if(regla.estado==='Pendiente de comprobar'&&zonasClasificadas.some(z=>m.index>=z.a-15&&m.index<z.b+15))continue;
+     // Never report generic 'net proceeds' as historical sale: generics stay pending.
+     visto.add(clave);cuenta++;zonasClasificadas.push({a:m.index,b:m.index+m[0].length});
+     evidencias.push({estado:regla.estado,categoria:regla.categoria,coincidencia:m[0],fragmento,motivo:regla.motivo});
+   }
+ }
+ return {evidencias,verificacion:'NINGUNA operación está verificada automáticamente. Resultados de coincidencia textual en un único documento SEC; comprobar contexto, anexos, fechas, acciones en circulación y duplicidades.',limite:'Máximo 4 citas por categoría y 12 en total. Ausencia de coincidencias no implica ausencia de emisión.',aptoParaCalcularDilucion:false};
 }
 
 export async function onRequestGet({request,env}){
@@ -162,6 +196,6 @@ export async function onRequestGet({request,env}){
    const doc=await textoAcotado(res);if(doc.error)return responder({error:doc.error},doc.status);
    const texto=normalizar(doc.texto);const hallazgos=[];
    for(const [tema,exp] of TEMAS){let match,cnt=0;while((match=exp.exec(texto))&&cnt<3&&hallazgos.length<15){const start=Math.max(0,match.index-140),end=Math.min(texto.length,match.index+match[0].length+230);hallazgos.push({tema,extracto:(start?'…':'')+texto.slice(start,end)+(end<texto.length?'…':'')});cnt++;}}
-   return responder({symbol:sym,url:u.href,formato:/\.txt$/i.test(m[3])?'TXT':'HTML',consultado:new Date().toISOString(),bytesAnalizados:doc.bytesAnalizados,truncado:false,hallazgos,pistasF53:pistasFinanciacionF53(texto),ofertasF63:ofertasF63(texto),indiciosF64:indiciosOperacionF64(texto),alcanceOfertasF63:'Búsqueda independiente de frases literales en el texto normalizado del documento leído; máximo 6 cantidades únicas. Un patrón puede omitir ofertas o encontrar cantidades de contexto. Contrastar original SEC.',cifrasF57:cifrasF57(texto),revisionF58:avisosRepeticionF58(cifrasF57(texto)),revisionF59:revisionDocumentoF59(texto),advertencia:'Búsqueda literal de términos en un único documento SEC, sin interpretación financiera ni revisión de anexos. Un resultado positivo no confirma acciones emitidas; uno negativo no descarta dilución. Abrir y contrastar el original.'});
+   return responder({symbol:sym,url:u.href,formato:/\.txt$/i.test(m[3])?'TXT':'HTML',consultado:new Date().toISOString(),bytesAnalizados:doc.bytesAnalizados,truncado:false,hallazgos,pistasF53:pistasFinanciacionF53(texto),ofertasF63:ofertasF63(texto),indiciosF64:indiciosOperacionF64(texto),clasificacionF65:clasificarContextosF65(texto),alcanceOfertasF63:'Búsqueda independiente de frases literales en el texto normalizado del documento leído; máximo 6 cantidades únicas. Un patrón puede omitir ofertas o encontrar cantidades de contexto. Contrastar original SEC.',cifrasF57:cifrasF57(texto),revisionF58:avisosRepeticionF58(cifrasF57(texto)),revisionF59:revisionDocumentoF59(texto),advertencia:'Búsqueda literal de términos en un único documento SEC, sin interpretación financiera ni revisión de anexos. Un resultado positivo no confirma acciones emitidas; uno negativo no descarta dilución. Abrir y contrastar el original.'});
  }catch(e){return responder({error:'Lectura SEC no disponible: '+String(e?.message||'fallo de conexión')},502);}
 }
