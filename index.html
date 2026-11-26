@@ -4500,6 +4500,8 @@ function iniciarRadarF40(){
          }catch(e){lecturas.push({f,dato:null,error:e?.name==='AbortError'?'Tiempo de espera agotado':String(e?.message||'No disponible')});}
          finally{clearTimeout(timer);}
        }
+       const fechaPresentacion=x=>/^\d{4}-\d{2}-\d{2}$/.test(String(x.f.date||''))?x.f.date:null;
+       lecturas.sort((a,b)=>(fechaPresentacion(a)||'9999').localeCompare(fechaPresentacion(b)||'9999'));
        resultCompararF59.replaceChildren();
        const add59=(tag,txt,parent=resultCompararF59)=>{const n=document.createElement(tag);n.textContent=txt;parent.append(n);return n;};
        add59('strong','Resultado descriptivo: '+lecturas.filter(x=>x.dato).length+' de '+lecturas.length+' documentos consultados.');
@@ -4542,8 +4544,7 @@ function iniciarRadarF40(){
        add59('p','Ordenada por FECHA DE PRESENTACIÓN de cada expediente, no por fecha de ejecución. Los importes son menciones documentales, no sumas ni saldo pendiente. No se comprueban cierres, enmiendas, periodos de ventas ni anexos.',timelineF60);
        add59('p','🛡️ Fase 65: añade una búsqueda independiente de ofertas, además de la muestra de ocho cifras, y conserva la comprobación de ejecución y fechas. Nada acredita liquidación sin documentos originales contrastados.',timelineF60);
        add59('p','🔬 Fase 65: lectura orientativa de frases de cierre, ventas e ingresos en los documentos recuperados. Solo compara la FECHA DE PRESENTACIÓN entre ellos, no acredita qué operaciones corresponden entre sí.',timelineF60);
-       const entriesF60=lecturas.map((x,i)=>({x,i,fecha:/^\d{4}-\d{2}-\d{2}$/.test(String(x.f.date||''))?x.f.date:null}));
-       entriesF60.sort((a,b)=>String(a.fecha||'9999').localeCompare(String(b.fecha||'9999'))||a.i-b.i);
+       const entriesF60=lecturas.map((x,i)=>({x,i,fecha:fechaPresentacion(x)}));
        // Fase 65: un texto con 'sale of' no demuestra que se vendieran las
        // acciones de una oferta. Solo se conserva 'venta declarada' cuando el
        // extracto contiene un verbo de venta en pasado, o ingresos obtenidos
