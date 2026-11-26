@@ -32,7 +32,7 @@ function pistasFinanciacionF53(texto){
   ['Oferta de acciones anunciada', /(?:we are offering|we offered|offering of|public offering of)\s.{0,100}?(?:[\d,]+)\s+shares/gi],
   ['Acciones declaradas como vendidas', /(?:sale of|sold|sales of)\s+(?:[\d,]+)\s+shares/gi],
   ['Ventas mediante ATM', /(?:[\d,]+)\s+shares.{0,85}?(?:at.the.market|ATM program)/gi],
-  ['Precio de oferta por acción', /(?:offering price|public offering price|price to public)\s.{0,50}?\$[\d,.]+/gi],
+  ['Precio de oferta por acción', /\b(?:offering price|public offering price|price to public)\s*(?:of|at|is|was|:)?\s*\$\s*\d+(?:,\d{3})*(?:\.\d+)?\s*(?:per\s+(?:common\s+)?share|\/\s*share)\b/gi],
   ['Importes ATM o capacidad futura', /(?:up to an aggregate of|up to a total of|net proceeds of)\s+\$[\d,.]+\s*(?:million|billion)?/gi]
  ];
  const pistas=[],vistos=new Set();
@@ -64,6 +64,16 @@ function ofertasF63(texto){
    const a=Math.max(0,m.index-100),b=Math.min(texto.length,m.index+m[0].length+140);
    r.push({tipo:p.tipo,cantidad:m[1],fragmento:(a?'…':'')+texto.slice(a,b)+(b<texto.length?'…':'')});
  }}
+ const capacidad=/\b(?:aggregate offering price of up to|up to)\s+\$\s*(\d+(?:,\d{3})*(?:\.\d+)?)(?:\s+(million|billion)\b)?\s+(?:of\s+(?:(?:class\s+[a-z]\s+)?common stock|ordinary shares)\b|from time to time\b)/gi;
+ for(const m of texto.matchAll(capacidad)){
+   if(r.length>=6)break;
+   const valor='$'+m[1]+(m[2]?' '+m[2].toLowerCase():'')+' USD';
+   const clave='capacidad|'+valor;
+   if(vistos.has(clave))continue;
+   vistos.add(clave);
+   const a=Math.max(0,m.index-100),b=Math.min(texto.length,m.index+m[0].length+140);
+   r.push({tipo:'Capacidad anunciada',valor,fragmento:(a?'…':'')+texto.slice(a,b)+(b<texto.length?'…':'')});
+ }
  return r;
 }
 
@@ -75,7 +85,8 @@ function cifrasF57(texto){
   {tipo:'Venta declarada en texto',estado:'El texto afirma una venta; cotejar periodo, cierre y anexos',re:/(?:sold|sale of|sales of)\s+([\d,]{3,})\s+shares\b/gi,valor:m=>m[1]+' acciones'},
   {tipo:'Importe obtenido declarado',estado:'El texto menciona ingresos; verificar si son netos, brutos o estimados',re:/(?:net proceeds (?:from|of)|gross proceeds (?:from|of))\s+.{0,35}?\$([\d,.]+)\s*(million|billion)?\b/gi,valor:m=>'$'+m[1]+' '+(m[2]||'USD (escala no indicada)')},
   {tipo:'Capacidad o importe máximo',estado:'Límite o capacidad anunciada; no es financiación ejecutada',re:/up to (?:an aggregate of|a total of|approximately)\s+\$([\d,.]+)\s*(million|billion)?\b/gi,valor:m=>'$'+m[1]+' '+(m[2]||'USD (escala no indicada)')},
-  {tipo:'Precio público de oferta',estado:'Precio citado; no valida suscripción ni ejecución',re:/(?:public offering price|offering price|price to public)\s*(?:of|at|:)??\s*\$([\d,.]+)/gi,valor:m=>'$'+m[1]+' / acción (contexto pendiente)'}
+  {tipo:'Precio público de oferta',estado:'Precio citado; no valida suscripción ni ejecución',re:/\b(?:(?:public offering price|offering price|price to public)\s*(?:of|at|is|was|:)?\s*)\$\s*(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:per\s+(?:common\s+)?share|\/\s*share)\b/gi,valor:m=>'$'+m[1]+' / acción'},
+  {tipo:'Cotización de referencia',estado:'Precio histórico de mercado citado en el documento',re:/\b(?:last reported sale price|last reported closing price|closing price)\b[^.!?;$]{0,180}\$\s*(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:per\s+share|\/\s*share)\b/gi,valor:m=>'$'+m[1]+' / acción'}
  ];
  const encontrados=[],vistos=new Set();
  for(const r of reglas){let m,n=0;while((m=r.re.exec(texto))&&n<2&&encontrados.length<8){
