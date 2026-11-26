@@ -4562,6 +4562,7 @@ function iniciarRadarF40(){
          }
          if(/oferta anunciada|oferta de acciones anunciada/.test(t))return 'Oferta anunciada';
          if(/capacidad|importe máximo|futura/.test(t))return 'Capacidad anunciada';
+         if(t==='cotización de referencia')return 'Cotización de referencia';
          if(/precio/.test(t))return 'Precio de oferta citado';
          return 'Otro dato documental';
        };
@@ -4598,7 +4599,10 @@ function iniciarRadarF40(){
            add59('p','Coincidencias documentales; no son ventas ejecutadas ni deben sumarse a las referencias que aparecen debajo.',controlOfertasF63);
            const ulOfertasF63=add59('ul','',controlOfertasF63);
            ofertasIndependientesF63.forEach(o=>{
-             const li=add59('li',String(o.cantidad||'Sin cantidad')+' acciones · oferta anunciada · ejecución no comprobada',ulOfertasF63);
+             const textoOferta=o.tipo==='Capacidad anunciada'
+               ? String(o.valor)+' · capacidad anunciada'
+               : String(o.cantidad||'Sin cantidad')+' acciones · oferta anunciada';
+             const li=add59('li',textoOferta+' · ejecución no comprobada',ulOfertasF63);
              const det=add59('details','',li);add59('summary','Ver extracto SEC',det);add59('p',String(o.fragmento||'Sin extracto'),det);
            });
          }
