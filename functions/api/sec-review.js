@@ -1,19 +1,26 @@
-// Fase 65: lectura documental SEC bajo demanda (compatible con cronologia F63).
+// Fase 67: lectura documental SEC bajo demanda (compatible con cronologia F63).
 // La clasificacion prudente de ofertas y ventas se realiza en index.html.
 // No confirma ejecuciones, no guarda datos ni cambia cartera o reglas del radar.
 const responder=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
-const MAX_BYTES=850000;
+const MAX_BYTES = 2_500_000;
+const limiteLectura = {
+  error: 'El documento supera el límite de lectura de 2,5 MB. Consulta el original en la SEC.',
+  status: 413
+};
 function entidades(s){return s.replace(/&#(x[0-9a-f]+|\d+);/gi,(_,n)=>{const c=n[0].toLowerCase()==='x'?parseInt(n.slice(1),16):parseInt(n,10);return c>=32&&c<=0x10ffff?String.fromCodePoint(c):' ';}).replace(/&(?:nbsp|amp|lt|gt|quot|apos|ndash|mdash);/gi,m=>({'&nbsp;':' ','&amp;':'&','&lt;':'<','&gt;':'>','&quot;':'"','&apos;':"'",'&ndash;':'-','&mdash;':'-'}[m.toLowerCase()]||' '));}
 function normalizar(html){return entidades(html.replace(/<(?:script|style|noscript|svg|head)\b[^>]*>[\s\S]*?<\/\s*(?:script|style|noscript|svg|head)\s*>/gi,' ').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ')).trim();}
 async function textoAcotado(res){
  const size=Number(res.headers.get('content-length')||0);
- if(size>MAX_BYTES)return {error:'El documento excede el límite de lectura de 850 KB; abre el original.',status:413};
+ if(size>MAX_BYTES){
+   await res.body?.cancel().catch(()=>{});
+   return limiteLectura;
+ }
  let total=0;const trozos=[];const reader=res.body?.getReader();
  if(!reader)return {error:'No se ha podido leer el documento',status:502};
  let truncado=false;
  try{while(true){const {value,done}=await reader.read();if(done)break;total+=value.byteLength;if(total>MAX_BYTES){truncado=true;break;}trozos.push(value);}}
  finally{if(truncado)await reader.cancel().catch(()=>{});reader.releaseLock();}
- if(truncado)return {error:'El documento supera 850 KB; no se ha realizado análisis parcial engañoso. Abre el original.',status:413};
+ if(truncado)return limiteLectura;
  const data=new Uint8Array(total);let pos=0;for(const b of trozos){data.set(b,pos);pos+=b.length;}
  return {texto:new TextDecoder('utf-8',{fatal:false}).decode(data),bytesAnalizados:total,truncado:false};
 }
@@ -49,7 +56,7 @@ function pistasFinanciacionF53(texto){
  return pistas;
 }
 
-// Fase 65: busqueda independiente y acotada de menciones de oferta
+// Fase 67: busqueda independiente y acotada de menciones de oferta
 // en el texto normalizado del documento SEC leido. No reutiliza el limite
 // de 8 cifras de cifrasF57. Un resultado es una mencion, NO ejecucion.
 function ofertasF63(texto){
@@ -142,7 +149,7 @@ function revisionDocumentoF59(texto){
 }
 
 
-// Fase 65: frases documentales clasificadas; NO verifica el cierre, la fecha
+// Fase 67: frases documentales clasificadas; NO verifica el cierre, la fecha
 // efectiva, las acciones nuevas ni su correspondencia con otros documentos.
 function indiciosOperacionF64(texto){
  const reglas=[
@@ -163,7 +170,7 @@ function indiciosOperacionF64(texto){
 }
 
 
-// Fase 65: clasificación conservadora de indicios textuales, no verificación contable.
+// Fase 67: clasificación conservadora de indicios textuales, no verificación contable.
 // Cada evidencia se refiere a ESTE documento; ninguna se consolida con otro expediente.
 function clasificarContextosF65(texto){
  const t=String(texto||'');
