@@ -72,7 +72,15 @@ function ofertasF63(texto){
    if(vistos.has(clave))continue;
    vistos.add(clave);
    const a=Math.max(0,m.index-100),b=Math.min(texto.length,m.index+m[0].length+140);
-   r.push({tipo:'Capacidad anunciada',valor,fragmento:(a?'…':'')+texto.slice(a,b)+(b<texto.length?'…':'')});
+   const antes=texto.slice(Math.max(0,m.index-180),m.index);
+   const despues=texto.slice(m.index+m[0].length,m.index+m[0].length+850);
+   const folletoBase=/\b(?:securities|units)\b.{0,120}\b(?:total|aggregate)\s+(?:offering price|value)\s+of\s*$/i.test(antes)
+     && /^\s+under this prospectus\b/i.test(despues);
+   const programaATM=/\b(?:aggregate offering price of up to|of\s+(?:(?:class\s+[a-z]\s+)?common stock|ordinary shares))\b/i.test(m[0])
+     && /\bat[\s-]+the[\s-]+market\b/i.test(despues)
+     && /\b(?:sales agreement|sales agent)\b/i.test(despues);
+   const alcance=folletoBase?'folleto_base':programaATM?'programa_atm':null;
+   r.push({tipo:'Capacidad anunciada',alcance,valor,fragmento:(a?'…':'')+texto.slice(a,b)+(b<texto.length?'…':'')});
  }
  return r;
 }
