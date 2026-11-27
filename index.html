@@ -4599,8 +4599,9 @@ function iniciarRadarF40(){
            add59('p','Coincidencias documentales; no son ventas ejecutadas ni deben sumarse a las referencias que aparecen debajo.',controlOfertasF63);
            const ulOfertasF63=add59('ul','',controlOfertasF63);
            ofertasIndependientesF63.forEach(o=>{
+             const etiquetasCapacidad={folleto_base:'Límite del folleto base',programa_atm:'Límite del programa ATM'};
              const textoOferta=o.tipo==='Capacidad anunciada'
-               ? String(o.valor)+' · capacidad anunciada'
+               ? String(o.valor)+' · '+(etiquetasCapacidad[o.alcance]||'capacidad anunciada')
                : String(o.cantidad||'Sin cantidad')+' acciones · oferta anunciada';
              const li=add59('li',textoOferta+' · ejecución no comprobada',ulOfertasF63);
              const det=add59('details','',li);add59('summary','Ver extracto SEC',det);add59('p',String(o.fragmento||'Sin extracto'),det);
