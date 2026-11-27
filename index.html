@@ -4562,6 +4562,7 @@ function iniciarRadarF40(){
          }
          if(/oferta anunciada|oferta de acciones anunciada/.test(t))return 'Oferta anunciada';
          if(/capacidad|importe máximo|futura/.test(t))return 'Capacidad anunciada';
+         if(t==='supuesto de cálculo de la oferta')return 'Supuesto de cálculo de la oferta';
          if(t==='cotización de referencia')return 'Cotización de referencia';
          if(/precio/.test(t))return 'Precio de oferta citado';
          return 'Otro dato documental';
