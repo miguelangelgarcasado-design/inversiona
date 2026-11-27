@@ -4340,6 +4340,28 @@ function iniciarRadarF40(){
    try{localStorage.setItem(F55_STORAGE,JSON.stringify(reg));msg.textContent='Revisión manual guardada en este navegador. No cambia el ranking ni desbloquea ninguna empresa.';}
    catch{msg.textContent='No se pudo guardar. Comprueba si el navegador permite almacenamiento local.';}
  });
+ function mostrarCierresDeclaradosSEC(cierres,add,raiz){
+   if(!Array.isArray(cierres))return;
+   const fechaFormato=new Intl.DateTimeFormat('es-ES',{dateStyle:'long',timeZone:'UTC'});
+   const numeroFormato=new Intl.NumberFormat('es-ES',{maximumFractionDigits:8});
+   const numero=v=>numeroFormato.format(Number(String(v).replace(/,/g,'')));
+   for(const cierre of cierres){
+     const ficha=add('div','',raiz);ficha.className='f42-panel';
+     add('strong','Cierre declarado por la empresa · Oferta directa registrada',ficha);
+     const lista=add('ul','',ficha);
+     const fecha=Date.parse(cierre.fecha+' UTC');
+     add('li','Fecha de cierre declarada · '+(Number.isFinite(fecha)?fechaFormato.format(fecha):cierre.fecha),lista);
+     add('li','Acciones · '+numero(cierre.acciones),lista);
+     if(cierre.precio)add('li','Precio · '+numero(cierre.precio)+' USD por acción',lista);
+     if(cierre.bruto){
+       const escala={million:' millones',billion:' mil millones'}[cierre.bruto.escala]||'';
+       add('li','Importe bruto · '+(cierre.bruto.aproximado?'aprox. ':'')+numero(cierre.bruto.importe)+escala+' USD',lista);
+     }
+     const extracto=add('details','',ficha);
+     add('summary','Ver extracto SEC',extracto);
+     add('p',cierre.fragmento,extracto);
+   }
+ }
  // Fase 65: el botón de revisión consulta un único documento y muestra extractos
  // de TEXTO como pistas, nunca como hechos financieros confirmados.
  salida.addEventListener('click',async evento=>{
@@ -4358,6 +4380,7 @@ function iniciarRadarF40(){
      add('strong','📖 Lectura parcial de documento SEC · '+(j.formato||'HTML/texto'));
      add('p','Texto examinado: '+Number(j.bytesAnalizados||0).toLocaleString('es-ES')+' bytes. Consulta: '+String(j.consultado||'').slice(0,10)+'.');
      add('p','La lectura es parcial y orientativa. No confirma emisiones, precios de ejecución ni calcula la dilución.');
+     mostrarCierresDeclaradosSEC(j.cierresDeclarados,add,lugar);
      const cifras=Array.isArray(j.cifrasF57)?j.cifrasF57:[];
      const control=j.revisionF58&&typeof j.revisionF58==='object'?j.revisionF58:{};
      const encabezado=add('h4','🧭 Fase 65 · Resumen documental');
@@ -4574,7 +4597,7 @@ function iniciarRadarF40(){
          const total=registros.map(c=>String(c.fragmento||'')).join(' ').toLowerCase();
          const acotado=total.slice(0,20000);
          const promesa=/\b(?:expect(?:s|ed)? to deliver|expected to deliver|anticipate(?:d)? to close|subject to completion|will be delivered|will close)\b/i.test(acotado);
-         const cierre=/\b(?:closing of the offering occurred|offering closed on|completed the offering on|settlement occurred on|consummated the offering on)\b/i.test(acotado);
+         const cierre=Boolean(item.x.dato?.cierresDeclarados?.length)||/\b(?:closing of the offering occurred|offering closed on|completed the offering on|settlement occurred on|consummated the offering on)\b/i.test(acotado);
          const ejecucion=/\b(?:sold [\d,]+ shares|proceeds from the sale of [\d,]+ shares|completed the sale of [\d,]+ shares)\b/i.test(acotado);
          return {promesa,cierre,ejecucion,fecha:item.fecha||null,
            fuente:'Fragmentos limitados del documento '+(item.i+1),
@@ -4591,6 +4614,7 @@ function iniciarRadarF40(){
          if(x.dato?.revisionF59?.etiqueta)add59('p','Identificación orientativa: '+x.dato.revisionF59.etiqueta+'.',d);
          const enlace=add59('a','Abrir documento original SEC',d);enlace.href=x.f.url;enlace.target='_blank';enlace.rel='noopener noreferrer';enlace.style.color='#9ddcff';
          if(x.error){add59('p','No se pudo consultar: '+x.error+'. No se considera ausencia de financiación o emisiones.',d);continue;}
+         mostrarCierresDeclaradosSEC(x.dato?.cierresDeclarados,add59,d);
          const ofertasIndependientesF63=Array.isArray(x.dato?.ofertasF63)?x.dato.ofertasF63:null;
          const controlOfertasF63=add59('details','',d);controlOfertasF63.className='f42-panel';controlOfertasF63.style.margin='9px 0';
          const cabOfertasF63=add59('summary','📄 Fase 65 · Ofertas detectadas fuera del límite de 8 cifras',controlOfertasF63);cabOfertasF63.style.cssText='cursor:pointer;color:#b7e5ff;font-weight:bold';
