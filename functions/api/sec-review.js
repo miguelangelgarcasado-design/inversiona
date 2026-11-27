@@ -196,6 +196,29 @@ function clasificarContextosF65(texto){
  return {evidencias,verificacion:'NINGUNA operación está verificada automáticamente. Resultados de coincidencia textual en un único documento SEC; comprobar contexto, anexos, fechas, acciones en circulación y duplicidades.',limite:'Máximo 4 citas por categoría y 12 en total. Ausencia de coincidencias no implica ausencia de emisión.',aptoParaCalcularDilucion:false};
 }
 
+// Reconoce cierres fechados y vincula solo las cifras del mismo pasaje.
+function cierresDeclaradosSEC(texto){
+ const cierres=[];
+ const patron=/\bOn ((?:January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}, \d{4})\s*\(the\s+["“]Closing Date["”]\),\s*((?:[^.!?;$]|\.(?=,|\s*\()){1,180}?)\s+(?:consummated|closed|completed)\s+(?:a|the|its)\s+registered direct offering(?:\s*\(the\s+["“]Offering["”]\))?\s+of\s+(?:an aggregate of\s+)?(\d+(?:,\d{3})*)\s+shares\b/gi;
+ for(const m of texto.matchAll(patron)){
+   if(/\b(?:if|unless|would|could|might|expected|scheduled|not|never)\b/i.test(m[2]))continue;
+   const desde=m.index+m[0].length;
+   const resto=texto.slice(desde,desde+650);
+   // El par value puede contener decimales. El precio debe abrir la oración siguiente.
+   const precio=/^(?:[^.!?;]|\.(?=\d)){0,280}\.(?!\d)\s+The price for each share was\s+\$\s*(\d+(?:,\d{3})*(?:\.\d+)?)(?=\.(?!\d)|$)/i.exec(resto);
+   const finPrecio=precio?precio[0].length:0;
+   const bruto=/^\.\s+The Company received (?:aggregate\s+)?gross proceeds from (?:the|this) offering of\s+(approximately\s+)?\$\s*(\d+(?:,\d{3})*(?:\.\d+)?)(?:\s+(million|billion)\b)?(?=[\s,.]|$)/i.exec(resto.slice(finPrecio));
+   const fin=desde+finPrecio+(bruto?.[0].length||0);
+   cierres.push({
+     fecha:m[1],acciones:m[3],precio:precio?.[1]||null,
+     bruto:bruto?{importe:bruto[2],escala:bruto[3]?.toLowerCase()||null,aproximado:Boolean(bruto[1])}:null,
+     fragmento:texto.slice(m.index,fin)
+   });
+   if(cierres.length===3)break;
+ }
+ return cierres;
+}
+
 export async function onRequestGet({request,env}){
  const q=new URL(request.url).searchParams;
  const sym=(q.get('symbol')||'').trim().toUpperCase(),raw=q.get('url')||'';
@@ -216,6 +239,6 @@ export async function onRequestGet({request,env}){
    const doc=await textoAcotado(res);if(doc.error)return responder({error:doc.error},doc.status);
    const texto=normalizar(doc.texto);const hallazgos=[];
    for(const [tema,exp] of TEMAS){let match,cnt=0;while((match=exp.exec(texto))&&cnt<3&&hallazgos.length<15){const start=Math.max(0,match.index-140),end=Math.min(texto.length,match.index+match[0].length+230);hallazgos.push({tema,extracto:(start?'…':'')+texto.slice(start,end)+(end<texto.length?'…':'')});cnt++;}}
-   return responder({symbol:sym,url:u.href,formato:/\.txt$/i.test(m[3])?'TXT':'HTML',consultado:new Date().toISOString(),bytesAnalizados:doc.bytesAnalizados,truncado:false,hallazgos,pistasF53:pistasFinanciacionF53(texto),ofertasF63:ofertasF63(texto),indiciosF64:indiciosOperacionF64(texto),clasificacionF65:clasificarContextosF65(texto),alcanceOfertasF63:'Búsqueda independiente de frases literales en el texto normalizado del documento leído; máximo 6 cantidades únicas. Un patrón puede omitir ofertas o encontrar cantidades de contexto. Contrastar original SEC.',cifrasF57:cifrasF57(texto),revisionF58:avisosRepeticionF58(cifrasF57(texto)),revisionF59:revisionDocumentoF59(texto),advertencia:'Búsqueda literal de términos en un único documento SEC, sin interpretación financiera ni revisión de anexos. Un resultado positivo no confirma acciones emitidas; uno negativo no descarta dilución. Abrir y contrastar el original.'});
+   return responder({symbol:sym,url:u.href,formato:/\.txt$/i.test(m[3])?'TXT':'HTML',consultado:new Date().toISOString(),bytesAnalizados:doc.bytesAnalizados,truncado:false,hallazgos,pistasF53:pistasFinanciacionF53(texto),ofertasF63:ofertasF63(texto),indiciosF64:indiciosOperacionF64(texto),cierresDeclarados:cierresDeclaradosSEC(texto),clasificacionF65:clasificarContextosF65(texto),alcanceOfertasF63:'Búsqueda independiente de frases literales en el texto normalizado del documento leído; máximo 6 cantidades únicas. Un patrón puede omitir ofertas o encontrar cantidades de contexto. Contrastar original SEC.',cifrasF57:cifrasF57(texto),revisionF58:avisosRepeticionF58(cifrasF57(texto)),revisionF59:revisionDocumentoF59(texto),advertencia:'Búsqueda literal de términos en un único documento SEC, sin interpretación financiera ni revisión de anexos. Un resultado positivo no confirma acciones emitidas; uno negativo no descarta dilución. Abrir y contrastar el original.'});
  }catch(e){return responder({error:'Lectura SEC no disponible: '+String(e?.message||'fallo de conexión')},502);}
 }
